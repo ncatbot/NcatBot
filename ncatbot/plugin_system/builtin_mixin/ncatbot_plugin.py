@@ -1,14 +1,12 @@
 from typing import final, Any
 from ncatbot.plugin_system.base_plugin import BasePlugin
-from ..builtin_mixin.command_mixin import CommandMixin
-from .config_mixin import ConfigMixin
 from .time_task_mixin import TimeTaskMixin
 from ncatbot.utils import get_log
 
 LOG = get_log("ncatbot.plugin_system")
 
 
-class NcatBotPlugin(BasePlugin, ConfigMixin, TimeTaskMixin, CommandMixin):
+class NcatBotPlugin(BasePlugin, TimeTaskMixin):
     def __init__(self, *args, **kwargs):
         BasePlugin.__init__(self, *args, **kwargs)
 
