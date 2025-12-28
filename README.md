@@ -25,7 +25,8 @@ NcatBot 是基于 onebot11协议 的 Python SDK, 它提供了一套方便易用�
 ## 如何使用
 
 
-认真阅读本项目[文档](https://docs.ncatbot.xyz)
+- 认真阅读本项目[文档](https://docs.ncatbot.xyz)
+- 使用 Docker [部署](https://github.com/ncatbot/NcatBot-Docker)。
 
 ## 欢迎来玩
 
@@ -80,3 +81,4 @@ NcatBot 是基于 onebot11协议 的 Python SDK, 它提供了一套方便易用�
 </a>
 
 </div>
+
