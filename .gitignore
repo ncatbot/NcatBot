@@ -50,6 +50,7 @@ env.bak/
 venv.bak/
 .env
 .venv
+uv.lock
 
 # PDM / local python packaging
 .pdm.toml
@@ -80,7 +81,6 @@ plugins/
 
 # development
 dev/
-
 
 # Misc
 .ipynb_checkpoints
