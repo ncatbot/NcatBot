@@ -73,7 +73,7 @@ def on_group_poke(func: Callable) -> Callable:
 
 def on_group_at(func: Callable) -> Callable:
     """群聊艾特专用装饰器"""
-    from ncatbot.core.event.message_event.message import GroupMessageEvent
+    from ncatbot.core.event.message_segments.message import GroupMessageEvent
 
     def at_filter(event) -> bool:
         """检查是否艾特了机器人"""

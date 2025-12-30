@@ -4,14 +4,14 @@ misc.py 模块测试 - 测试杂项消息类型 (Share, Location, Music, Json, M
 import pytest
 from typing import Dict, Any
 
-from ncatbot.core.event.message_event.types.misc import (
+from ncatbot.core.event.message_segments.misc import (
     Share,
     Location,
     Music,
     Json,
     Markdown,
 )
-from ncatbot.core.event.message_event.types.base import parse_message_segment
+from ncatbot.core.event.message_segments.base import parse_message_segment
 
 
 class TestShare:

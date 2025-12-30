@@ -4,8 +4,8 @@ primitives.py 模块测试 - 测试基础消息类型 (PlainText, Face, At, Repl
 import pytest
 from typing import Dict, Any, List
 
-from ncatbot.core.event.message_event.types.primitives import PlainText, Face, At, Reply
-from ncatbot.core.event.message_event.types.base import parse_message_segment
+from ncatbot.core.event.message_segments.primitives import PlainText, Face, At, Reply
+from ncatbot.core.event.message_segments.base import parse_message_segment
 
 
 class TestPlainText:

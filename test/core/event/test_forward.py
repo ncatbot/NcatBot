@@ -4,12 +4,12 @@ forward.py 模块测试 - 测试转发消息类型 (Node, Forward)
 import pytest
 from typing import Dict, Any, List
 
-from ncatbot.core.event.message_event.types.forward import Node, Forward
-from ncatbot.core.event.message_event.types.base import (
+from ncatbot.core.event.message_segments.forward import Node, Forward
+from ncatbot.core.event.message_segments.base import (
     MessageArrayDTO,
     parse_message_segment,
 )
-from ncatbot.core.event.message_event.types.primitives import PlainText
+from ncatbot.core.event.message_segments.primitives import PlainText
 
 
 class TestNode:
@@ -172,7 +172,7 @@ class TestForwardIntegration:
     
     def test_forward_with_mixed_message_types(self):
         """测试包含混合消息类型的转发"""
-        from ncatbot.core.event.message_event.types.primitives import At, Face
+        from ncatbot.core.event.message_segments.primitives import At, Face
         
         content = MessageArrayDTO(message=[
             PlainText(text="Hello "),

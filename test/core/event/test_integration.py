@@ -4,15 +4,15 @@
 import pytest
 from typing import Dict, Any, List
 
-from ncatbot.core.event.message_event.types.base import (
+from ncatbot.core.event.message_segments.base import (
     MessageArrayDTO,
     parse_message_segment,
     MessageSegment,
     TYPE_MAP,
 )
-from ncatbot.core.event.message_event.types.primitives import PlainText, Face, At, Reply
-from ncatbot.core.event.message_event.types.media import Image
-from ncatbot.core.event.message_event.types.forward import Forward
+from ncatbot.core.event.message_segments.primitives import PlainText, Face, At, Reply
+from ncatbot.core.event.message_segments.media import Image
+from ncatbot.core.event.message_segments.forward import Forward
 
 
 class TestCompleteMessageParsing:
