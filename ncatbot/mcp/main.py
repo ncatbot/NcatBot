@@ -11,7 +11,7 @@ from mcp.types import Resource, Tool, TextContent
 
 # 导入 NcatBot SDK
 from ncatbot.core import BotClient
-from ncatbot.core.event.message_segment import MessageArray, Text
+from ncatbot.core.event import MessageArray, Text
 
 # ----------------------- 日志配置 -----------------------
 logging.basicConfig(level=logging.INFO)

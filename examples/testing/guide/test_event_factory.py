@@ -4,7 +4,7 @@ EventFactory 用法测试
 """
 
 from ncatbot.utils.testing import EventFactory
-from ncatbot.core.event.message_segment import MessageArray, Text, At, Image
+from ncatbot.core.event import MessageArray, Text, At, Image
 import asyncio
 
 

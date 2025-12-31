@@ -5,7 +5,7 @@ from ncatbot.utils import get_log
 from ncatbot.utils import run_coroutine
 
 if TYPE_CHECKING:
-    from ncatbot.core.event.message_segment import MessageArray
+    from ncatbot.core.event import MessageArray
 else:
     MessageArray = "MessageArray"
 

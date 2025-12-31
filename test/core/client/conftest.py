@@ -49,6 +49,17 @@ def mock_adapter():
     return adapter
 
 
+@pytest.fixture
+def mock_services():
+    """Mock 的 ServiceManager 实例"""
+    from ncatbot.core.service import ServiceManager
+    services = MagicMock(spec=ServiceManager)
+    services.load_all = AsyncMock()
+    services.close_all = AsyncMock()
+    services.get = MagicMock(return_value=MagicMock())
+    return services
+
+
 # ==================== EventRegistry Fixtures ====================
 
 @pytest.fixture

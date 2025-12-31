@@ -5,8 +5,7 @@ CalculatorPlugin - 用于演示 unittest 测试的计算器插件
 
 from ncatbot.plugin_system import NcatBotPlugin
 from ncatbot.plugin_system import on_message
-from ncatbot.core.event import BaseMessageEvent
-from ncatbot.core.event.message_segment import MessageArray
+from ncatbot.core.event import BaseMessageEvent, MessageArray
 
 
 class CalculatorPlugin(NcatBotPlugin):

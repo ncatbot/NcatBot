@@ -6,8 +6,9 @@ from ncatbot.core.event import (
     PrivateMessageEvent,
     NoticeEvent,
     RequestEvent,
+    MessageArray,
+    Text,
 )
-from ncatbot.core.event.message_segment import MessageArray, Text
 
 
 class EventFactory:

@@ -40,21 +40,21 @@ class TestStartArgsType:
 class TestLifecycleManagerInit:
     """测试 LifecycleManager 初始化"""
 
-    def test_init_components(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_init_components(self, mock_services, event_bus, event_registry):
         """初始化各组件"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         
-        assert manager.adapter is mock_adapter
-        assert manager.api is mock_api
+        assert manager.services is mock_services
+        assert manager.api is None  # API 在启动后才初始化
         assert manager.event_bus is event_bus
         assert manager.registry is event_registry
         assert manager._running is False
         assert manager.crash_flag is False
         assert manager.plugin_loader is None
 
-    def test_init_backend_attributes(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_init_backend_attributes(self, mock_services, event_bus, event_registry):
         """初始化后台运行相关属性"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         
         assert manager.lock is None
         assert manager.release_callback is None
@@ -63,9 +63,9 @@ class TestLifecycleManagerInit:
 class TestLifecycleManagerStartValidation:
     """测试启动参数验证"""
 
-    def test_start_validates_legal_args(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_start_validates_legal_args(self, mock_services, event_bus, event_registry):
         """启动时验证合法参数"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.mock_mode = True  # 使用 mock 模式
         
         with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
@@ -84,16 +84,16 @@ class TestLifecycleManagerStartValidation:
                     mock_config.update_value.assert_any_call("bt_uin", "123456")
                     mock_config.update_value.assert_any_call("debug", True)
 
-    def test_start_rejects_illegal_args(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_start_rejects_illegal_args(self, mock_services, event_bus, event_registry):
         """拒绝非法参数"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         
         with pytest.raises(NcatBotError, match="非法参数"):
             manager.start(illegal_param="value")
 
-    def test_start_ignores_none_values(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_start_ignores_none_values(self, mock_services, event_bus, event_registry):
         """忽略 None 值参数"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.mock_mode = True
         
         with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
@@ -116,9 +116,9 @@ class TestLifecycleManagerStartValidation:
 class TestLifecycleManagerMockMode:
     """测试 Mock 模式"""
 
-    def test_mock_start(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_mock_start(self, mock_services, event_bus, event_registry):
         """Mock 模式启动不连接真实服务"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.mock_mode = True
         
         with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
@@ -140,9 +140,9 @@ class TestLifecycleManagerMockMode:
 class TestLifecycleManagerExit:
     """测试退出流程"""
 
-    def test_bot_exit_unloads_plugins(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_bot_exit_unloads_plugins(self, mock_services, event_bus, event_registry):
         """退出时卸载所有插件"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager._running = True
         
         mock_plugin_loader = MagicMock()
@@ -155,17 +155,17 @@ class TestLifecycleManagerExit:
             mock_status.exit = True
             mock_plugin_loader.unload_all.assert_called_once()
 
-    def test_bot_exit_when_not_running(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_bot_exit_when_not_running(self, mock_services, event_bus, event_registry):
         """未运行时退出给出警告"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager._running = False
         
         # 不应抛出异常
         manager.bot_exit()
 
-    def test_bot_exit_sets_exit_flag(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_bot_exit_sets_exit_flag(self, mock_services, event_bus, event_registry):
         """退出设置 exit 标志"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager._running = True
         manager.plugin_loader = None
         
@@ -178,22 +178,22 @@ class TestLifecycleManagerExit:
 class TestLifecycleManagerRunModes:
     """测试运行模式"""
 
-    def test_run_frontend_alias(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_run_frontend_alias(self, mock_services, event_bus, event_registry):
         """run_frontend 别名正确"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         
         assert manager.run_frontend == manager.run_blocking
         assert manager.run == manager.run_frontend
 
-    def test_run_backend_alias(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_run_backend_alias(self, mock_services, event_bus, event_registry):
         """run_backend 别名正确"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         
         assert manager.run_backend == manager.run_non_blocking
 
-    def test_run_frontend_calls_start(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_run_frontend_calls_start(self, mock_services, event_bus, event_registry):
         """run_frontend 调用 start"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.start = MagicMock(side_effect=KeyboardInterrupt)
         manager.bot_exit = MagicMock()
         
@@ -206,16 +206,18 @@ class TestLifecycleManagerRunModes:
 class TestLifecycleManagerBackendMode:
     """测试后台模式"""
 
-    def test_run_backend_returns_api(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_run_backend_returns_api(self, mock_services, event_bus, event_registry):
         """run_backend 返回 API 实例"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
+        
+        mock_api = MagicMock()
         
         # Mock start 方法：模拟正常启动，通过 startup handler 释放锁
         def mock_start(**kwargs):
             # 正常启动后，触发 startup handler 来释放锁
-            # 我们需要直接调用 release_callback 因为这是测试场景
             import time
             time.sleep(0.01)  # 给主线程时间设置锁
+            manager.api = mock_api  # 模拟设置 api
             if manager.release_callback:
                 manager.release_callback(None)
             # 保持运行，防止线程退出
@@ -228,9 +230,9 @@ class TestLifecycleManagerBackendMode:
         
         assert result is mock_api
 
-    def test_run_backend_crash(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_run_backend_crash(self, mock_services, event_bus, event_registry):
         """run_backend 启动崩溃抛出异常"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         
         def mock_start(**kwargs):
             manager.crash_flag = True
@@ -246,9 +248,9 @@ class TestLifecycleManagerBackendMode:
 class TestLifecycleManagerPluginLoader:
     """测试插件加载器管理"""
 
-    def test_plugin_loader_initialized_on_start(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_plugin_loader_initialized_on_start(self, mock_services, event_bus, event_registry):
         """启动时初始化插件加载器"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.mock_mode = True
         
         with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
@@ -269,9 +271,9 @@ class TestLifecycleManagerPluginLoader:
 class TestLifecycleManagerStartFlow:
     """测试完整启动流程"""
 
-    def test_start_flow_mock_mode(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_start_flow_mock_mode(self, mock_services, event_bus, event_registry):
         """Mock 模式完整启动流程"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.mock_mode = True
         
         with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
@@ -290,9 +292,9 @@ class TestLifecycleManagerStartFlow:
                     mock_run_coroutine.assert_called_once()
                     assert manager._running is True
 
-    def test_start_sets_running_flag(self, mock_adapter, mock_api, event_bus, event_registry):
+    def test_start_sets_running_flag(self, mock_services, event_bus, event_registry):
         """启动设置 running 标志"""
-        manager = LifecycleManager(mock_adapter, mock_api, event_bus, event_registry)
+        manager = LifecycleManager(mock_services, event_bus, event_registry)
         manager.mock_mode = True
         
         assert manager._running is False

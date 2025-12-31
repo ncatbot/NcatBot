@@ -1,7 +1,6 @@
 from ncatbot.plugin_system import NcatBotPlugin
 from ncatbot.plugin_system import command_registry
-from ncatbot.core.event import BaseMessageEvent
-from ncatbot.core.event.message_segment import Image, At
+from ncatbot.core.event import BaseMessageEvent, Image, At
 
 
 class ParamsMediaPlugin(NcatBotPlugin):

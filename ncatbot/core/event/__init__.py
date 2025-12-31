@@ -14,6 +14,7 @@ from .events import *  # noqa: F401,F403 - 事件类
 from .message_segments import Text as PlainText  # noqa: F401
 from .events import MessageEvent as BaseMessageEvent  # noqa: F401
 from .events import MessageEvent as MessageSentEvent  # noqa: F401
+from .events import BaseEvent as BaseEventData  # noqa: F401
 
 __all__ = [
     # 解析器
@@ -28,7 +29,7 @@ __all__ = [
     "PostType", "MessageType", "NoticeType", "RequestType",
     "MetaEventType", "NotifySubType", "EventType",
     # 事件类 (from events)
-    "BaseEvent", "MessageEvent", "BaseMessageEvent", "MessageSentEvent",
+    "BaseEvent", "BaseEventData", "MessageEvent", "BaseMessageEvent", "MessageSentEvent",
     "PrivateMessageEvent", "GroupMessageEvent",
     "NoticeEvent", "GroupUploadNoticeEvent", "GroupAdminNoticeEvent",
     "GroupDecreaseNoticeEvent", "GroupIncreaseNoticeEvent", "GroupBanNoticeEvent",
