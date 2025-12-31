@@ -61,7 +61,7 @@ class MessageRetrieveMixin(APIComponent):
 
         result = await self._request_raw("/get_group_msg_history", data)
         status = APIReturnStatus(result)
-        return [GroupMessageEvent(data) for data in status.data.get("messages", [])]
+        return [GroupMessageEvent(**data) for data in status.data.get("messages", [])]
 
     async def get_msg(self, message_id: Union[str, int]) -> "BaseMessageEvent":
         """
@@ -80,7 +80,7 @@ class MessageRetrieveMixin(APIComponent):
             {"message_id": message_id},
         )
         status = APIReturnStatus(result)
-        return GroupMessageEvent(status.data)
+        return GroupMessageEvent(**status.data)
 
     async def get_forward_msg(self, message_id: Union[str, int]) -> "Forward":
         """
@@ -99,7 +99,7 @@ class MessageRetrieveMixin(APIComponent):
             {"message_id": message_id},
         )
         status = APIReturnStatus(result)
-        return Forward.from_content(status.data.get("messages"), message_id)
+        return Forward.from_dict({"type": "forward", "data": {"id": str(message_id), "content": status.data.get("messages")}})
 
     async def get_friend_msg_history(
         self,
@@ -132,7 +132,7 @@ class MessageRetrieveMixin(APIComponent):
             },
         )
         status = APIReturnStatus(result)
-        return [PrivateMessageEvent(data) for data in status.data.get("messages", [])]
+        return [PrivateMessageEvent(**data) for data in status.data.get("messages", [])]
 
     async def get_record(
         self,
@@ -155,13 +155,14 @@ class MessageRetrieveMixin(APIComponent):
         """
         from ncatbot.core.event import Record
 
-        check_exclusive_argument(file, file_id, ["file", "file_id"])
+        check_exclusive_argument(file, file_id, names=["file", "file_id"])
         result = await self._request_raw(
             "/get_record",
             {"file": file, "file_id": file_id, "out_format": out_format},
         )
         status = APIReturnStatus(result)
-        return Record.from_dict(status.data)
+        segment = Record.from_dict({"type": "record", "data": status.data})
+        return segment  # type: ignore
 
     async def get_image(
         self,
@@ -180,13 +181,14 @@ class MessageRetrieveMixin(APIComponent):
         """
         from ncatbot.core.event import Image
 
-        check_exclusive_argument(file, file_id, ["file", "file_id"])
+        check_exclusive_argument(file, file_id, names=["file", "file_id"])
         result = await self._request_raw(
             "/get_image",
             {"file": file, "file_id": file_id},
         )
         status = APIReturnStatus(result)
-        return Image.from_dict(status.data)
+        segment = Image.from_dict({"type": "image", "data": status.data})
+        return segment  # type: ignore
 
     async def fetch_emoji_like(
         self,

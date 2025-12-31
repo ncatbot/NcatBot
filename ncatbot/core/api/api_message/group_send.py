@@ -77,7 +77,6 @@ class GroupMessageMixin(APIComponent):
         """
         pass
 
-
     async def post_group_msg(
         self,
         group_id: Union[str, int],
@@ -101,7 +100,7 @@ class GroupMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ...event import MessageArray
+        from ...event import MessageArray, Image
 
         msg_array = MessageArray()
         if reply is not None:
@@ -111,7 +110,7 @@ class GroupMessageMixin(APIComponent):
         if text is not None:
             msg_array.add_text(text)
         if image is not None:
-            msg_array.add_image(image)
+            msg_array.add_by_segment(Image(file=image))
         if rtf is not None:
             msg_array += rtf
         return await self.post_group_array_msg(group_id, msg_array)
@@ -168,9 +167,9 @@ class GroupMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        return await self.post_group_array_msg(
-            group_id,
-            MessageArray((Record(file=file))),
+        # 统一走 send_group_msg 以确保预上传
+        return await self.send_group_msg(
+            group_id, [Record(file=file).to_dict()]
         )
 
     async def send_group_dice(
@@ -203,7 +202,7 @@ class GroupMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        return await self.post_group_array_msg(
-            group_id,
-            MessageArray((File(file=file, file_name=name))),
+        # 统一走 send_group_msg 以确保预上传
+        return await self.send_group_msg(
+            group_id, [File(file=file, file_name=name).to_dict()]
         )

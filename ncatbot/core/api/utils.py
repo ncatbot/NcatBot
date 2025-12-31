@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import functools
 import traceback
-from dataclasses import dataclass, field
 from typing import (
     Any,
     Callable,
@@ -119,14 +118,13 @@ def check_exclusive_argument(*args: Any, names: List[str], error: bool = False) 
 # =============================================================================
 
 
-@dataclass
 class APIReturnStatus:
     """API 返回状态封装"""
 
     retcode: int
     message: str
-    data: Any = None
-    _raw: Dict[str, Any] = field(default_factory=dict, repr=False)
+    data: Any
+    _raw: Dict[str, Any]
 
     def __init__(self, data: Dict[str, Any]):
         """
@@ -172,7 +170,6 @@ class APIReturnStatus:
         return f"APIReturnStatus(retcode={self.retcode}, message={self.message})"
 
 
-@dataclass
 class MessageAPIReturnStatus(APIReturnStatus):
     """消息 API 返回状态，包含 message_id"""
 

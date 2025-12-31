@@ -25,31 +25,6 @@ LOG = get_log("GroupFileMixin")
 class GroupFileMixin(APIComponent):
     """群文件管理相关方法"""
 
-    async def post_group_file(
-        self,
-        group_id: Union[str, int],
-        file: str,
-        name: str,
-        folder_id: str = "",
-    ) -> None:
-        """
-        上传群文件（原生 API）
-
-        Args:
-            group_id: 群号
-            file: 文件路径/URL
-            name: 文件名
-            folder_id: 目标文件夹 ID
-        """
-        # 预上传处理
-        processed_file = await self._preupload_file(file, "file")
-        
-        result = await self._request_raw(
-            "/upload_group_file",
-            {"group_id": group_id, "file": processed_file, "name": name, "folder": folder_id},
-        )
-        APIReturnStatus.raise_if_failed(result)
-
     async def move_group_file(
         self,
         group_id: Union[str, int],
@@ -131,7 +106,8 @@ class GroupFileMixin(APIComponent):
             {"file_id": file_id, "file": file},
         )
         status = APIReturnStatus(result)
-        return FileClass(status.data)
+        segment = FileClass.from_dict({"type": "file", "data": status.data})
+        return segment  # type: ignore
 
     async def upload_group_file(
         self,
@@ -176,7 +152,7 @@ class GroupFileMixin(APIComponent):
 
     async def group_file_folder_makedir(
         self, group_id: Union[str, int], path: str
-    ) -> str:
+    ) -> Optional[str]:
         """
         按路径创建群文件夹（自定义函数）
 
@@ -185,10 +161,10 @@ class GroupFileMixin(APIComponent):
             path: 文件夹路径
 
         Returns:
-            str: 创建结果
+            Optional[str]: 创建结果
         """
         # TODO: 实现此功能
-        pass
+        return None
 
     async def delete_group_file(
         self, group_id: Union[str, int], file_id: str

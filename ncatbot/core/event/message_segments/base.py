@@ -36,8 +36,9 @@ class MessageArrayDTO(BaseModel):
     def from_list(cls, data: List[Dict[str, Any]]) -> "MessageArrayDTO":
         return cls(message=[parse_message_segment(seg) for seg in data])
     
-    def to_list(self) -> Dict[str, Any]:
-        return self.model_dump()
+    def to_list(self) -> List[Dict[str, Any]]:
+        """转换为 OneBot 11 消息数组格式"""
+        return [seg.to_dict() for seg in self.message]
     
     
 def parse_message_segment(data: Dict[str, Any]) -> MessageSegment:

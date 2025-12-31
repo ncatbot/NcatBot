@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, List, Optional, Union
 
+from ...event import MessageArray, PlainText, Image, Record, File
 from ..utils import (
     APIComponent,
     MessageAPIReturnStatus,
@@ -16,8 +17,7 @@ from ..utils import (
 from .validation import validate_msg
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
-    from ncatbot.core.event.message_segment.message_array import MessageArray
+    from ...event import MessageArray
 
 LOG = get_log("ncatbot.core.api.api_message.private_send")
 
@@ -64,7 +64,7 @@ class PrivateMessageMixin(APIComponent):
     ) -> str:
         """
         发送私聊消息（MessageArray）
-
+        
         Args:
             user_id: 用户 QQ 号
             msg: MessageArray 消息对象
@@ -95,15 +95,13 @@ class PrivateMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ncatbot.core.event.message_segment.message_array import MessageArray
-
         msg_array = MessageArray()
         if reply is not None:
             msg_array.add_reply(reply)
         if text is not None:
             msg_array.add_text(text)
         if image is not None:
-            msg_array.add_image(image)
+            msg_array.add_by_segment(Image(file=image))
         if rtf is not None:
             msg_array += rtf
         return await self.post_private_array_msg(user_id, msg_array)
@@ -119,8 +117,6 @@ class PrivateMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ncatbot.core.event.message_segment.message_array import MessageArray
-
         msg_array = MessageArray(text)
         return await self.post_private_array_msg(user_id, msg_array)
 
@@ -137,9 +133,6 @@ class PrivateMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ncatbot.core.event.message_segment.message_array import MessageArray
-        from ncatbot.core.event import PlainText
-
         msg_array = MessageArray(PlainText(text))
         return await self.post_private_array_msg(user_id, msg_array)
 
@@ -154,7 +147,6 @@ class PrivateMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ncatbot.core.event import Image
         # 统一走 send_private_msg 以确保预上传
         return await self.send_private_msg(
             user_id, [Image(file=image).to_dict()]
@@ -171,7 +163,6 @@ class PrivateMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ncatbot.core.event import Record
         # 统一走 send_private_msg 以确保预上传
         return await self.send_private_msg(
             user_id, [Record(file=file).to_dict()]
@@ -230,7 +221,6 @@ class PrivateMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        from ncatbot.core.event import File
         # 统一走 send_private_msg 以确保预上传
         return await self.send_private_msg(
             user_id, [File(file=file, file_name=name).to_dict()]
