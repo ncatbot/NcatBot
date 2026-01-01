@@ -82,7 +82,7 @@ class EventFactory:
             **kwargs,
         }
 
-        return GroupMessageEvent(event_data)
+        return GroupMessageEvent(**event_data)
 
     @staticmethod
     def create_private_message(
@@ -123,7 +123,7 @@ class EventFactory:
             **kwargs,
         }
 
-        return PrivateMessageEvent(event_data)
+        return PrivateMessageEvent(**event_data)
 
     @staticmethod
     def create_notice_event(
@@ -149,7 +149,7 @@ class EventFactory:
         if sub_type:
             event_data["sub_type"] = sub_type
 
-        return NoticeEvent(event_data)
+        return NoticeEvent(**event_data)
 
     @staticmethod
     def create_request_event(
@@ -174,7 +174,7 @@ class EventFactory:
         if sub_type:
             event_data["sub_type"] = sub_type
 
-        return RequestEvent(event_data)
+        return RequestEvent(**event_data)
 
     @staticmethod
     def create_friend_request_event(

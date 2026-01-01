@@ -47,6 +47,10 @@ class BotClient(EventRegistry, LifecycleManager):
     
     继承：
     - EventRegistry: 提供事件注册和装饰器接口
+    
+    测试模式：
+    使用 start(mock=True) 启动 Mock 模式，无需网络连接。
+    可通过 inject_event() 或 inject_raw_event() 注入测试事件。
     """
 
     _initialized = False
@@ -87,6 +91,15 @@ class BotClient(EventRegistry, LifecycleManager):
         
         # 注册内置处理器
         self._register_builtin_handlers()
+    
+    @classmethod
+    def reset_singleton(cls):
+        """
+        重置单例状态（仅用于测试）
+        
+        允许在测试中创建新的 BotClient 实例。
+        """
+        cls._initialized = False
     
     async def _setup_api(self) -> None:
         """设置 API（在服务加载后调用）"""

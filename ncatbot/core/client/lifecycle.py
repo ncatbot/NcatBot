@@ -20,6 +20,7 @@ if TYPE_CHECKING:
     from ncatbot.core.service import ServiceManager, MessageRouter
     from .event_bus import EventBus
     from .registry import EventRegistry
+    from .dispatcher import EventDispatcher
 
 LOG = get_log("Lifecycle")
 
@@ -37,6 +38,8 @@ class StartArgs(TypedDict, total=False):
     enable_webui: Optional[bool]
     enable_webui_interaction: Optional[bool]
     debug: Optional[bool]
+    mock: Optional[bool]  # Mock 模式，用于测试
+    skip_plugin_load: Optional[bool]  # 跳过插件加载
 
 
 LEGAL_ARGS = StartArgs.__annotations__.keys()
@@ -75,6 +78,10 @@ class LifecycleManager:
         self.crash_flag = False
         self.plugin_loader = None
         self.api: Optional["BotAPI"] = None
+        self.dispatcher: Optional["EventDispatcher"] = None  # 事件分发器
+        
+        # Mock 模式相关
+        self._mock_mode = False
         
         # 后台运行相关
         self.lock: Optional[threading.Lock] = None
@@ -90,7 +97,16 @@ class LifecycleManager:
         3. 加载插件
         4. 启动 NapCat 服务
         5. 加载内置服务并连接 WebSocket
+        
+        Args:
+            mock: 是否启用 Mock 模式（用于测试，不建立网络连接）
+            skip_plugin_load: 是否跳过插件加载
         """
+        # 提取特殊参数
+        mock_mode = kwargs.pop("mock", False)
+        skip_plugin_load = kwargs.pop("skip_plugin_load", False)
+        self._mock_mode = mock_mode
+        
         # 验证并应用配置
         for key, value in kwargs.items():
             if key not in LEGAL_ARGS:
@@ -109,40 +125,118 @@ class LifecycleManager:
         )
         self._running = True
 
-        # 加载插件
-        run_coroutine(self.plugin_loader.load_plugins)
+        # 加载插件（可选跳过）
+        if not skip_plugin_load:
+            run_coroutine(self.plugin_loader.load_plugins)
+
+        # Mock 模式：替换网络相关服务为 Mock 版本
+        if mock_mode:
+            self._replace_network_services_with_mock()
 
         # 启动服务
-        if getattr(self, "mock_mode", False):
-            self.mock_start()
-        else:
+        if not mock_mode:
             launch_napcat_service()
+        
+        try:
+            # 检查是否已有事件循环在运行
             try:
+                loop = asyncio.get_running_loop()
+                # 已有事件循环，使用 run_coroutine
+                run_coroutine(self._async_start)
+            except RuntimeError:
+                # 没有事件循环，使用 asyncio.run
                 asyncio.run(self._async_start())
-            except NcatBotConnectionError:
-                self.bot_exit()
-                raise
+        except NcatBotConnectionError:
+            self.bot_exit()
+            raise
+    
+    def _replace_network_services_with_mock(self):
+        """
+        替换网络相关服务为 Mock 版本
+        
+        - 使用 MockMessageRouter 替代真实的 WebSocket 连接
+        - 使用 MockPreUploadService 替代真实的预上传服务
+        - 保留其他真实服务（plugin_config, rbac 等）
+        """
+        LOG.info("Mock 模式：替换网络相关服务")
+        
+        from ncatbot.utils.testing.mock_services import MockMessageRouter, MockPreUploadService
+        
+        # 移除真实的网络相关服务，注册 Mock 版本
+        if "message_router" in self.services._service_classes:
+            del self.services._service_classes["message_router"]
+            del self.services._service_configs["message_router"]
+        if "preupload" in self.services._service_classes:
+            del self.services._service_classes["preupload"]
+            del self.services._service_configs["preupload"]
+        
+        self.services.register(MockMessageRouter)
+        self.services.register(MockPreUploadService)
     
     async def _async_start(self):
-        """异步启动流程"""
+        """异步启动流程（正常模式和 Mock 模式共用）"""
         # 加载所有服务
         await self.services.load_all()
         
         # 获取消息路由服务
-        router: "MessageRouter" = self.services.message_router
+        router = self.services.message_router
         
         from ncatbot.core.api import BotAPI
         from .dispatcher import EventDispatcher
         
-        # 传入 service_manager 以支持预上传等服务（预上传服务自己维护独立的 WebSocket）
+        # 传入 service_manager 以支持预上传等服务
         self.api = BotAPI(router.send, service_manager=self.services)
         
         # 设置事件分发器
-        dispatcher = EventDispatcher(self.event_bus, self.api)
-        router.set_event_callback(dispatcher)
+        self.dispatcher = EventDispatcher(self.event_bus, self.api)
+        router.set_event_callback(self.dispatcher)
         
-        # 开始监听
+        # 开始监听（仅在有 WebSocket 连接时）
         await router.websocket.listen()
+    
+    # ==================== 测试辅助方法 ====================
+    
+    async def inject_event(self, event) -> None:
+        """
+        注入事件（仅 Mock 模式可用）
+        
+        将解析后的事件对象直接发布到 EventBus。
+        
+        Args:
+            event: 事件对象（如 GroupMessageEvent, PrivateMessageEvent 等）
+        """
+        if not self._mock_mode:
+            raise RuntimeError("inject_event 仅在 Mock 模式下可用")
+        
+        from .ncatbot_event import NcatBotEvent
+        
+        # 绑定 API 上下文（如果事件对象支持）
+        if hasattr(event, 'bind_api') and self.api:
+            event.bind_api(self.api)
+        
+        # 构造事件类型
+        event_type = f"ncatbot.{event.post_type}"
+        ncatbot_event = NcatBotEvent(event_type, event)
+        
+        await self.event_bus.publish(ncatbot_event)
+    
+    async def inject_raw_event(self, data: dict) -> None:
+        """
+        注入原始事件数据（仅 Mock 模式可用）
+        
+        将原始事件数据通过 EventDispatcher 解析并发布。
+        
+        Args:
+            data: 原始事件数据（OneBot 格式）
+        """
+        if not self._mock_mode:
+            raise RuntimeError("inject_raw_event 仅在 Mock 模式下可用")
+        
+        router = self.services.message_router
+        if hasattr(router, "inject_event"):
+            await router.inject_event(data)
+        elif self.dispatcher:
+            await self.dispatcher.dispatch(data)
 
     def bot_exit(self):
         """退出 Bot"""
@@ -155,7 +249,14 @@ class LifecycleManager:
         run_coroutine(self.services.close_all)
         
         if self.plugin_loader:
-            asyncio.run(self.plugin_loader.unload_all())
+            # 检查是否在事件循环中
+            try:
+                loop = asyncio.get_running_loop()
+                # 在运行中的事件循环内，使用 run_coroutine
+                run_coroutine(self.plugin_loader.unload_all)
+            except RuntimeError:
+                # 没有运行中的事件循环，使用 asyncio.run
+                asyncio.run(self.plugin_loader.unload_all())
         LOG.info("Bot 已退出")
 
     def run_frontend(self, **kwargs: Unpack[StartArgs]):
@@ -205,9 +306,6 @@ class LifecycleManager:
             raise NcatBotError("启动失败", log=False)
         return self.api
 
-    def mock_start(self):
-        """Mock 启动（用于测试）"""
-        LOG.info("Mock 模式启动")
 
     # ==================== 兼容别名 ====================
     run_blocking = run_frontend
