@@ -55,7 +55,7 @@ class EventFactory:
             message_array = message
             raw_message = "".join(
                 [
-                    seg.text if hasattr(seg, "text") else f"[{seg.msg_seg_type}]"
+                    seg.text if hasattr(seg, "text") else f"[{seg.type}]"
                     for seg in message_array.messages
                 ]
             )
@@ -102,7 +102,7 @@ class EventFactory:
             message_array = message
             raw_message = "".join(
                 [
-                    seg.text if hasattr(seg, "text") else f"[{seg.msg_seg_type}]"
+                    seg.text if hasattr(seg, "text") else f"[{seg.type}]"
                     for seg in message_array.messages
                 ]
             )

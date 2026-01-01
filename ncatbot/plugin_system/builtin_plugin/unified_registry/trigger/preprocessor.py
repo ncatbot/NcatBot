@@ -36,12 +36,14 @@ class MessagePreprocessor:
         if not event.message.message:
             return None
 
+        from ncatbot.core.event.message_segments.primitives import PlainText
+
         first = event.message.message[0]
-        if getattr(first, "type", None) != "text":
+        if not isinstance(first, PlainText):
             # 没有首段文本，不进入命令解析
             return None
 
-        text: str = getattr(first, "text", "") or ""
+        text: str = first.text or ""
         raw = text
         norm = self._normalize(text).lstrip()
 

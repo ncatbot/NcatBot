@@ -83,12 +83,8 @@ class MessageTokenizer:
         Returns:
             是否为文本段
         """
-        # 检查是否有 text 属性且 msg_seg_type 为 text 或其子类
-        return (
-            hasattr(segment, "text")
-            and hasattr(segment, "msg_seg_type")
-            and segment.msg_seg_type in ["text", "plain_text"]
-        )
+        from ncatbot.core.event.message_segments.primitives import PlainText
+        return isinstance(segment, PlainText)
 
 
 # 便捷函数

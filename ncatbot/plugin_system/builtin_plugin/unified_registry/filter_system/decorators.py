@@ -93,10 +93,12 @@ def on_group_at(func: Callable) -> Callable:
         """检查是否艾特了机器人"""
         if not isinstance(event, GroupMessageEvent):
             return False
+        from ncatbot.core.event.message_segments.primitives import At
+
         bot_id = event.self_id
         for message_spiece in event.message.messages:
             if (
-                message_spiece.msg_seg_type == "at"
+                isinstance(message_spiece, At)
                 and getattr(message_spiece, "qq", None) == bot_id
             ):
                 return True
