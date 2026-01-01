@@ -16,10 +16,9 @@ from concurrent.futures import ThreadPoolExecutor
 
 from .config import config
 from ncatbot.core import EventBus, NcatBotEvent
-from .rbac import RBACManager
 from ncatbot.utils import status, get_log
 from ncatbot.core.api import BotAPI
-from ncatbot.core.service import ServiceManager
+from ncatbot.core.service import ServiceManager, RBACService
 
 if TYPE_CHECKING:
     from .loader import PluginLoader
@@ -69,7 +68,7 @@ class BasePlugin:
     data_file: Path
     first_load: bool = True
     main_file: Path
-    rbac_manager: RBACManager
+    rbac: RBACService
     source_dir: Path
     workspace: Path
     services: ServiceManager  # 服务管理器实例
@@ -85,7 +84,6 @@ class BasePlugin:
         event_bus: EventBus,
         *,
         debug: bool = False,
-        rbac_manager: RBACManager = None,
         plugin_loader: "PluginLoader" = None,
         service_manager: ServiceManager = None,
         **extras: Any,
@@ -119,8 +117,8 @@ class BasePlugin:
         # 初始化属性
         self.api = status.global_api
         self._handlers_id = set()
-        self.rbac_manager = rbac_manager
         self.services = service_manager or ServiceManager()
+        self.rbac = status.global_access_manager  # 从全局状态获取 RBAC 服务
 
         # 路径计算（只算不建）
         self.main_file = Path(inspect.getmodule(self.__class__).__file__).resolve()

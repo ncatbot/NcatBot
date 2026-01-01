@@ -6,8 +6,12 @@
 
 from .message_router import MessageRouter
 from .preupload import PreUploadService
+from .rbac import RBACService, PermissionPath, PermissionTrie
 
 __all__ = [
     "MessageRouter",
     "PreUploadService",
+    "RBACService",
+    "PermissionPath",
+    "PermissionTrie",
 ]

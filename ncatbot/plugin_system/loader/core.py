@@ -12,7 +12,6 @@ from ..pluginsys_err import (
     PluginVersionError,
 )
 from ..config import config
-from ..rbac import RBACManager
 from ..builtin_plugin import SystemManager, UnifiedRegistryPlugin
 from packaging.specifiers import SpecifierSet
 from packaging.version import parse as parse_version
@@ -30,13 +29,9 @@ class PluginLoader:
     def __init__(self, event_bus: EventBus, *, debug: bool = False) -> None:
         self.plugins: Dict[str, BasePlugin] = {}
         self.event_bus = event_bus or EventBus()
-        self.rbac_manager = RBACManager(config.rbac_path)
         self._debug = debug
         self._importer = _ModuleImporter(str(ncatbot_config.plugin.plugins_dir))
         self._resolver = _DependencyResolver()
-
-        # 将rbac_manager注册到全局状态
-        status.global_access_manager = self.rbac_manager
 
         if debug:
             LOG.warning("插件系统已切换为调试模式")
@@ -71,7 +66,6 @@ class PluginLoader:
         plugin = plugin_class(
             event_bus=self.event_bus,
             debug=self._debug,
-            rbac_manager=self.rbac_manager,
             plugin_loader=self,
             name=name,
             **kwargs,
@@ -175,7 +169,7 @@ class PluginLoader:
 
     async def unload_all(self, **kwargs) -> None:
         """一键异步卸载全部插件。"""
-        self.rbac_manager.save(config.rbac_path)
+        # RBAC 服务会在 on_close 时自动保存数据
         await asyncio.gather(
             *(self.unload_plugin(name, **kwargs) for name in list(self.plugins))
         )

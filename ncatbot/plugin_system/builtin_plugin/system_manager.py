@@ -194,12 +194,10 @@ class SystemManager(NcatBotPlugin):
             user_id = user_id.split("=")[1].split('"')[1]
 
         if set == "add":
-            self.rbac_manager.assign_role_to_user(user_id, PermissionGroup.ADMIN.value)
+            self.rbac.assign_role("user", user_id, PermissionGroup.ADMIN.value)
             await event.reply(f"添加管理员 {user_id}", at=False)
         elif set == "remove":
-            self.rbac_manager.unassign_role_to_user(
-                user_id, PermissionGroup.ADMIN.value
-            )
+            self.rbac.unassign_role("user", user_id, PermissionGroup.ADMIN.value)
             await event.reply(f"删除管理员 {user_id}", at=False)
 
     @command_registry.command("set_config", aliases=["cfg"])

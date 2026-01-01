@@ -1,12 +1,12 @@
 """Global state management for NcatBot."""
 
 from threading import Lock
-from typing import Any, Set, TYPE_CHECKING
+from typing import Any, Set, Optional, TYPE_CHECKING
 import logging
 
 if TYPE_CHECKING:
     from ncatbot.core.api import BotAPI
-    from ncatbot.plugin_system.rbac import RBACManager
+    from ncatbot.core.service.builtin.rbac import RBACService
 
 
 class Status:
@@ -16,7 +16,7 @@ class Status:
         self.exit = False  # 全局退出标志
         self._lock = Lock()
         self.current_github_proxy = None
-        self.global_access_manager: "RBACManager" = None
+        self.global_access_manager: Optional["RBACService"] = None
         self._registered_loggers: Set[str] = set()
 
     def set(self, key: str, value: Any) -> None:
