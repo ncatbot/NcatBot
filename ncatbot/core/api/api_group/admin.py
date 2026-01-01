@@ -78,10 +78,6 @@ class GroupAdminMixin(APIComponent):
         """
         获取群相册列表
 
-        .. warning::
-            此 API 可能不被当前版本的 NapCat 支持，调用可能会抛出
-            ``NapCatAPIError: 不支持的API get_qun_album_list`` 异常。
-
         Args:
             group_id: 群号
 

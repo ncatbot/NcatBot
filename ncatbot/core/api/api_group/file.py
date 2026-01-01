@@ -134,6 +134,48 @@ class GroupFileMixin(APIComponent):
         )
         APIReturnStatus.raise_if_failed(result)
 
+    async def post_group_file(
+        self,
+        group_id: Union[str, int],
+        image: Optional[str] = None,
+        record: Optional[str] = None,
+        video: Optional[str] = None,
+        file: Optional[str] = None,
+    ) -> str:
+        """
+        以消息形式发送群文件（便捷方法）
+
+        Args:
+            group_id: 目标群号
+            image: 图片路径/URL
+            record: 语音路径/URL
+            video: 视频路径/URL
+            file: 文件路径/URL
+
+        Returns:
+            str: 消息 ID
+
+        Note:
+            四个参数中必须且只能提供一个
+        """
+        from ..utils import require_exactly_one
+        from ..api_message.group_send import GroupMessageMixin
+        
+        require_exactly_one(
+            image, record, video, file,
+            names=["image", "record", "video", "file"],
+        )
+
+        # 获取 GroupMessageMixin 的方法
+        if image is not None:
+            return await GroupMessageMixin.send_group_image(self, group_id, image)  # type: ignore
+        elif record is not None:
+            return await GroupMessageMixin.send_group_record(self, group_id, record)  # type: ignore
+        elif video is not None:
+            return await GroupMessageMixin.send_group_video(self, group_id, video)  # type: ignore
+        else:
+            return await GroupMessageMixin.send_group_file(self, group_id, file)  # type: ignore
+
     async def create_group_file_folder(
         self, group_id: Union[str, int], folder_name: str
     ) -> None:

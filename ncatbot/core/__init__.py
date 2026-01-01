@@ -6,6 +6,7 @@ NcatBot 核心模块
 
 from .client import BotClient, EventBus, NcatBotEvent, EventType, NcatBotEventFactory
 from .helper import ForwardConstructor  # noqa: F401
+from .api import BotAPI
 
 # 事件类型 (from event submodule)
 from .event import * # noqa: F401,F403
@@ -17,7 +18,7 @@ from . import event
 
 __all__ = [
     # 核心
-    "BotClient", "EventBus", "NcatBotEvent", "ForwardConstructor", "EventType", "MessageSentEvent", "NcatBotEventFactory",
+    "BotAPI", "BotClient", "EventBus", "NcatBotEvent", "ForwardConstructor", "EventType", "MessageSentEvent", "NcatBotEventFactory",
 ]
 
 __all__.extend(getattr(event, "__all__", [])) # type: ignore

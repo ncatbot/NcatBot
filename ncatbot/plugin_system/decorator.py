@@ -11,7 +11,7 @@ from typing import Protocol, Callable, List, ClassVar, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from .base_plugin import BasePlugin
-    from .event.event_bus import EventBus, NcatBotEvent
+    from ncatbot.core import EventBus, NcatBotEvent
 
 
 class CompatibleHandler(Protocol):  # 我觉得应该改个名字

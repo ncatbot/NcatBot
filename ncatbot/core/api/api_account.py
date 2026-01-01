@@ -175,7 +175,7 @@ class AccountAPI(APIComponent):
         Returns:
             List[dict]: 好友列表
         """
-        result = await self._request_raw("/get_friends_with_cat")
+        result = await self._request_raw("/get_friends_with_category")
         status = APIReturnStatus(result)
         return status.data
 

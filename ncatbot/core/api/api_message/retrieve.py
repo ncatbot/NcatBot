@@ -73,14 +73,24 @@ class MessageRetrieveMixin(APIComponent):
         Returns:
             MessageEvent: 消息事件对象
         """
-        from ncatbot.core import GroupMessageEvent
+        from ncatbot.core import GroupMessageEvent, PrivateMessageEvent
 
         result = await self._request_raw(
             "/get_msg",
             {"message_id": message_id},
         )
         status = APIReturnStatus(result)
-        return GroupMessageEvent(**status.data)
+        data = status.data
+        
+        # NapCat 对机器人自己发送的消息返回 post_type="message_sent"
+        # 将其转换为标准的 "message" 类型以便正确解析
+        if data.get("post_type") == "message_sent":
+            data["post_type"] = "message"
+        
+        # 根据 message_type 选择正确的事件类型
+        if data.get("message_type") == "private":
+            return PrivateMessageEvent(**data)
+        return GroupMessageEvent(**data)
 
     async def get_forward_msg(self, message_id: Union[str, int]) -> "Forward":
         """
@@ -132,7 +142,13 @@ class MessageRetrieveMixin(APIComponent):
             },
         )
         status = APIReturnStatus(result)
-        return [PrivateMessageEvent(**data) for data in status.data.get("messages", [])]
+        # 处理 post_type='message_sent' (历史消息可能返回此值)
+        messages = []
+        for data in status.data.get("messages", []):
+            if data.get("post_type") == "message_sent":
+                data["post_type"] = "message"
+            messages.append(PrivateMessageEvent(**data))
+        return messages
 
     async def get_record(
         self,

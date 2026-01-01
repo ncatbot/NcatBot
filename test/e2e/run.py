@@ -8,6 +8,7 @@ NcatBot API 端到端测试入口
 可选参数:
     --category <category>   只运行指定分类的测试
     --tag <tag>             只运行带有指定标签的测试
+    --skip-to <index>       从指定序号开始运行测试（跳过之前的测试）
     --report <path>         保存测试报告到指定路径
     --list                  只列出测试用例，不执行
     --auto                  自动模式（非交互），适合 CI/CD
@@ -21,6 +22,9 @@ NcatBot API 端到端测试入口
 
     # 运行带有 basic 标签的测试
     uv run python test/e2e/run.py --tag basic
+
+    # 从第 10 个测试开始运行（跳过前 9 个）
+    uv run python test/e2e/run.py --skip-to 10
 
     # 自动模式运行测试
     uv run python test/e2e/run.py --auto --category account
@@ -75,6 +79,7 @@ def filter_tests(
     tests: List[TestCase],
     category: Optional[str] = None,
     tag: Optional[str] = None,
+    skip_to: Optional[int] = None,
 ) -> List[TestCase]:
     """过滤测试用例"""
     filtered = tests
@@ -84,6 +89,16 @@ def filter_tests(
 
     if tag:
         filtered = [t for t in filtered if tag in t.tags]
+
+    if skip_to is not None:
+        # skip_to 是 1-based，转换为 0-based 索引
+        if skip_to > 0 and skip_to <= len(tests):
+            filtered = tests[skip_to - 1:]
+        elif skip_to > len(tests):
+            print(
+                f"{Colors.RED}错误: 指定的序号 {skip_to} 超过总测试数 {len(tests)}{Colors.ENDC}"
+            )
+            sys.exit(1)
 
     return filtered
 
@@ -179,6 +194,12 @@ async def main():
     parser = argparse.ArgumentParser(description="NcatBot API 端到端测试工具")
     parser.add_argument("--category", "-c", help="只运行指定分类的测试")
     parser.add_argument("--tag", "-t", help="只运行带有指定标签的测试")
+    parser.add_argument(
+        "--skip-to",
+        "-s",
+        type=int,
+        help="从指定序号开始运行测试（跳过之前的测试，序号从 1 开始）",
+    )
     parser.add_argument("--report", "-r", help="保存测试报告到指定路径")
     parser.add_argument("--list", "-l", action="store_true", help="只列出测试用例")
     parser.add_argument("--auto", "-a", action="store_true", help="自动模式（非交互）")
@@ -191,7 +212,7 @@ async def main():
     all_tests = collect_all_tests(*ALL_TEST_SUITES)
 
     # 过滤测试
-    tests = filter_tests(all_tests, category=args.category, tag=args.tag)
+    tests = filter_tests(all_tests, category=args.category, tag=args.tag, skip_to=args.skip_to)
 
     if not tests:
         print(f"{Colors.RED}没有匹配的测试用例{Colors.ENDC}")

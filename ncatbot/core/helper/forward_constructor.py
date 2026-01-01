@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 from ..event import (
     MessageArray,
     Image,
@@ -21,6 +21,11 @@ class ForwardConstructor:
         self.nickname = nickname
         self.content = content if content else []
 
+    def set_author(self, user_id: str, nickname: str):
+        """设置当前作者信息，后续添加的消息将使用此作者"""
+        self.user_id = user_id
+        self.nickname = nickname
+
     def attach(self, content: MessageArray, user_id: Optional[str] = None, nickname: Optional[str] = None):
         self.content.append(
             Node(
@@ -29,6 +34,10 @@ class ForwardConstructor:
                 content=content,
             )
         )
+
+    def attach_message(self, message: MessageArray, user_id: Optional[str] = None, nickname: Optional[str] = None):
+        """添加一条 MessageArray 消息"""
+        self.attach(message, user_id, nickname)
 
     def attach_text(self, text: str, user_id: Optional[str] = None, nickname: Optional[str] = None):
         self.attach(MessageArray(Text(text)), user_id, nickname)
@@ -52,6 +61,8 @@ class ForwardConstructor:
     def attach_message_id(
         self, message_id: str, user_id: Optional[str] = None, nickname: Optional[str] = None
     ):
+        """通过消息 ID 引用已有消息（暂不支持）"""
+        # NapCat 目前不支持通过消息 ID 引用
         pass
 
     def to_forward(self) -> Forward:
