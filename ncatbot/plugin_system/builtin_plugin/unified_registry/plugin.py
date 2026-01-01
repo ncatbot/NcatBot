@@ -96,10 +96,7 @@ class UnifiedRegistryPlugin(NcatBotPlugin):
         """执行函数
         :args[0] 是事件对象
         """
-        print(f"DEBUG: _execute_function called with {func.__name__}, args: {len(args)}, kwargs: {list(kwargs.keys())}")
-
         plugin = self._find_plugin_for_function(func)
-        print(f"DEBUG: plugin found: {plugin}")
         try:
             # 使用新的过滤器验证器
             if hasattr(func, "__filters__"):
@@ -126,68 +123,44 @@ class UnifiedRegistryPlugin(NcatBotPlugin):
             await self._execute_function(func, event)
 
     async def _run_command(self, event: "MessageEvent") -> None:
-        print(f"DEBUG: _run_command called")
         # 前置检查与提取首段文本（用于前缀与命令词匹配）
         pre: Optional[PreprocessResult] = self._preprocessor.precheck(event)
-        print(f"DEBUG: precheck result: {pre}")
         if pre is None:
             # 不符合前置条件（例如不要求前缀但为空/非文本）
-            print("DEBUG: precheck returned None, returning False")
             return False
 
         # 解析首段文本为 token（用于命令匹配）
         text = pre.command_text
-        print(f"DEBUG: Processing text: '{text}'")
         first_word = text.split(" ")[0]
-        print(f"DEBUG: first_word: '{first_word}'")
 
         commands = self._resolver.get_commands()
-        print(f"DEBUG: Available commands: {[cmd.path_words for cmd in commands]}")
         hit = [
             command
             for command in commands
             if first_word.endswith(command.path_words[0])
         ]
-        print(f"DEBUG: Hit commands: {[cmd.path_words for cmd in hit]}")
         if not hit:
-            print("DEBUG: No commands matched, returning False")
             return False
 
-        print(f"DEBUG: About to tokenize text: '{text}'")
         tokenizer = StringTokenizer(text)
         tokens: List[Token] = tokenizer.tokenize()
-        print(f"DEBUG: Tokens: {[str(t) for t in tokens]}")
 
         # 从首段 token 流解析命令（严格无前缀冲突则应唯一）
-        print("DEBUG: About to resolve from tokens")
-        print("DEBUG: Calling resolve_from_tokens...")
         prefix, match = self._resolver.resolve_from_tokens(tokens)
-        print(f"DEBUG: resolve_from_tokens returned: prefix='{prefix}', match={match is not None}")
-
-        print(f"DEBUG: Checking match conditions: match is None: {match is None}")
         if match is None:
-            print("DEBUG: match is None, returning False")
             return False
-        print(f"DEBUG: prefix: '{prefix}', match.command.prefixes: {match.command.prefixes}")
-        print(f"DEBUG: prefix in prefixes: {prefix in match.command.prefixes}")
         if prefix not in match.command.prefixes:
-            print(f"DEBUG: prefix '{prefix}' not in prefixes {match.command.prefixes}, returning False")
             return False
 
-        LOG.info(f"命中命令: {match.command.func.__name__}")
-        print(f"DEBUG: Command matched successfully: {match.command.func.__name__}")
+        LOG.debug(f"命中命令: {match.command.func.__name__}")
 
         func = match.command.func
         ignore_words = match.path_words  # 用于参数绑定的 ignore 计数
-
-        print("DEBUG: About to bind parameters")
         try:
             bind_result: BindResult = self._binder.bind(
                 match.command, event, ignore_words, [prefix]
             )
-            print(f"DEBUG: Parameter binding successful: args={bind_result.args}, kwargs={bind_result.named_args}")
         except Exception as e:
-            print(f"DEBUG: Parameter binding failed: {e}")
             await self.event_bus.publish(
                 NcatBotEvent(
                     type="ncatbot.param_bind_failed",
@@ -196,23 +169,18 @@ class UnifiedRegistryPlugin(NcatBotPlugin):
             )
             return False
 
-        print(f"DEBUG: About to execute {func.__name__}")
         try:
             await self._execute_function(
                 func, event, *bind_result.args, **bind_result.named_args
             )
-            print(f"DEBUG: Function execution completed")
         except Exception as e:
-            print(f"DEBUG: Exception during command execution: {e}")
             import traceback
             traceback.print_exc()
 
     async def handle_message_event(self, event: "NcatBotEvent") -> bool:
         """处理消息事件（命令和过滤器）"""
-        print(f"DEBUG: handle_message_event called for {event.type}")
         # 惰性初始化
         self.initialize_if_needed()
-        print("DEBUG: About to call _run_command")
         await self._run_command(event.data)
         await self._run_pure_filters(event.data)
 

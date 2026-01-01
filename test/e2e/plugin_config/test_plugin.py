@@ -4,6 +4,9 @@ Plugin Config E2E 测试插件
 
 from ncatbot.plugin_system import NcatBotPlugin
 from ncatbot.core import GroupMessageEvent
+from ncatbot.utils import get_log
+
+LOG = get_log()
 
 
 class PluginConfigTestPlugin(NcatBotPlugin):
@@ -44,7 +47,6 @@ class PluginConfigTestPlugin(NcatBotPlugin):
 
         @command_registry.command("config_set", description="设置配置", prefixes=["", "/"])
         async def config_set_command(event: GroupMessageEvent, key: str, value: str):
-            print(f"DEBUG: config_set called with key={key}, value={value}")
             try:
                 if key == "test_string":
                     self.set_config(key, value)
