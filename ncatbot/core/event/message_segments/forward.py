@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, ClassVar
+from typing import Any, Dict, List, Optional, ClassVar, TYPE_CHECKING
 from pydantic import field_validator, model_validator
 from .base import MessageArrayDTO, MessageSegment, BaseModel
 
@@ -13,13 +13,30 @@ class Node(BaseModel):
         return str(v) if v is not None else v
     
     def to_node_dict(self) -> Dict[str, Any]:
-        """转换为 OneBot 节点格式"""
+        """转换为 OneBot 节点格式
+        
+        处理嵌套转发消息：当 content 中包含 Forward 类型时，
+        需要将其展开为节点列表格式。
+        """
+        content_list = []
+        
+        if self.content:
+            for seg in self.content.message:
+                if isinstance(seg, Forward):
+                    # 嵌套转发：展开为节点列表
+                    if seg.content:
+                        for inner_node in seg.content:
+                            content_list.append(inner_node.to_node_dict())
+                else:
+                    # 普通消息段：正常序列化
+                    content_list.append(seg.to_dict())
+        
         return {
             "type": "node",
             "data": {
                 "name": self.nickname,
                 "uin": self.user_id,
-                "content": self.content.to_list() if self.content else [],
+                "content": content_list,
             }
         }
 
@@ -28,6 +45,22 @@ class Forward(MessageSegment):
     type: ClassVar[str] = "forward"
     id: Optional[str] = None
     content: Optional[List[Node]] = None
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """序列化为字典格式
+        
+        重写基类方法以正确序列化嵌套结构。
+        当 Forward 作为消息段被包含时使用此方法。
+        """
+        if self.content:
+            # 有内容时，序列化为节点列表
+            content_data = [node.to_node_dict() for node in self.content]
+            return {"type": "forward", "data": {"content": content_data}}
+        elif self.id:
+            # 只有 ID 时
+            return {"type": "forward", "data": {"id": self.id}}
+        else:
+            return {"type": "forward", "data": {}}
     
     def to_forward_dict(self) -> Dict[str, Any]:
         """

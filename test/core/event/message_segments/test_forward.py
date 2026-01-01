@@ -191,3 +191,80 @@ class TestForwardIntegration:
         
         assert len(forward.content) == 1
         assert len(forward.content[0].content.message) == 4
+
+    def test_nested_forward_serialization(self):
+        """测试嵌套转发消息的序列化（修复 Bug：嵌套转发无法正常发送）"""
+        from ncatbot.core.event import MessageArray
+        
+        # 创建内层转发
+        inner_content = MessageArrayDTO(message=[
+            PlainText(text="Inner message"),
+        ])
+        inner_node = Node(
+            user_id="10001",
+            nickname="Inner User",
+            content=inner_content
+        )
+        inner_forward = Forward(content=[inner_node])
+        
+        # 创建外层节点，其 content 包含 Forward
+        outer_content = MessageArray(inner_forward)
+        outer_node = Node(
+            user_id="10002",
+            nickname="Outer User",
+            content=outer_content
+        )
+        
+        # 创建外层转发
+        forward = Forward(content=[outer_node])
+        
+        # 序列化为 API 格式
+        result = forward.to_forward_dict()
+        
+        # 验证结构
+        assert "messages" in result
+        assert len(result["messages"]) == 1
+        
+        outer_msg = result["messages"][0]
+        assert outer_msg["type"] == "node"
+        assert outer_msg["data"]["name"] == "Outer User"
+        assert outer_msg["data"]["uin"] == "10002"
+        
+        # 嵌套的 Forward 应该展开为节点列表
+        inner_content_list = outer_msg["data"]["content"]
+        assert len(inner_content_list) == 1
+        assert inner_content_list[0]["type"] == "node"
+        assert inner_content_list[0]["data"]["name"] == "Inner User"
+        assert inner_content_list[0]["data"]["uin"] == "10001"
+        
+        # 最内层是文本消息
+        innermost_content = inner_content_list[0]["data"]["content"]
+        assert len(innermost_content) == 1
+        assert innermost_content[0]["type"] == "text"
+        assert innermost_content[0]["data"]["text"] == "Inner message"
+
+    def test_forward_to_dict_with_content(self):
+        """测试 Forward.to_dict() 方法正确序列化内容"""
+        content = MessageArrayDTO(message=[
+            PlainText(text="Test message"),
+        ])
+        node = Node(
+            user_id="12345",
+            nickname="Test User",
+            content=content
+        )
+        forward = Forward(content=[node])
+        
+        result = forward.to_dict()
+        
+        assert result["type"] == "forward"
+        assert "content" in result["data"]
+        assert len(result["data"]["content"]) == 1
+        
+        # 验证节点格式
+        node_dict = result["data"]["content"][0]
+        assert node_dict["type"] == "node"
+        assert node_dict["data"]["name"] == "Test User"
+        assert node_dict["data"]["uin"] == "12345"
+        assert node_dict["data"]["content"][0]["type"] == "text"
+        assert node_dict["data"]["content"][0]["data"]["text"] == "Test message"

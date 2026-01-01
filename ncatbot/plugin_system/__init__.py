@@ -10,6 +10,7 @@ from .base_plugin import BasePlugin
 from .loader import PluginLoader
 from .builtin_mixin import NcatBotPlugin
 from .decorator import CompatibleHandler
+from ncatbot.core import NcatBotEvent
 
 # 统一注册模块
 from .builtin_plugin.unified_registry import (
@@ -27,6 +28,8 @@ __all__ = [
     "BasePlugin", "PluginLoader",
     "NcatBotPlugin", "CompatibleHandler",
     "filter_registry", "command_registry", "option", "param", "option_group",
+    
+    "NcatBotEvent",
 ]
 
 # 从 filter_system 扩展 __all__

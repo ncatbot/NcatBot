@@ -111,7 +111,7 @@ class TestBotClientPluginManagement:
         from ncatbot.core.client.client import BotClient
         
         client = BotClient()
-        client._lifecycle.plugin_loader = None
+        client.plugin_loader = None
         
         result = client.get_registered_plugins()
         
@@ -127,7 +127,7 @@ class TestBotClientPluginManagement:
         mock_plugin2 = MagicMock()
         mock_loader = MagicMock()
         mock_loader.plugins = {"plugin1": mock_plugin1, "plugin2": mock_plugin2}
-        client._lifecycle.plugin_loader = mock_loader
+        client.plugin_loader = mock_loader
         
         result = client.get_registered_plugins()
         
@@ -147,7 +147,7 @@ class TestBotClientPluginManagement:
         mock_plugin = TestPluginType()
         mock_loader = MagicMock()
         mock_loader.plugins = {"test": mock_plugin}
-        client._lifecycle.plugin_loader = mock_loader
+        client.plugin_loader = mock_loader
         
         result = client.get_plugin(TestPluginType)
         
@@ -168,7 +168,7 @@ class TestBotClientPluginManagement:
         mock_plugin = OtherPluginType()
         mock_loader = MagicMock()
         mock_loader.plugins = {"other": mock_plugin}
-        client._lifecycle.plugin_loader = mock_loader
+        client.plugin_loader = mock_loader
         
         with pytest.raises(ValueError, match="未找到"):
             client.get_plugin(TestPluginType)

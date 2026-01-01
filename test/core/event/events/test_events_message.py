@@ -201,6 +201,42 @@ class TestGroupMessageEvent:
         assert event.anonymous is not None
         assert event.anonymous.name == "匿名用户"
 
+    def test_message_sent_post_type(self):
+        """测试 post_type=message_sent 的消息事件（自己发送的消息）
+        
+        修复 Bug: get_group_msg_history 返回的消息可能包含 post_type="message_sent"，
+        这是自己发送的消息，需要正确处理。
+        """
+        from ncatbot.core.event.enums import PostType
+        
+        data = {
+            "time": 1767072511,
+            "self_id": "1550507358",
+            "post_type": "message_sent",  # 自己发送的消息
+            "message_type": "group",
+            "sub_type": "normal",
+            "message_id": "2009890763",
+            "user_id": "1550507358",  # 通常是自己的 ID
+            "group_id": "701784439",
+            "message": [{"type": "text", "data": {"text": "我发送的消息"}}],
+            "raw_message": "我发送的消息",
+            "font": 14,
+            "sender": {
+                "user_id": "1550507358",
+                "nickname": "机器人",
+                "card": "",
+                "role": "member"
+            }
+        }
+        
+        event = GroupMessageEvent(**data)
+        
+        assert event.post_type == PostType.MESSAGE_SENT
+        assert event.message_type == MessageType.GROUP
+        assert event.group_id == "701784439"
+        assert event.user_id == "1550507358"
+        assert event.message.concatenate_text() == "我发送的消息"
+
 
 class TestMessageEventWithRealData:
     """使用真实日志数据测试消息事件"""

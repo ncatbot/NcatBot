@@ -21,6 +21,7 @@ class TestPostType:
     def test_all_values_exist(self):
         """验证所有预期的枚举值存在"""
         assert PostType.MESSAGE == "message"
+        assert PostType.MESSAGE_SENT == "message_sent"
         assert PostType.NOTICE == "notice"
         assert PostType.REQUEST == "request"
         assert PostType.META_EVENT == "meta_event"
@@ -40,6 +41,8 @@ class TestPostType:
         """验证枚举值可与字符串直接比较"""
         assert PostType.MESSAGE == "message"
         assert "message" == PostType.MESSAGE
+        assert PostType.MESSAGE_SENT == "message_sent"
+        assert "message_sent" == PostType.MESSAGE_SENT
 
 
 class TestMessageType:

@@ -65,7 +65,7 @@ class BotClient(EventRegistry, LifecycleManager):
         self.event_bus = EventBus()
         
         # 初始化父类 EventRegistry
-        super().__init__(self.event_bus)
+        EventRegistry.__init__(self, self.event_bus)
         
         # 服务管理器
         self.services = ServiceManager()
@@ -81,9 +81,7 @@ class BotClient(EventRegistry, LifecycleManager):
         self.dispatcher: EventDispatcher = None
         
         # 生命周期管理器
-        self._lifecycle = LifecycleManager(
-            self.services, self.event_bus, self
-        )
+        LifecycleManager.__init__(self, self.services, self.event_bus, self)
         
         # 注册内置处理器
         self._register_builtin_handlers()
@@ -107,8 +105,8 @@ class BotClient(EventRegistry, LifecycleManager):
 
     def get_registered_plugins(self) -> List["BasePlugin"]:
         """获取已注册的插件列表"""
-        if self._lifecycle and self._lifecycle.plugin_loader:
-            return list(self._lifecycle.plugin_loader.plugins.values())
+        if self.plugin_loader:
+            return list(self.plugin_loader.plugins.values())
         return []
 
     def get_plugin(self, plugin_type: Type[T]) -> T:

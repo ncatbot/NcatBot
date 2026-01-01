@@ -8,6 +8,7 @@ __all__ = [
 
 class PostType(str, Enum):
     MESSAGE = "message"
+    MESSAGE_SENT = "message_sent"  # 自己发送的消息
     NOTICE = "notice"
     REQUEST = "request"
     META_EVENT = "meta_event"

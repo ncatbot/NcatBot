@@ -134,15 +134,26 @@ class MessageArray(MessageArrayDTO):
         self.message.extend(parse_message_segments(text))
         return self
 
-    def add_image(self, image: str):
-        """TODO 实现文件上传并返回 Image 消息段
-        cases:
-            - URL: "http://example.com/image.jpg"
-            - FilePath "/path/to/image.jpg"
-            - Base64 "base64://...."
-            - Pillow Image object
+    def add_image(self, image: Union[str, Image]):
+        """添加图片消息段
+        
+        Args:
+            image: 可以是字符串路径/URL 或 Image 对象
+                - URL: "http://example.com/image.jpg"
+                - FilePath: "/path/to/image.jpg"
+                - Base64: "base64://..."
+                - Image 对象: Image(file="...")
+        
+        Returns:
+            self: 支持链式调用
         """
-        pass
+        if isinstance(image, Image):
+            self.message.append(image)
+        elif isinstance(image, str):
+            self.message.append(Image(file=image))
+        else:
+            raise TypeError(f"image must be str or Image, got {type(image)}")
+        return self
 
     def add_at(self, user_id: Union[str, int]):
         self.message.append(At(qq=str(user_id)))
