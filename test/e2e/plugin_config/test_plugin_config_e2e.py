@@ -23,8 +23,16 @@ class TestPluginConfigE2E:
         with E2ETestSuite() as suite:
             suite.register_plugin_sync(PluginConfigTestPlugin)
 
+            # 检查 unified_registry 是否加载了命令
+            try:
+                from ncatbot.plugin_system import command_registry
+                commands = command_registry.get_all_commands()
+                print(f"DEBUG: Registered commands: {list(commands.keys())}")
+            except Exception as e:
+                print(f"DEBUG: Failed to check commands: {e}")
+
             # 发送测试命令查看默认配置
-            suite.inject_group_message_sync("/config_test")
+            suite.inject_group_message_sync("config_test")
             time.sleep(0.1)
 
             # 应该收到包含默认配置的回复

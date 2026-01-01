@@ -2,7 +2,7 @@
 Plugin Config E2E 测试插件
 """
 
-from ncatbot.plugin_system import NcatBotPlugin, config_item
+from ncatbot.plugin_system import NcatBotPlugin
 from ncatbot.core import GroupMessageEvent
 
 
@@ -12,47 +12,47 @@ class PluginConfigTestPlugin(NcatBotPlugin):
     name = "plugin_config_test_plugin"
     version = "1.0.0"
 
-    def __init__(self):
-        super().__init__()
+    async def on_load(self):
         # 注册配置项
-        self.test_string = config_item(
-            key="test_string",
-            default="default_value",
+        self.register_config(
+            name="test_string",
+            default_value="default_value",
             description="测试字符串配置"
         )
-        self.test_number = config_item(
-            key="test_number",
-            default=42,
+        self.register_config(
+            name="test_number",
+            default_value=42,
             description="测试数字配置"
         )
-        self.test_bool = config_item(
-            key="test_bool",
-            default=True,
+        self.register_config(
+            name="test_bool",
+            default_value=True,
             description="测试布尔配置"
         )
 
-    async def on_load(self):
         # 注册命令
         from ncatbot.plugin_system import command_registry
 
         @command_registry.command("config_test", description="配置测试命令")
         async def config_test_command(event: GroupMessageEvent):
+            print(f"DEBUG: config_test command triggered for {self.name}")
             current_config = {
-                "test_string": self.test_string.get(),
-                "test_number": self.test_number.get(),
-                "test_bool": self.test_bool.get()
+                "test_string": self.config["test_string"],
+                "test_number": self.config["test_number"],
+                "test_bool": self.config["test_bool"]
             }
+            print(f"DEBUG: current config: {current_config}")
             await event.reply(f"当前配置: {current_config}")
 
         @command_registry.command("config_set", description="设置配置")
         async def config_set_command(event: GroupMessageEvent, key: str, value: str):
             try:
                 if key == "test_string":
-                    self.test_string.set(value)
+                    self.set_config(key, value)
                 elif key == "test_number":
-                    self.test_number.set(int(value))
+                    self.set_config(key, int(value))
                 elif key == "test_bool":
-                    self.test_bool.set(value.lower() in ("true", "1", "yes"))
+                    self.set_config(key, value.lower() in ("true", "1", "yes"))
                 else:
                     await event.reply(f"未知配置项: {key}")
                     return
