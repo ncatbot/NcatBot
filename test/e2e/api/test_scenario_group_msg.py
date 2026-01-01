@@ -15,10 +15,9 @@
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from framework import test_case, APITestSuite
-from utils import model_to_dict, ensure_test_image
+from .framework import test_case, APITestSuite
+from .utils import model_to_dict, ensure_test_image
 
 
 # ============================================================================
