@@ -75,4 +75,44 @@ asyncio_mode = "strict"
 testpaths = ["test"]
 # 忽略 e2e/api 目录（需要真实 NapCat 服务）
 # 忽略 examples 目录
-addopts = "--ignore=test/e2e/api --ignore=examples"
+addopts = "--ignore=test/e2e/api --ignore=examples --cov=ncatbot --cov-report=term-missing --cov-report=html"
+
+[tool.coverage.run]
+source = ["ncatbot"]
+branch = true
+omit = [
+    # 版本文件（自动生成）
+    "ncatbot/_version.py",
+    # 测试文件
+    "ncatbot/**/test_*.py",
+    # CLI 模块（交互式命令行，需要单独的集成测试）
+    "ncatbot/cli/*",
+    # MCP 模块（Model Context Protocol 服务端，需要外部 MCP 客户端测试）
+    "ncatbot/mcp/*",
+    # 网络 I/O（需要真实网络环境）
+    "ncatbot/utils/network_io.py",
+    # NapCat 适配器（需要真实 NapCat 服务和文件系统操作）
+    "ncatbot/core/adapter/nc/*",
+    # 模板插件（静态资源）
+    "ncatbot/utils/assets/*",
+    # 日志格式化（视觉效果代码）
+    "ncatbot/utils/logger.py",
+    # 废弃的线程池工具
+    "ncatbot/utils/thread_pool.py",
+    # 测试基础设施（不需要测试自身）
+    "ncatbot/utils/testing/*",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+    "@abstractmethod",
+]
+show_missing = true
+skip_covered = false
+
+[tool.coverage.html]
+directory = "htmlcov"
