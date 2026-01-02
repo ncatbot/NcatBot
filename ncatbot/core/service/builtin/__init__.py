@@ -9,6 +9,7 @@ from .preupload import PreUploadService
 from .rbac import RBACService, PermissionPath, PermissionTrie
 from .plugin_config import PluginConfigService, ConfigItem, PluginConfig
 from .unified_registry import UnifiedRegistryService
+from .file_watcher import FileWatcherService
 
 __all__ = [
     "MessageRouter",
@@ -20,4 +21,5 @@ __all__ = [
     "ConfigItem",
     "PluginConfig",
     "UnifiedRegistryService",
+    "FileWatcherService",
 ]

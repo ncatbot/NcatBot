@@ -14,7 +14,8 @@ if TYPE_CHECKING:
         PreUploadService,
         PluginConfigService,
         RBACService,
-        UnifiedRegistryService
+        UnifiedRegistryService,
+        FileWatcherService,
     )
     from ncatbot.core.client import BotClient
     from ncatbot.plugin_system.loader import PluginLoader
@@ -99,6 +100,11 @@ class ServiceManager:
     def unified_registry(self) -> "UnifiedRegistryService":
         """统一注册服务"""
         return self._services.get("unified_registry")  # type: ignore
+    
+    @property
+    def file_watcher(self) -> "FileWatcherService":
+        """文件监视服务"""
+        return self._services.get("file_watcher")  # type: ignore
     
     # -------------------------------------------------------------------------
     # 服务管理方法
