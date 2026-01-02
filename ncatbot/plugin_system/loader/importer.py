@@ -116,11 +116,22 @@ class _ModuleImporter:
                 LOG.debug("跳过非插件文件/目录或缺少 manifest: %s", entry)
         return list(self._plugin_folders.keys())
 
-    def get_plugin_name_by_folder(self, folder_name):
-        plugin_folder_name = self._plugin_folders
-        for plugin_name, _folder_name in plugin_folder_name.items():
-            if _folder_name == folder_name:
+    def get_plugin_name_by_folder(self, folder_name: str) -> Optional[str]:
+        """根据文件夹名称获取插件名称
+        
+        支持两种情况：
+        1. folder_name 是完整路径
+        2. folder_name 是文件夹名称，需要匹配存储路径的最后一部分
+        """
+        from pathlib import Path
+        for plugin_name, stored_path in self._plugin_folders.items():
+            # 直接匹配
+            if stored_path == folder_name:
                 return plugin_name
+            # 匹配路径的最后一部分（文件夹名）
+            if Path(stored_path).name == folder_name:
+                return plugin_name
+        return None
 
     def get_plugin_manifests(self) -> Dict[str, Dict]:
         if not self._manifests:
@@ -166,11 +177,25 @@ class _ModuleImporter:
         return True
 
     def load_plugin_module(self, plugin_name: str) -> Optional[ModuleType]:
+        # 清除导入缓存，确保读取最新的源文件
+        importlib.invalidate_caches()
+        
+        # 清除插件目录的 __pycache__，确保重新编译源文件
+        plugin_dir = self._get_plugin_dir(plugin_name)
+        pycache_dir = plugin_dir / "__pycache__"
+        if pycache_dir.exists():
+            import shutil
+            try:
+                shutil.rmtree(pycache_dir)
+                LOG.debug("已清除插件 %s 的字节码缓存", plugin_name)
+            except Exception as e:
+                LOG.warning("清除字节码缓存失败: %s", e)
+        
         original_sys_path = sys.path.copy()
         created_pkg = False
         created_module = False
         try:
-            plugin_path = str(self._get_plugin_dir(plugin_name))
+            plugin_path = str(plugin_dir)
             sys.path.insert(0, plugin_path)
 
             pkg_name = self._get_plugin_pkg_name(plugin_name)
