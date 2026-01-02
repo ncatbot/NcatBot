@@ -1,306 +1,238 @@
 """
-LifecycleManager 测试
+LifecycleManager 单元测试
+
+测试生命周期管理器的核心功能：
+- 初始化和状态管理
+- 启动参数验证
+- 异步关闭流程
 """
+
 import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
+
 import pytest
-from unittest.mock import MagicMock, AsyncMock, patch, PropertyMock
 
-from ncatbot.core.client.lifecycle import LifecycleManager, StartArgs, LEGAL_ARGS
-from ncatbot.core.client.event_bus import EventBus
-from ncatbot.core.client.registry import EventRegistry
+from ncatbot.core.client.lifecycle import LifecycleManager, LEGAL_ARGS
 from ncatbot.utils.error import NcatBotError
-
-# 预导入 plugin_system 模块以便 patch 可以正常工作
-import ncatbot.plugin_system
-
-
-class TestStartArgsType:
-    """测试 StartArgs 类型定义"""
-
-    def test_legal_args_contains_expected_keys(self):
-        """LEGAL_ARGS 包含预期的参数"""
-        expected_args = [
-            "bt_uin",
-            "root",
-            "ws_uri",
-            "webui_uri",
-            "ws_token",
-            "webui_token",
-            "ws_listen_ip",
-            "remote_mode",
-            "enable_webui",
-            "enable_webui_interaction",
-            "debug"
-        ]
-        
-        for arg in expected_args:
-            assert arg in LEGAL_ARGS
 
 
 class TestLifecycleManagerInit:
-    """测试 LifecycleManager 初始化"""
+    """初始化测试"""
 
-    def test_init_components(self, mock_services, event_bus, event_registry):
-        """初始化各组件"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
+    def test_init_with_required_components(self, event_bus, mock_services):
+        """测试使用必需组件初始化"""
+        from ncatbot.core.client.registry import EventRegistry
+        registry = EventRegistry(event_bus)
+
+        manager = LifecycleManager(mock_services, event_bus, registry)
+
         assert manager.services is mock_services
-        assert manager.api is None  # API 在启动后才初始化
         assert manager.event_bus is event_bus
-        assert manager.registry is event_registry
+        assert manager.registry is registry
         assert manager._running is False
-        assert manager.crash_flag is False
+        assert manager.api is None
+        assert manager.dispatcher is None
+        assert manager._main_task is None
+
+    def test_init_state(self, event_bus, mock_services):
+        """测试初始状态"""
+        from ncatbot.core.client.registry import EventRegistry
+        registry = EventRegistry(event_bus)
+
+        manager = LifecycleManager(mock_services, event_bus, registry)
+
+        assert manager._skip_plugin_load is False
+        assert manager._startup_event is None
         assert manager.plugin_loader is None
 
-    def test_init_backend_attributes(self, mock_services, event_bus, event_registry):
-        """初始化后台运行相关属性"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
-        assert manager.lock is None
-        assert manager.release_callback is None
+
+class TestPrepareStartup:
+    """_prepare_startup 方法测试"""
+
+    @pytest.fixture
+    def manager(self, event_bus, mock_services):
+        from ncatbot.core.client.registry import EventRegistry
+        registry = EventRegistry(event_bus)
+        return LifecycleManager(mock_services, event_bus, registry)
+
+    @patch("ncatbot.core.client.lifecycle.launch_napcat_service")
+    @patch("ncatbot.core.client.lifecycle.ncatbot_config")
+    def test_prepare_startup_normal_mode(self, mock_config, mock_launch, manager):
+        """测试正常模式启动准备"""
+        mock_config.debug = False
+
+        result = manager._prepare_startup(mock=False)
+
+        assert result is False  # 非 mock 模式
+        assert manager._running is True
+        assert manager.plugin_loader is not None
+        mock_launch.assert_called_once()
+
+    @patch("ncatbot.core.client.lifecycle.launch_napcat_service")
+    @patch("ncatbot.core.client.lifecycle.ncatbot_config")
+    def test_prepare_startup_mock_mode(self, mock_config, mock_launch, manager):
+        """测试 mock 模式启动准备（不启动 NapCat）"""
+        mock_config.debug = False
+
+        result = manager._prepare_startup(mock=True)
+
+        assert result is True  # mock 模式
+        assert manager._running is True
+        mock_launch.assert_not_called()
+
+    @patch("ncatbot.core.client.lifecycle.launch_napcat_service")
+    @patch("ncatbot.core.client.lifecycle.ncatbot_config")
+    def test_prepare_startup_skip_plugin_load(self, mock_config, mock_launch, manager):
+        """测试跳过插件加载"""
+        mock_config.debug = False
+
+        manager._prepare_startup(mock=True, skip_plugin_load=True)
+
+        assert manager._skip_plugin_load is True
+
+    @patch("ncatbot.core.client.lifecycle.ncatbot_config")
+    def test_prepare_startup_illegal_arg(self, mock_config, manager):
+        """测试非法参数抛出异常"""
+        with pytest.raises(NcatBotError, match="非法启动参数"):
+            manager._prepare_startup(illegal_param="value")
 
 
-class TestLifecycleManagerStartValidation:
-    """测试启动参数验证"""
+class TestShutdown:
+    """shutdown 方法测试"""
 
-    def test_start_validates_legal_args(self, mock_services, event_bus, event_registry):
-        """启动时验证合法参数"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
+    @pytest.fixture
+    def manager(self, event_bus, mock_services):
+        from ncatbot.core.client.registry import EventRegistry
+        registry = EventRegistry(event_bus)
+        return LifecycleManager(mock_services, event_bus, registry)
 
-        with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
-            mock_config.validate_config = MagicMock()
-            mock_config.debug = False
-
-            with patch("ncatbot.core.client.lifecycle.run_coroutine"):
-                with patch("ncatbot.plugin_system.PluginLoader") as mock_loader:
-                    mock_loader_instance = MagicMock()
-                    mock_loader.return_value = mock_loader_instance
-
-                    # 合法参数应该正常工作，使用 mock 模式避免网络操作
-                    manager.start(mock=True, bt_uin="123456", debug=True)
-                    
-                    # 验证 config 被更新
-                    mock_config.update_value.assert_any_call("bt_uin", "123456")
-                    mock_config.update_value.assert_any_call("debug", True)
-
-    def test_start_rejects_illegal_args(self, mock_services, event_bus, event_registry):
-        """拒绝非法参数"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
-        with pytest.raises(NcatBotError, match="非法参数"):
-            manager.start(illegal_param="value")
-
-    def test_start_ignores_none_values(self, mock_services, event_bus, event_registry):
-        """忽略 None 值参数"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-
-        with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
-            mock_config.validate_config = MagicMock()
-            mock_config.debug = False
-
-            with patch("ncatbot.core.client.lifecycle.run_coroutine"):
-                with patch("ncatbot.plugin_system.PluginLoader") as mock_loader:
-                    mock_loader_instance = MagicMock()
-                    mock_loader.return_value = mock_loader_instance
-
-                    manager.start(mock=True, bt_uin="123", root=None)
-                    
-                    # None 值不应被更新
-                    calls = mock_config.update_value.call_args_list
-                    keys_updated = [call[0][0] for call in calls]
-                    assert "root" not in keys_updated
-
-
-class TestLifecycleManagerMockMode:
-    """测试 Mock 模式"""
-
-    def test_mock_start(self, mock_services, event_bus, event_registry):
-        """Mock 模式启动不连接真实服务"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-
-        with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
-            mock_config.validate_config = MagicMock()
-            mock_config.debug = False
-
-            with patch("ncatbot.core.client.lifecycle.run_coroutine"):
-                with patch("ncatbot.plugin_system.PluginLoader") as mock_loader:
-                    mock_loader_instance = MagicMock()
-                    mock_loader.return_value = mock_loader_instance
-
-                    with patch("ncatbot.core.client.lifecycle.launch_napcat_service") as mock_launch:
-                        manager.start(mock=True, bt_uin="123456")
-
-                        # Mock 模式不应调用真实服务
-                        mock_launch.assert_not_called()
-
-
-class TestLifecycleManagerExit:
-    """测试退出流程"""
-
-    def test_bot_exit_unloads_plugins(self, mock_services, event_bus, event_registry):
-        """退出时卸载所有插件"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        manager._running = True
-        
-        mock_plugin_loader = MagicMock()
-        mock_plugin_loader.unload_all = AsyncMock()
-        manager.plugin_loader = mock_plugin_loader
-        
-        with patch("ncatbot.core.client.lifecycle.status") as mock_status:
-            manager.bot_exit()
-            
-            mock_status.exit = True
-            mock_plugin_loader.unload_all.assert_called_once()
-
-    def test_bot_exit_when_not_running(self, mock_services, event_bus, event_registry):
-        """未运行时退出给出警告"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
+    @pytest.mark.asyncio
+    async def test_shutdown_when_not_running(self, manager):
+        """测试未运行时调用 shutdown 应该安全返回"""
         manager._running = False
-        
-        # 不应抛出异常
+
+        await manager.shutdown()  # 不应抛出异常
+
+    @pytest.mark.asyncio
+    async def test_shutdown_cancels_main_task(self, manager):
+        """测试 shutdown 会取消主任务"""
+        manager._running = True
+
+        # 创建一个模拟的 long-running task
+        async def long_running():
+            try:
+                await asyncio.sleep(100)
+            except asyncio.CancelledError:
+                raise
+
+        manager._main_task = asyncio.create_task(long_running())
+        await asyncio.sleep(0.01)  # 让任务启动
+
+        await manager.shutdown()
+
+        assert manager._main_task.done()
+        assert manager._main_task.cancelled()
+
+    @pytest.mark.asyncio
+    async def test_shutdown_when_task_already_done(self, manager):
+        """测试任务已完成时 shutdown 应该安全返回"""
+        manager._running = True
+
+        async def quick_task():
+            return "done"
+
+        manager._main_task = asyncio.create_task(quick_task())
+        await manager._main_task  # 等待完成
+
+        await manager.shutdown()  # 不应抛出异常
+
+
+class TestBotExit:
+    """bot_exit 方法测试"""
+
+    @pytest.fixture
+    def manager(self, event_bus, mock_services):
+        from ncatbot.core.client.registry import EventRegistry
+        registry = EventRegistry(event_bus)
+        return LifecycleManager(mock_services, event_bus, registry)
+
+    def test_bot_exit_when_not_running(self, manager):
+        """测试未运行时调用 bot_exit"""
+        manager._running = False
+
+        manager.bot_exit()  # 不应抛出异常
+
+    @pytest.mark.asyncio
+    async def test_bot_exit_cancels_task(self, manager):
+        """测试 bot_exit 会取消主任务"""
+        manager._running = True
+
+        async def long_running():
+            await asyncio.sleep(100)
+
+        manager._main_task = asyncio.create_task(long_running())
+        await asyncio.sleep(0.01)
+
         manager.bot_exit()
 
-    def test_bot_exit_sets_exit_flag(self, mock_services, event_bus, event_registry):
-        """退出设置 exit 标志"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
+        # 等待取消生效
+        await asyncio.sleep(0.01)
+        assert manager._main_task.cancelled() or manager._main_task.done()
+
+
+class TestCleanup:
+    """_cleanup 方法测试"""
+
+    @pytest.fixture
+    def manager(self, event_bus, mock_services):
+        from ncatbot.core.client.registry import EventRegistry
+        registry = EventRegistry(event_bus)
+        return LifecycleManager(mock_services, event_bus, registry)
+
+    @pytest.mark.asyncio
+    async def test_cleanup_when_not_running(self, manager):
+        """测试未运行时调用 _cleanup 应该直接返回"""
+        manager._running = False
+
+        await manager._cleanup()  # 不应抛出异常
+
+    @pytest.mark.asyncio
+    async def test_cleanup_closes_services(self, manager):
+        """测试 _cleanup 会关闭服务"""
         manager._running = True
-        manager.plugin_loader = None
-        
-        with patch("ncatbot.core.client.lifecycle.status") as mock_status:
-            manager.bot_exit()
-            
-            assert mock_status.exit is True
+        manager.plugin_loader = MagicMock()
+        manager.plugin_loader.unload_all = AsyncMock()
 
-
-class TestLifecycleManagerRunModes:
-    """测试运行模式"""
-
-    def test_run_frontend_alias(self, mock_services, event_bus, event_registry):
-        """run_frontend 别名正确"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
-        assert manager.run_frontend == manager.run_blocking
-        assert manager.run == manager.run_frontend
-
-    def test_run_backend_alias(self, mock_services, event_bus, event_registry):
-        """run_backend 别名正确"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
-        assert manager.run_backend == manager.run_non_blocking
-
-    def test_run_frontend_calls_start(self, mock_services, event_bus, event_registry):
-        """run_frontend 调用 start"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        manager.start = MagicMock(side_effect=KeyboardInterrupt)
-        manager.bot_exit = MagicMock()
-        
-        manager.run_frontend(bt_uin="123456")
-        
-        manager.start.assert_called_once_with(bt_uin="123456")
-        manager.bot_exit.assert_called_once()
-
-
-class TestLifecycleManagerBackendMode:
-    """测试后台模式"""
-
-    def test_run_backend_returns_api(self, mock_services, event_bus, event_registry):
-        """run_backend 返回 API 实例"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
-        mock_api = MagicMock()
-        
-        # Mock start 方法：模拟正常启动，通过 startup handler 释放锁
-        def mock_start(**kwargs):
-            # 正常启动后，触发 startup handler 来释放锁
-            import time
-            time.sleep(0.01)  # 给主线程时间设置锁
-            manager.api = mock_api  # 模拟设置 api
-            if manager.release_callback:
-                manager.release_callback(None)
-            # 保持运行，防止线程退出
-            import threading
-            threading.Event().wait(timeout=0.1)
-        
-        manager.start = mock_start
-        
-        result = manager.run_backend(bt_uin="123456")
-        
-        assert result is mock_api
-
-    def test_run_backend_crash(self, mock_services, event_bus, event_registry):
-        """run_backend 启动崩溃抛出异常"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-        
-        def mock_start(**kwargs):
-            manager.crash_flag = True
-            if manager.release_callback:
-                manager.release_callback(None)
-        
-        manager.start = mock_start
-        
-        with pytest.raises(NcatBotError, match="启动失败"):
-            manager.run_backend(bt_uin="123456")
-
-
-class TestLifecycleManagerPluginLoader:
-    """测试插件加载器管理"""
-
-    def test_plugin_loader_initialized_on_start(self, mock_services, event_bus, event_registry):
-        """启动时初始化插件加载器"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-
-        with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
-            mock_config.validate_config = MagicMock()
-            mock_config.debug = False
-
-            with patch("ncatbot.core.client.lifecycle.run_coroutine"):
-                with patch("ncatbot.plugin_system.PluginLoader") as mock_loader_class:
-                    mock_loader_instance = MagicMock()
-                    mock_loader_class.return_value = mock_loader_instance
-
-                    manager.start(mock=True, bt_uin="123456")
-                    
-                    mock_loader_class.assert_called_once()
-                    assert manager.plugin_loader is mock_loader_instance
-
-
-class TestLifecycleManagerStartFlow:
-    """测试完整启动流程"""
-
-    def test_start_flow_mock_mode(self, mock_services, event_bus, event_registry):
-        """Mock 模式完整启动流程"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
-
-        with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
-            mock_config.validate_config = MagicMock()
-            mock_config.debug = False
-
-            with patch("ncatbot.core.client.lifecycle.run_coroutine") as mock_run_coroutine:
-                with patch("ncatbot.plugin_system.PluginLoader") as mock_loader_class:
-                    mock_loader_instance = MagicMock()
-                    mock_loader_class.return_value = mock_loader_instance
-
-                    manager.start(mock=True, bt_uin="123456")
-                    
-                    # 验证流程
-                    mock_config.validate_config.assert_called_once()
-                    mock_run_coroutine.assert_called_once()
-                    assert manager._running is True
-
-    def test_start_sets_running_flag(self, mock_services, event_bus, event_registry):
-        """启动设置 running 标志"""
-        manager = LifecycleManager(mock_services, event_bus, event_registry)
+        await manager._cleanup()
 
         assert manager._running is False
+        manager.plugin_loader.unload_all.assert_awaited_once()
+        manager.services.close_all.assert_awaited_once()
 
-        with patch("ncatbot.core.client.lifecycle.ncatbot_config") as mock_config:
-            mock_config.validate_config = MagicMock()
-            mock_config.debug = False
+    @pytest.mark.asyncio
+    async def test_cleanup_idempotent(self, manager):
+        """测试 _cleanup 幂等性（重复调用安全）"""
+        manager._running = True
+        manager.plugin_loader = MagicMock()
+        manager.plugin_loader.unload_all = AsyncMock()
 
-            with patch("ncatbot.core.client.lifecycle.run_coroutine"):
-                with patch("ncatbot.plugin_system.PluginLoader") as mock_loader_class:
-                    mock_loader_class.return_value = MagicMock()
+        await manager._cleanup()
+        await manager._cleanup()  # 第二次调用应该什么都不做
 
-                    manager.start(mock=True, bt_uin="123456")
-        
-        assert manager._running is True
+        # unload_all 只应调用一次
+        assert manager.plugin_loader.unload_all.await_count == 1
+
+
+class TestLegalArgs:
+    """合法参数常量测试"""
+
+    def test_legal_args_contains_expected_keys(self):
+        """测试 LEGAL_ARGS 包含预期的键"""
+        expected = {
+            "bt_uin", "root", "ws_uri", "webui_uri",
+            "ws_token", "webui_token", "ws_listen_ip",
+            "remote_mode", "enable_webui", "enable_webui_interaction",
+            "debug", "mock", "skip_plugin_load"
+        }
+        assert set(LEGAL_ARGS) == expected
+
