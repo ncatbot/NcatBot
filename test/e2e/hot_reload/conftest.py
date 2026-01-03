@@ -158,8 +158,8 @@ async def test_suite():
     
     # 等待 FileWatcher 完成首次扫描
     # 这确保了后续的 modify_plugin_file 会被检测为变化
-    for _ in range(10):  # 最多等待 0.1 秒
-        await asyncio.sleep(0.01)
+    for _ in range(10):  # 最多等待 0.05 秒
+        await asyncio.sleep(0.005)
         if file_watcher._first_scan_done:
             break
     
@@ -171,7 +171,7 @@ async def test_suite():
     # 等待可能正在执行的热重载回调完成
     # 因为 _trigger_reload 使用 asyncio.run 创建独立事件循环执行回调
     # 需要给它足够时间完成
-    await asyncio.sleep(0.1)
+    await asyncio.sleep(0.01)
     
     # 清空 pending 队列，防止后续处理
     with file_watcher._pending_lock:

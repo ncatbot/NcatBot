@@ -1,13 +1,12 @@
 """
 E2ETestSuite 断言有效性测试
 
-测试 E2ETestSuite 和 E2ETestSuite 的断言方法是否能正确检测回复。
+测试 E2ETestSuite 的断言方法是否能正确检测回复。
+使用 clear_call_history() 在测试之间清理，减少 setup/teardown 开销。
 """
 
 import os
 import pytest
-import pytest_asyncio
-import asyncio
 
 from ncatbot.utils.testing import E2ETestSuite
 
@@ -16,220 +15,114 @@ from ncatbot.utils.testing import E2ETestSuite
 PLUGINS_DIR = os.path.join(os.path.dirname(__file__), "plugins")
 
 
-class TestAssertReplyValidity:
-    """测试 assert_reply_sent 断言的有效性"""
+class TestSimpleReplyPlugin:
+    """使用 simple_reply_plugin 的断言测试（合并到单个 suite）"""
     
     @pytest.mark.asyncio
-    async def test_assert_reply_sent_detects_reply(self):
-        """验证 assert_reply_sent 能检测到回复"""
+    async def test_assertions_with_simple_reply_plugin(self):
+        """测试所有使用 simple_reply_plugin 的断言场景"""
         async with E2ETestSuite() as suite:
             plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
             suite.index_plugin(plugin_dir)
             await suite.register_plugin("simple_reply_plugin")
             
-            # 发送命令（需要命令前缀 /）
+            # 场景1: assert_reply_sent 能检测到回复
             await suite.inject_group_message("/ping")
-            await asyncio.sleep(0.02)  # 等待异步处理
-            
-            # 断言应该能检测到回复
             suite.assert_reply_sent()
-            
-            # 验证具体调用了 send_group_msg
             suite.assert_api_called("send_group_msg")
-            
-            # 验证调用参数
             calls = suite.get_api_calls("send_group_msg")
             assert len(calls) >= 1, f"Expected at least 1 call, got {len(calls)}"
-    
-    @pytest.mark.asyncio
-    async def test_assert_reply_sent_with_content(self):
-        """验证 assert_reply_sent 能检测回复内容"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("simple_reply_plugin")
+            suite.clear_call_history()
             
+            # 场景2: assert_reply_sent 能检测回复内容
             await suite.inject_group_message("/ping")
-                
-            # 断言包含特定内容
             suite.assert_reply_sent(contains="pong")
-    
-    @pytest.mark.asyncio
-    async def test_assert_no_reply_when_no_response(self):
-        """验证 assert_no_reply 在无回复时通过"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "no_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("no_reply_plugin")
+            suite.clear_call_history()
             
-            await suite.inject_group_message("/silent")
-                
-            # 应该没有回复
-            suite.assert_no_reply()
-    
-    @pytest.mark.asyncio
-    async def test_assert_no_reply_fails_when_reply_exists(self):
-        """验证 assert_no_reply 在有回复时失败"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("simple_reply_plugin")
-            
+            # 场景3: assert_no_reply 在有回复时应该失败
             await suite.inject_group_message("/ping")
-                
-            # 有回复时应该失败
             with pytest.raises(AssertionError):
                 suite.assert_no_reply()
+            suite.clear_call_history()
+            
+            # 场景4: get_latest_reply 获取最后一条回复
+            await suite.inject_group_message("/ping")
+            last_reply = suite.get_latest_reply()
+            assert last_reply is not None
+            suite.clear_call_history()
+            
+            # 场景5: echo 命令带参数
+            await suite.inject_group_message("/echo hello world")
+            suite.assert_reply_sent(contains="Echo:")
+            suite.clear_call_history()
+            
+            # 场景6: greet 命令带名字参数
+            await suite.inject_group_message("/greet Alice")
+            suite.assert_reply_sent(contains="Hello")
+
+
+class TestNoReplyPlugin:
+    """使用 no_reply_plugin 的断言测试（合并到单个 suite）"""
     
     @pytest.mark.asyncio
-    async def test_assert_reply_sent_fails_when_no_reply(self):
-        """验证 assert_reply_sent 在无回复时失败"""
+    async def test_assertions_with_no_reply_plugin(self):
+        """测试所有使用 no_reply_plugin 的断言场景"""
         async with E2ETestSuite() as suite:
             plugin_dir = os.path.join(PLUGINS_DIR, "no_reply_plugin")
             suite.index_plugin(plugin_dir)
             await suite.register_plugin("no_reply_plugin")
             
+            # 场景1: assert_no_reply 在无回复时通过
             await suite.inject_group_message("/silent")
-                
-            # 无回复时应该失败
+            suite.assert_no_reply()
+            suite.clear_call_history()
+            
+            # 场景2: assert_reply_sent 在无回复时应该失败
+            await suite.inject_group_message("/silent")
             with pytest.raises(AssertionError):
                 suite.assert_reply_sent()
 
 
-class TestE2ETestSuiteAssertions:
-    """测试 E2ETestSuite 的断言方法"""
+class TestFilteredReplyPlugin:
+    """使用 filtered_reply_plugin 的过滤器测试（合并到单个 suite）"""
     
     @pytest.mark.asyncio
-    async def test_helper_assert_reply_sent(self):
-        """测试 E2ETestSuite.assert_reply_sent"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("simple_reply_plugin")
-            
-            await suite.inject_group_message("/ping")
-                
-            # 使用 helper 的断言方法
-            suite.assert_reply_sent()
-    
-    @pytest.mark.asyncio
-    async def test_helper_assert_no_reply(self):
-        """测试 E2ETestSuite.assert_no_reply"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "no_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("no_reply_plugin")
-            
-            await suite.inject_group_message("/silent")
-                
-            suite.assert_no_reply()
-    
-    @pytest.mark.asyncio
-    async def test_helper_get_latest_reply(self):
-        """测试 E2ETestSuite.get_latest_reply"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("simple_reply_plugin")
-            
-            await suite.inject_group_message("/ping")
-                
-            # 获取最后一条回复
-            last_reply = suite.get_latest_reply()
-            assert last_reply is not None
-
-
-class TestFilteredCommandReply:
-    """测试过滤器命令的回复检测"""
-    
-    @pytest.mark.asyncio
-    async def test_group_filter_allows_group_message(self):
-        """测试群聊过滤器允许群消息"""
+    async def test_filter_behaviors(self):
+        """测试过滤器命令的回复检测"""
         async with E2ETestSuite() as suite:
             plugin_dir = os.path.join(PLUGINS_DIR, "filtered_reply_plugin")
             suite.index_plugin(plugin_dir)
             await suite.register_plugin("filtered_reply_plugin")
             
+            # 场景1: 群聊过滤器允许群消息
             await suite.inject_group_message("/group_ping")
-                
-            # 群消息应该有回复
             suite.assert_api_called("send_group_msg")
-    
-    @pytest.mark.asyncio
-    async def test_group_filter_blocks_private_message(self):
-        """测试群聊过滤器阻止私聊消息"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "filtered_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("filtered_reply_plugin")
+            suite.clear_call_history()
             
+            # 场景2: 群聊过滤器阻止私聊消息
             await suite.inject_private_message("/group_ping")
-                
-            # 私聊消息不应该触发群聊命令的回复
             suite.assert_api_not_called("send_group_msg")
-    
-    @pytest.mark.asyncio
-    async def test_private_filter_allows_private_message(self):
-        """测试私聊过滤器允许私聊消息"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "filtered_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("filtered_reply_plugin")
+            suite.clear_call_history()
             
+            # 场景3: 私聊过滤器允许私聊消息
             await suite.inject_private_message("/private_ping")
-                
-            # 私聊消息应该有回复
             suite.assert_api_called("send_private_msg")
 
 
-class TestCommandWithArgs:
-    """测试带参数命令的回复"""
+class TestSuiteIsolation:
+    """测试 suite 实例之间的隔离"""
     
     @pytest.mark.asyncio
-    async def test_echo_command_with_args(self):
-        """测试 echo 命令带参数"""
+    async def test_new_suite_has_clean_history(self):
+        """验证新 suite 实例没有历史记录"""
+        # 第一个 suite 发送回复
         async with E2ETestSuite() as suite:
             plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
             suite.index_plugin(plugin_dir)
             await suite.register_plugin("simple_reply_plugin")
-            
-            await suite.inject_group_message("/echo hello world")
-                
-            # 应该有回复
-            suite.assert_reply_sent(contains="Echo:")
-    
-    @pytest.mark.asyncio
-    async def test_greet_command_with_name(self):
-        """测试 greet 命令带名字参数"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("simple_reply_plugin")
-            
-            await suite.inject_group_message("/greet Alice")
-                
-            # 应该有回复包含名字
-            suite.assert_reply_sent(contains="Hello")
-
-
-class TestClearHistoryBetweenTests:
-    """测试测试之间的隔离"""
-    
-    @pytest.mark.asyncio
-    async def test_first_test_sends_reply(self):
-        """第一个测试发送回复"""
-        async with E2ETestSuite() as suite:
-            plugin_dir = os.path.join(PLUGINS_DIR, "simple_reply_plugin")
-            suite.index_plugin(plugin_dir)
-            await suite.register_plugin("simple_reply_plugin")
-            
             await suite.inject_group_message("/ping")
-                
             suite.assert_reply_sent()
-    
-    @pytest.mark.asyncio
-    async def test_second_test_has_clean_history(self):
-        """第二个测试有干净的历史"""
+        
+        # 第二个 suite 应该是干净的
         async with E2ETestSuite() as suite:
-            # 新的 suite 应该没有历史记录
             assert len(suite.get_api_calls()) == 0

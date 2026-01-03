@@ -122,8 +122,9 @@ class CommandRunner:
             await self._executor.execute(
                 func, event, *bind_result.args, **bind_result.named_args
             )
-        except Exception:
-            traceback.print_exc()
+        except Exception as e:
+            LOG.exception(f"命令 {func.__name__} 执行失败: {e}")
+            return False
 
         return True
 

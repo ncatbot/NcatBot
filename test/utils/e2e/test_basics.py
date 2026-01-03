@@ -87,17 +87,6 @@ class TestMockServerBasics:
     """MockServer 基础功能测试"""
     
     @pytest.mark.asyncio
-    async def test_api_call_recording(self):
-        """测试 API 调用记录"""
-        async with E2ETestSuite() as suite:
-            await suite.api.send_group_text(group_id="123", text="test")
-            
-            suite.assert_api_called("send_group_msg")
-            calls = suite.get_api_calls("send_group_msg")
-            assert len(calls) == 1
-            assert calls[0]["group_id"] == "123"
-    
-    @pytest.mark.asyncio
     async def test_multiple_api_calls(self):
         """测试多次 API 调用"""
         async with E2ETestSuite() as suite:
@@ -108,18 +97,14 @@ class TestMockServerBasics:
             group_calls = suite.get_api_calls("send_group_msg")
             private_calls = suite.get_api_calls("send_private_msg")
             
+            assert group_calls[0]["group_id"] == "1"
             assert len(group_calls) == 2
             assert len(private_calls) == 1
-    
-    @pytest.mark.asyncio
-    async def test_clear_call_history(self):
-        """测试清空调用历史"""
-        async with E2ETestSuite() as suite:
-            await suite.api.send_group_text(group_id="123", text="test")
-            assert len(suite.get_api_calls("send_group_msg")) == 1
             
             suite.clear_call_history()
             assert len(suite.get_api_calls("send_group_msg")) == 0
+            
+            
 
 
 class TestPluginLifecycle:
@@ -141,7 +126,7 @@ class TestPluginLifecycle:
             
             await suite.unregister_plugin("lifecycle_plugin")
             
-            await asyncio.sleep(0.02)
+            await asyncio.sleep(0.01)
             
             # 验证 on_close 被调用
             assert "closed" in PluginClass.lifecycle_events

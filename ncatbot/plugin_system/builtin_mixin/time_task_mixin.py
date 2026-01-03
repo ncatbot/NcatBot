@@ -5,8 +5,11 @@ import time
 import asyncio
 import functools
 import threading
+import traceback
 from schedule import Scheduler
-from ncatbot.utils import run_coroutine
+from ncatbot.utils import run_coroutine, get_log
+
+LOG = get_log("TimeTaskScheduler")
 
 
 class TimeTaskScheduler:
@@ -160,7 +163,7 @@ class TimeTaskScheduler:
         """
         # 名称唯一性检查
         if any(job["name"] == name for job in self._jobs):
-            print(f"任务添加失败: 名称 '{name}' 已存在")
+            LOG.warning(f"定时任务添加失败: 任务名称 '{name}' 已存在")
             return False
 
         # 参数冲突检查
@@ -221,9 +224,11 @@ class TimeTaskScheduler:
                         job_info["func"](*final_args, **final_kwargs)
                     job_info["run_count"] += 1
                 except Exception as e:
-                    print(f"任务执行失败 [{name}]: {str(e)}")
+                    LOG.error(f"定时任务执行失败 [{name}]: {e}")
+                    LOG.debug(f"任务执行异常堆栈:\n{traceback.format_exc()}")
 
             # 创建调度任务
+            job = None
             if interval_cfg["type"] == "interval":
                 job = self._scheduler.every(interval_cfg["value"]).seconds.do(
                     job_wrapper
@@ -239,12 +244,17 @@ class TimeTaskScheduler:
                     job_wrapper
                 )
 
+            if job is None:
+                LOG.error(f"无法识别的任务调度类型: {interval_cfg['type']}")
+                return False
+
             job_info["schedule_job"] = job
             self._jobs.append(job_info)
             return True
 
         except Exception as e:
-            print(f"任务添加失败: {str(e)}")
+            LOG.error(f"定时任务添加失败: {e}")
+            LOG.debug(f"任务添加异常堆栈:\n{traceback.format_exc()}")
             return False
 
     def step(self) -> None:
@@ -280,7 +290,7 @@ class TimeTaskScheduler:
                     # 如果没有任务待执行，适当等待
                     time.sleep(0.2)  # 我觉得吧, 应该不需要等待
         except KeyboardInterrupt:
-            print("\n调度器已安全停止")
+            LOG.info("定时任务调度器已安全停止")
 
     def remove_job(self, name: str) -> bool:
         """

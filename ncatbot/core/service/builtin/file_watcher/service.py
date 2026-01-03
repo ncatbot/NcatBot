@@ -191,8 +191,8 @@ class FileWatcherService(BaseService):
                 elif self._file_cache[file_path] != mod_time:
                     self._file_cache[file_path] = mod_time
                     self._on_file_changed(file_path, plugins_dir)
-            except OSError:
-                pass
+            except OSError as e:
+                LOG.debug(f"无法获取文件修改时间 {file_path}: {e}")
         
         deleted = [f for f in self._file_cache if not os.path.exists(f)]
         for file_path in deleted:

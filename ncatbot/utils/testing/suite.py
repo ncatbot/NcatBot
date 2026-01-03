@@ -73,14 +73,19 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
     
     # ==================== 生命周期 ====================
     
-    async def setup(self) -> "BotClient":
-        """异步设置测试环境"""
+    async def setup(self, use_shared_server: bool = False) -> "BotClient":
+        """异步设置测试环境
+        
+        Args:
+            use_shared_server: 是否使用已提供的共享 MockServer（优化性能）
+        """
         from ncatbot.core import BotClient
         from ncatbot.utils import ncatbot_config
         from .mock_server import NapCatMockServer, get_standard_data
         
-        # 自动创建 MockServer
+        # 自动创建 MockServer（仅在未提供时）
         if not self._mock_server:
+            # 如果没有提供共享 server，创建新的
             port = self._port
             if port is None:
                 E2ETestSuite._port_counter += 1

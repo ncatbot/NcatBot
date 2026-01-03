@@ -3,8 +3,12 @@
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING, Callable
 
+from ncatbot.utils import get_log
+
 if TYPE_CHECKING:
     from ncatbot.core import MessageEvent
+
+LOG = get_log("FilterSystem")
 
 __all__ = ["BaseFilter", "CombinedFilter"]
 
@@ -15,7 +19,7 @@ class BaseFilter(ABC):
     简化设计：过滤器函数只接受 event 参数
     """
 
-    def __init__(self, name: str = None):
+    def __init__(self, name: str | None = None):
         self.name = name or self.__class__.__name__
 
     @abstractmethod
@@ -73,11 +77,13 @@ class CombinedFilter(BaseFilter):
         if self.mode == "or":
             try:
                 return self.left.check(event) or self.right.check(event)
-            except Exception:
+            except Exception as e:
                 # 保守策略：出现异常视为未通过
+                LOG.warning(f"组合过滤器 {self.name} 检查失败: {e}")
                 return False
         else:
             try:
                 return self.left.check(event) and self.right.check(event)
-            except Exception:
+            except Exception as e:
+                LOG.warning(f"组合过滤器 {self.name} 检查失败: {e}")
                 return False

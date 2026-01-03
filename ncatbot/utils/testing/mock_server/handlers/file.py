@@ -122,7 +122,9 @@ class FileHandlerMixin:
     
     def _handle_get_file(self, params: dict) -> dict:
         file_id = str(params.get("file_id", ""))
+        file_path = str(params.get("file", ""))
         return self._success_response({
+            "file": file_path or f"/mock/files/{file_id}",
             "file_id": file_id,
             "file_name": "mock_file",
             "file_size": 1024,

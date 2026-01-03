@@ -303,7 +303,7 @@ class NapCatMockServer:
         
         message = json.dumps(event_data)
         await asyncio.gather(*[client.send(message) for client in self._clients])
-        await asyncio.sleep(0.001) # 等 1ms 让回调处理
+        await asyncio.sleep(0.005) # 等 5ms 让回调处理
     
     async def inject_group_message(
         self,
