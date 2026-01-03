@@ -121,9 +121,14 @@ class MessageArray(MessageArrayDTO):
         else:
             super().__init__(message=parse_message_segments(args))
 
+    # 兼容用的只读接口
+    @property
+    def messages(self) -> List[MessageSegment]:
+        return self.message
     # -------------------
     # region 构造用接口
     # -------------------
+    
     def add_by_list(self, data: List[Union[dict, MessageSegment]]):
         self.message.extend(parse_message_segments(data))
         return self

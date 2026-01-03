@@ -3,6 +3,7 @@
 from typing import Dict, List, Callable, Optional, Union, Any
 from dataclasses import dataclass
 from .base import BaseFilter
+from .decorators import group_filter, private_filter
 from ncatbot.utils import get_log
 
 LOG = get_log(__name__)
@@ -124,6 +125,8 @@ class FilterRegistry:
         for name in deleted_filters:
             del self._function_filters[name]
 
+    group_filter = group_filter
+    private_filter = private_filter
 
 # 全局单例
 filter_registry = FilterRegistry()

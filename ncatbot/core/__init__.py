@@ -9,6 +9,7 @@ from .helper import ForwardConstructor  # noqa: F401
 from .api import BotAPI
 from .event import GroupMessageEvent as GroupMessage
 from .event import PrivateMessageEvent as PrivateMessage
+from .event import MessageEvent as BaseMessageEvent
 
 # 事件类型 (from event submodule)
 from .event import *  # noqa: F401,F403
@@ -30,6 +31,7 @@ __all__ = [
     "NcatBotEventFactory",
     "GroupMessage",
     "PrivateMessage",
+    "BaseMessageEvent",
 ]
 
 __all__.extend(getattr(event, "__all__", []))  # type: ignore
