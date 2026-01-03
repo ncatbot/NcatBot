@@ -1,146 +1,138 @@
 """
 测试套件
 
-提供端到端测试的高级封装，简化测试编写。
+提供端到端测试的高级封装。
+使用 pytest-asyncio 管理事件循环，不创建额外的事件循环。
 """
+# pyright: reportAttributeAccessIssue=false
+# pyright: reportReturnType=false
+# pyright: reportOptionalMemberAccess=false
 
-from typing import List, Optional, Type, TYPE_CHECKING
+from typing import List, Optional, TYPE_CHECKING
 from contextlib import asynccontextmanager
-from unittest.mock import MagicMock, AsyncMock
 
-from ncatbot.utils import get_log, run_coroutine
+from ncatbot.utils import get_log
+from .mixins import PluginMixin, InjectorMixin, AssertionMixin
 
 if TYPE_CHECKING:
-    from ncatbot.core import BotClient
-    from ncatbot.plugin_system import BasePlugin
+    from ncatbot.core import BotClient, BotAPI
+    from .mock_server import NapCatMockServer
 
 LOG = get_log("E2ETestSuite")
 
 
-class E2ETestSuite:
+class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
     """
     端到端测试套件
     
     提供完整的测试环境，包括：
-    - Mock 模式的 BotClient
+    - Mock 模式的 BotClient（连接到 MockServer）
     - 插件注册和卸载
-    - 事件注入
+    - 事件注入（通过 MockServer）
     - API 调用断言
     
-    使用示例（作为上下文管理器）：
+    使用示例（pytest-asyncio fixture）：
     ```python
-    async with TestSuite() as suite:
-        await suite.register_plugin(MyPlugin)
-        await suite.inject_group_message("/hello")
-        suite.assert_api_called("send_group_msg")
-    ```
+    @pytest_asyncio.fixture
+    async def test_suite():
+        suite = E2ETestSuite()
+        await suite.setup()
+        yield suite
+        await suite.teardown()
     
-    使用示例（手动管理）：
-    ```python
-    suite = TestSuite()
-    suite.setup()
-    try:
-        suite.register_plugin_sync(MyPlugin)
-        suite.inject_group_message_sync("/hello")
-        suite.assert_api_called("send_group_msg")
-    finally:
-        suite.teardown()
+    @pytest.mark.asyncio
+    async def test_example(test_suite):
+        await test_suite.register_plugin("my_plugin")
+        await test_suite.inject_group_message("/hello")
+        test_suite.assert_api_called("send_group_msg")
     ```
     """
     
-    def __init__(self, bt_uin: str = "123456789", skip_builtin_plugins: bool = False):
+    _port_counter = 16700
+    
+    def __init__(
+        self,
+        bt_uin: str = "123456789",
+        mock_server: Optional["NapCatMockServer"] = None,
+        port: Optional[int] = None,
+    ):
         """
         初始化测试套件
         
         Args:
             bt_uin: 模拟的机器人 QQ 号
-            skip_builtin_plugins: 是否跳过内置插件加载（默认为 False，会加载 UnifiedRegistryPlugin 等）
+            mock_server: MockServer 实例（可选，未提供时自动创建）
+            port: MockServer 端口（仅在自动创建时使用）
         """
         self._bt_uin = bt_uin
-        self._skip_builtin_plugins = skip_builtin_plugins
+        self._mock_server = mock_server
+        self._port = port
         self._client: Optional["BotClient"] = None
         self._registered_plugins: List[str] = []
+        self._owns_mock_server = False
     
     # ==================== 生命周期 ====================
     
-    def setup(self) -> "BotClient":
-        """
-        设置测试环境
-        
-        Returns:
-            配置好的 BotClient 实例
-        """
+    async def setup(self) -> "BotClient":
+        """异步设置测试环境"""
         from ncatbot.core import BotClient
+        from ncatbot.utils import ncatbot_config
+        from .mock_server import NapCatMockServer, get_standard_data
         
-        # 重置单例以允许创建新实例
+        # 自动创建 MockServer
+        if not self._mock_server:
+            port = self._port
+            if port is None:
+                E2ETestSuite._port_counter += 1
+                port = E2ETestSuite._port_counter
+            
+            self._mock_server = NapCatMockServer(
+                port=port,
+                initial_data=get_standard_data()
+            )
+            await self._mock_server.start()
+            self._owns_mock_server = True
+        
+        # 配置 WebSocket URI 指向 MockServer
+        ncatbot_config.napcat.ws_uri = self._mock_server.uri
+        
+        # 创建并启动 BotClient（与 run_backend 使用相同的初始化逻辑）
         BotClient.reset_singleton()
-        
         self._client = BotClient()
-
-        # 使用真实的 ServiceManager（稍后会替换 WebSocket）
-
-        # 始终跳过插件目录加载，但可选择是否加载内置插件
-        self._client.start(
-            mock=True,
+        await self._client.run_backend_async(
             bt_uin=self._bt_uin,
-            skip_plugin_load=True,  # 始终跳过自动加载
+            mock=True,
+            skip_plugin_load=True,
         )
-
-        # 手动加载内置插件（如果需要）
-        if not self._skip_builtin_plugins:
-            run_coroutine(self._client.plugin_loader.load_builtin_plugins)
-
-        # 在启动完成后，替换 MessageRouter 的 WebSocket 为 Mock 版本
-        self._replace_websocket_with_mock()
+        
+        # 设置反向引用，供 TestHelper 使用
+        self._client._test_suite = self
 
         LOG.info("测试套件已启动")
         return self._client
 
-    def _replace_websocket_with_mock(self):
-        """确保 MessageRouter 使用 Mock WebSocket"""
-        try:
-            router = self._client.services.message_router
-            if router:
-                from ncatbot.utils.testing.mock_services import MockWebSocket, MockMessageRouter
-                if isinstance(router, MockMessageRouter):
-                    # 对于 MockMessageRouter，确保它使用 MockWebSocket
-                    router._ws = MockWebSocket()
-                    LOG.info("MockMessageRouter 的 WebSocket 已设置")
-                elif hasattr(router, '_ws'):
-                    # 对于真实 MessageRouter，替换 WebSocket
-                    if not isinstance(router._ws, MockWebSocket):
-                        router._ws = MockWebSocket()
-                        LOG.info("MessageRouter 的 WebSocket 已替换为 Mock 版本")
-        except Exception as e:
-            LOG.warning(f"替换 WebSocket 失败: {e}")
-
-    def teardown(self) -> None:
-        """清理测试环境"""
+    async def teardown(self) -> None:
+        """异步清理测试环境"""
         if self._client:
-            # bot_exit 会先卸载所有插件，再关闭服务
-            self._client.bot_exit()
+            # 使用 shutdown() 安全关闭，让 finally 块负责清理
+            # 避免与 _core_execution 的 _cleanup() 重复调用 close_all()
+            await self._client.shutdown()
             self._client = None
             self._registered_plugins.clear()
         
+        if self._owns_mock_server and self._mock_server:
+            await self._mock_server.stop()
+            self._mock_server = None
+            self._owns_mock_server = False
+
         LOG.info("测试套件已清理")
     
     async def __aenter__(self) -> "E2ETestSuite":
-        """异步上下文管理器入口"""
-        self.setup()
+        await self.setup()
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        """异步上下文管理器出口"""
-        self.teardown()
-    
-    def __enter__(self) -> "E2ETestSuite":
-        """同步上下文管理器入口"""
-        self.setup()
-        return self
-    
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:
-        """同步上下文管理器出口"""
-        self.teardown()
+        await self.teardown()
     
     # ==================== 属性访问 ====================
     
@@ -162,251 +154,40 @@ class E2ETestSuite:
         return self.client.services
     
     @property
-    def api(self):
+    def api(self) -> "BotAPI":
         """获取 BotAPI"""
         return self.client.api
     
     @property
-    def mock_router(self):
-        """获取 MockMessageRouter"""
-        return self.services.message_router
-    
-    # ==================== 插件管理 ====================
-    
-    def index_plugin(self, plugin_dir: str) -> str:
-        """
-        索引一个外部插件文件夹
-        
-        读取插件的元数据并写入索引，之后可以使用 register_plugin 加载。
-        
-        Args:
-            plugin_dir: 插件文件夹的路径
-            
-        Returns:
-            插件名称
-        """
-        plugin_name = self.client.plugin_loader.index_external_plugin(plugin_dir)
-        if plugin_name:
-            LOG.info(f"已索引测试插件: {plugin_name} (路径: {plugin_dir})")
-        return plugin_name
-    
-    async def register_plugin(self, plugin_name: str) -> "BasePlugin":
-        """
-        注册插件（通过插件名加载已索引的插件）
-        
-        Args:
-            plugin_name: 插件名称
-            
-        Returns:
-            插件实例
-        """
-        plugin = await self.client.plugin_loader.load_plugin(plugin_name)
-        if plugin:
-            self._registered_plugins.append(plugin_name)
-            LOG.info(f"已注册测试插件: {plugin_name}")
-        return plugin
-    
-    def register_plugin_sync(self, plugin_name: str) -> "BasePlugin":
-        """同步版本的 register_plugin"""
-        return run_coroutine(self.register_plugin, plugin_name)
-    
-    async def unregister_plugin(self, plugin_name: str) -> None:
-        """卸载插件"""
-        await self.client.plugin_loader.unload_plugin(plugin_name)
-        if plugin_name in self._registered_plugins:
-            self._registered_plugins.remove(plugin_name)
-        LOG.info(f"已卸载测试插件: {plugin_name}")
-    
-    def unregister_plugin_sync(self, plugin_name: str) -> None:
-        """同步版本的 unregister_plugin"""
-        run_coroutine(self.unregister_plugin, plugin_name)
-    
-    # ==================== 事件注入 ====================
-    
-    async def inject_event(self, event) -> None:
-        """
-        注入解析后的事件
-        
-        Args:
-            event: 事件对象
-        """
-        await self.client.inject_event(event)
-    
-    def inject_event_sync(self, event) -> None:
-        """同步版本的 inject_event"""
-        run_coroutine(self.inject_event, event)
-    
-    async def inject_raw_event(self, data: dict) -> None:
-        """
-        注入原始事件数据
-        
-        Args:
-            data: OneBot 格式的原始事件数据
-        """
-        await self.client.inject_raw_event(data)
-    
-    def inject_raw_event_sync(self, data: dict) -> None:
-        """同步版本的 inject_raw_event"""
-        run_coroutine(self.inject_raw_event, data)
-    
-    async def inject_group_message(
-        self,
-        message: str,
-        group_id: str = "123456789",
-        user_id: str = "987654321",
-        **kwargs
-    ) -> None:
-        """
-        注入群消息事件
-        
-        Args:
-            message: 消息内容
-            group_id: 群号
-            user_id: 发送者 QQ
-        """
-        from .event_factory import EventFactory
-        from ncatbot.core.client.ncatbot_event import NcatBotEvent
-
-        message_event = EventFactory.create_group_message(
-            message=message,
-            group_id=group_id,
-            user_id=user_id,
-            **kwargs
-        )
-        # 绑定 API 上下文
-        message_event.bind_api(self.api)
-        # 使用与真实系统一致的事件类型 ncatbot.message_event
-        ncatbot_event = NcatBotEvent("ncatbot.message_event", data=message_event)
-        await self.event_bus.publish(ncatbot_event)
-
-    def inject_group_message_sync(
-        self,
-        message: str,
-        group_id: str = "123456789",
-        user_id: str = "987654321",
-        **kwargs
-    ) -> None:
-        """同步版本的 inject_group_message"""
-        run_coroutine(self.inject_group_message, message, group_id, user_id, **kwargs)
-    
-    async def inject_private_message(
-        self,
-        message: str,
-        user_id: str = "987654321",
-        **kwargs
-    ) -> None:
-        """
-        注入私聊消息事件
-        
-        Args:
-            message: 消息内容
-            user_id: 发送者 QQ
-        """
-        from .event_factory import EventFactory
-        from ncatbot.core.client.ncatbot_event import NcatBotEvent
-
-        message_event = EventFactory.create_private_message(
-            message=message,
-            user_id=user_id,
-            **kwargs
-        )
-        # 绑定 API 上下文
-        message_event.bind_api(self.api)
-        # 使用与真实系统一致的事件类型 ncatbot.message_event
-        ncatbot_event = NcatBotEvent("ncatbot.message_event", data=message_event)
-        await self.event_bus.publish(ncatbot_event)
-
-    def inject_private_message_sync(
-        self,
-        message: str,
-        user_id: str = "987654321",
-        **kwargs
-    ) -> None:
-        """同步版本的 inject_private_message"""
-        run_coroutine(self.inject_private_message, message, user_id, **kwargs)
-    
-    # ==================== 断言方法 ====================
-    
-    def assert_api_called(self, action: str) -> None:
-        """断言 API 被调用过"""
-        self.mock_router.assert_called(action)
-    
-    def assert_api_not_called(self, action: str) -> None:
-        """断言 API 未被调用"""
-        self.mock_router.assert_not_called(action)
-    
-    def assert_api_called_with(self, action: str, **expected_params) -> None:
-        """断言 API 使用特定参数被调用"""
-        self.mock_router.assert_called_with(action, **expected_params)
-    
-    def assert_reply_sent(self, contains: Optional[str] = None) -> None:
-        """
-        断言发送了回复消息
-        
-        Args:
-            contains: 回复中应包含的文本（可选）
-        """
-        group_calls = self.mock_router.get_calls_for_action("send_group_msg")
-        private_calls = self.mock_router.get_calls_for_action("send_private_msg")
-        all_calls = group_calls + private_calls
-        
-        assert all_calls, "没有发送任何回复消息"
-        
-        if contains:
-            for params in all_calls:
-                if params and "message" in params:
-                    message = params["message"]
-                    # 检查消息内容
-                    message_str = str(message)
-                    if contains in message_str:
-                        return
-            raise AssertionError(f"回复中未包含预期文本: {contains}")
-    
-    def assert_no_reply(self) -> None:
-        """断言没有发送回复"""
-        group_calls = self.mock_router.get_calls_for_action("send_group_msg")
-        private_calls = self.mock_router.get_calls_for_action("send_private_msg")
-        all_calls = group_calls + private_calls
-        
-        assert not all_calls, f"意外发送了 {len(all_calls)} 条回复"
-    
-    def get_api_calls(self, action: Optional[str] = None) -> list:
-        """
-        获取 API 调用记录
-        
-        Args:
-            action: 指定 API，为 None 则返回所有调用
-        """
-        if action:
-            return self.mock_router.get_calls_for_action(action)
-        return self.mock_router.get_call_history()
-    
-    def clear_call_history(self) -> None:
-        """清空 API 调用历史"""
-        self.mock_router.clear_call_history()
-    
-    # ==================== API 响应设置 ====================
-    
-    def set_api_response(self, action: str, response: dict) -> None:
-        """设置 API 响应"""
-        self.mock_router.set_api_response(action, response)
+    def mock_server(self) -> Optional["NapCatMockServer"]:
+        """获取 MockServer 实例"""
+        return self._mock_server
 
 
 @asynccontextmanager
-async def create_test_suite(**kwargs):
+async def create_test_suite_with_mock_server(
+    initial_data: Optional[dict] = None,
+    port: int = 16700,
+    **suite_kwargs
+):
     """
-    创建测试套件的异步上下文管理器
+    创建带有 MockServer 的测试套件
     
-    使用示例：
-    ```python
-    async with create_test_suite() as suite:
-        await suite.register_plugin(MyPlugin)
-        await suite.inject_group_message("/hello")
-    ```
+    自动启动 MockServer 并配置测试套件。
+    
+    Args:
+        initial_data: 初始数据，默认使用 get_standard_data()
+        port: MockServer 端口，默认 16700
+        **suite_kwargs: 传递给 E2ETestSuite 的其他参数
     """
-    suite = E2ETestSuite(**kwargs)
-    suite.setup()
-    try:
-        yield suite
-    finally:
-        suite.teardown()
+    from .mock_server import NapCatMockServer, get_standard_data
+    
+    data = initial_data or get_standard_data()
+    
+    async with NapCatMockServer(port=port, initial_data=data) as server:
+        suite = E2ETestSuite(mock_server=server, **suite_kwargs)
+        await suite.setup()
+        try:
+            yield suite
+        finally:
+            await suite.teardown()
