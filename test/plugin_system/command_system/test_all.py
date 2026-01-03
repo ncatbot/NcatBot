@@ -32,11 +32,7 @@ def run_all_tests():
 
             # 运行测试主函数
             if hasattr(module, "__main__"):
-                exec(
-                    open(
-                        f"test/plugin_system/command_system/{module_name}.py"
-                    ).read()
-                )
+                exec(open(f"test/plugin_system/command_system/{module_name}.py").read())
 
             results[test_name] = "✓ 通过"
             print(f"\n{test_name} 测试完成！")
@@ -65,4 +61,3 @@ def run_all_tests():
 if __name__ == "__main__":
     success = run_all_tests()
     sys.exit(0 if success else 1)
-

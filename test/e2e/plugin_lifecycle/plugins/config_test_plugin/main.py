@@ -28,7 +28,10 @@ class ConfigTestPlugin(NcatBotPlugin):
             description="API密钥配置",
         )
         self.register_config(
-            name="max_retries", default_value=3, description="最大重试次数", value_type=int
+            name="max_retries",
+            default_value=3,
+            description="最大重试次数",
+            value_type=int,
         )
         self.register_config(
             name="enabled", default_value=True, description="是否启用", value_type=bool
@@ -44,9 +47,7 @@ class ConfigTestPlugin(NcatBotPlugin):
     async def on_close(self):
         LOG.debug("ConfigTestPlugin on_close called")
 
-    @command_registry.command(
-        "cfg_get", description="获取配置", prefixes=["", "/"]
-    )
+    @command_registry.command("cfg_get", description="获取配置", prefixes=["", "/"])
     async def cfg_get(self, event: GroupMessageEvent, key: str = ""):
         if key:
             value = self.config.get(key, "NOT_FOUND")
@@ -54,9 +55,7 @@ class ConfigTestPlugin(NcatBotPlugin):
         else:
             await event.reply(f"All configs: {dict(self.config)}")
 
-    @command_registry.command(
-        "cfg_set", description="设置配置", prefixes=["", "/"]
-    )
+    @command_registry.command("cfg_set", description="设置配置", prefixes=["", "/"])
     async def cfg_set(self, event: GroupMessageEvent, key: str, value: str):
         old = self.config.get(key)
         self.set_config(key, value)
@@ -67,4 +66,3 @@ class ConfigTestPlugin(NcatBotPlugin):
     def reset_counters(cls):
         cls.config_values_on_load = {}
         cls.config_change_history = []
-

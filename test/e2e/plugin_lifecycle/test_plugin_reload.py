@@ -22,7 +22,9 @@ class TestBasicPluginReload:
     """基础插件重载测试"""
 
     @pytest.mark.asyncio
-    async def test_manual_reload_flow(self, test_suite: E2ETestSuite, basic_plugin_name):
+    async def test_manual_reload_flow(
+        self, test_suite: E2ETestSuite, basic_plugin_name
+    ):
         """测试手动重载流程（卸载+加载）"""
         # 首次加载
         await test_suite.register_plugin(basic_plugin_name)
@@ -37,13 +39,15 @@ class TestBasicPluginReload:
         # 再次加载（会得到新的类）
         await test_suite.register_plugin(basic_plugin_name)
         BasicTestPlugin2 = get_plugin_class(basic_plugin_name)
-        
+
         # 新类的 load_count 应该是 1（重置后）
         assert BasicTestPlugin2.load_count == 1
         assert BasicTestPlugin2.init_called is True
 
     @pytest.mark.asyncio
-    async def test_plugin_available_after_reload(self, test_suite: E2ETestSuite, basic_plugin_name):
+    async def test_plugin_available_after_reload(
+        self, test_suite: E2ETestSuite, basic_plugin_name
+    ):
         """测试重载后插件仍然可用"""
         await test_suite.register_plugin(basic_plugin_name)
         await test_suite.unregister_plugin("basic_test_plugin")
@@ -78,7 +82,9 @@ class TestCommandReloadBehavior:
         test_suite.assert_reply_sent()
 
     @pytest.mark.asyncio
-    async def test_command_executable_after_reload(self, test_suite: E2ETestSuite, command_plugin_name):
+    async def test_command_executable_after_reload(
+        self, test_suite: E2ETestSuite, command_plugin_name
+    ):
         """测试重载后命令可执行"""
         await test_suite.register_plugin(command_plugin_name)
 
@@ -96,7 +102,9 @@ class TestCommandReloadBehavior:
         test_suite.assert_reply_sent()
 
     @pytest.mark.asyncio
-    async def test_command_state_reset_after_reload(self, test_suite: E2ETestSuite, command_plugin_name):
+    async def test_command_state_reset_after_reload(
+        self, test_suite: E2ETestSuite, command_plugin_name
+    ):
         """测试重载后命令状态被重置（类变量重置）"""
         await test_suite.register_plugin(command_plugin_name)
         CommandTestPlugin1 = get_plugin_class(command_plugin_name)
@@ -155,7 +163,9 @@ class TestConfigReloadBehavior:
         assert len(configs) == 3
 
     @pytest.mark.asyncio
-    async def test_new_config_merged_with_existing(self, test_suite: E2ETestSuite, config_plugin_name):
+    async def test_new_config_merged_with_existing(
+        self, test_suite: E2ETestSuite, config_plugin_name
+    ):
         """测试新配置与现有配置合并"""
         await test_suite.register_plugin(config_plugin_name)
 
@@ -228,7 +238,9 @@ class TestFullFeaturePluginReload:
     """完整功能插件重载测试"""
 
     @pytest.mark.asyncio
-    async def test_full_reload_lifecycle(self, test_suite: E2ETestSuite, full_feature_plugin_name):
+    async def test_full_reload_lifecycle(
+        self, test_suite: E2ETestSuite, full_feature_plugin_name
+    ):
         """测试完整重载生命周期"""
         # 首次加载
         await test_suite.register_plugin(full_feature_plugin_name)
@@ -287,7 +299,9 @@ class TestRapidReload:
     """快速重载测试"""
 
     @pytest.mark.asyncio
-    async def test_multiple_rapid_reloads(self, test_suite: E2ETestSuite, basic_plugin_name):
+    async def test_multiple_rapid_reloads(
+        self, test_suite: E2ETestSuite, basic_plugin_name
+    ):
         """测试多次快速重载"""
         for i in range(3):
             await test_suite.register_plugin(basic_plugin_name)
@@ -301,7 +315,9 @@ class TestRapidReload:
         assert plugin is None
 
     @pytest.mark.asyncio
-    async def test_reload_with_pending_events(self, test_suite: E2ETestSuite, handler_plugin_name):
+    async def test_reload_with_pending_events(
+        self, test_suite: E2ETestSuite, handler_plugin_name
+    ):
         """测试有待处理事件时的重载"""
         await test_suite.register_plugin(handler_plugin_name)
 

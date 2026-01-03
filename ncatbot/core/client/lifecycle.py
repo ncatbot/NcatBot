@@ -12,7 +12,7 @@ from typing_extensions import Unpack
 from pathlib import Path
 
 from ncatbot.utils import get_log, ncatbot_config
-from ncatbot.utils.error import NcatBotError, NcatBotConnectionError
+from ncatbot.utils.error import NcatBotError
 from ncatbot.core.adapter import launch_napcat_service
 
 if TYPE_CHECKING:
@@ -27,6 +27,7 @@ LOG = get_log("Lifecycle")
 
 class StartArgs(TypedDict, total=False):
     """启动参数类型定义"""
+
     bt_uin: Union[str, int]
     root: Optional[str]
     ws_uri: Optional[str]
@@ -55,12 +56,12 @@ class LifecycleManager:
         self.services = services
         self.event_bus = event_bus
         self.registry = registry
-        
+
         self._running = False
         self.plugin_loader = None
         self.api: Optional["BotAPI"] = None
         self.dispatcher: Optional["EventDispatcher"] = None
-        
+
         # 异步任务控制
         self._main_task: Optional[asyncio.Task] = None
         self._startup_event: Optional[asyncio.Event] = None
@@ -83,6 +84,7 @@ class LifecycleManager:
         self.services.set_test_mode(self._test_mode)
 
         from ncatbot.plugin_system import PluginLoader
+
         self.plugin_loader = PluginLoader(
             self.event_bus,
             self.services,
@@ -92,7 +94,7 @@ class LifecycleManager:
 
         if not self._test_mode:
             launch_napcat_service()
-            
+
     async def _core_execution(self):
         """核心执行流"""
         try:
@@ -111,7 +113,9 @@ class LifecycleManager:
             # 3. 加载插件
             if self.plugin_loader:
                 if not self._skip_plugin_load:
-                    await self.plugin_loader.load_external_plugins(Path(ncatbot_config.plugin.plugins_dir).resolve())
+                    await self.plugin_loader.load_external_plugins(
+                        Path(ncatbot_config.plugin.plugins_dir).resolve()
+                    )
                 await self.plugin_loader.load_builtin_plugins()
             # 4. 关键：通知启动完成
             # 在开始无限循环监听之前，设置事件，告知 start_background 可以返回了
@@ -121,7 +125,7 @@ class LifecycleManager:
             # 5. 开始监听 (阻塞直到连接断开或任务取消)
             if router.websocket:
                 await router.websocket.listen()
-                
+
         except asyncio.CancelledError:
             # 正常退出信号
             LOG.info("Bot 运行任务被取消，正在停止...")
@@ -131,7 +135,7 @@ class LifecycleManager:
             # 如果错误发生在启动阶段，也要释放等待锁，否则 start_background 会死锁
             if self._startup_event and not self._startup_event.is_set():
                 # 这里不设置 set，而是让 task 结束，外层检测到 task done 会抛出异常
-                pass 
+                pass
             raise
         finally:
             await self._cleanup()
@@ -140,16 +144,16 @@ class LifecycleManager:
         """资源清理"""
         if not self._running:
             return
-        
+
         self._running = False
-        
+
         # 1. 卸载插件
         if self.plugin_loader:
             await self.plugin_loader.unload_all()
-        
+
         # 2. 关闭服务 (包括 Websocket 连接)
         await self.services.close_all()
-        
+
         LOG.info("Bot 资源已释放")
 
     # ================= 启动入口 =================
@@ -157,38 +161,35 @@ class LifecycleManager:
     async def run_backend_async(self, **kwargs: Unpack[StartArgs]) -> "BotAPI":
         """
         [推荐] 安全的异步非阻塞启动
-        
+
         1. 启动 NapCat
         2. 建立 WebSocket 连接
         3. 确认连接成功后，立即返回 BotAPI
         4. Bot 在后台任务中运行
-        
+
         Returns:
             BotAPI: 操作 Bot 的接口对象
-            
+
         Raises:
             NcatBotError: 启动超时或失败
         """
         if self._running:
-             LOG.warning("Bot 已经在运行中")
-             return self.api  # type: ignore
+            LOG.warning("Bot 已经在运行中")
+            return self.api  # type: ignore
 
         self._prepare_startup(**kwargs)
-        
+
         # 创建同步事件
         self._startup_event = asyncio.Event()
-        
+
         # 创建后台任务
         self._main_task = asyncio.create_task(self._core_execution())
-        
+
         # 等待启动完成 或 任务崩溃
         # 我们同时等待 startup_event (成功) 和 _main_task (可能失败退出)
         done, pending = await asyncio.wait(
-            [
-                asyncio.create_task(self._startup_event.wait()),
-                self._main_task
-            ],
-            return_when=asyncio.FIRST_COMPLETED
+            [asyncio.create_task(self._startup_event.wait()), self._main_task],
+            return_when=asyncio.FIRST_COMPLETED,
         )
 
         # 检查是否是任务先结束了（说明启动失败崩溃了）
@@ -217,20 +218,20 @@ class LifecycleManager:
     def run_backend(self, daemon: bool = True, **kwargs: Unpack[StartArgs]) -> "BotAPI":
         """
         [新增] 同步环境下的安全非阻塞启动
-        
+
         在独立线程中启动一个新的 Event Loop 运行 Bot，适合在 GUI 程序或
         同步脚本中使用，不会阻塞主线程。
-        
+
         Args:
             daemon: 是否将 Bot 线程设为守护线程（主程序退出时 Bot 自动退出）
             **kwargs: 启动参数
-            
+
         Returns:
             BotAPI: Bot 操作接口 (注意：调用其方法时需注意线程安全或使用 run_coroutine_threadsafe)
         """
         import threading
         import concurrent.futures
-        
+
         if self._running:
             LOG.warning("Bot 已经在运行中")
             return self.api  # type: ignore
@@ -265,7 +266,9 @@ class LifecycleManager:
                     LOG.error(f"Bot 线程清理失败: {cleanup_err}")
 
         # 启动后台线程
-        bot_thread = threading.Thread(target=_thread_entry, name="NcatBot-Thread", daemon=daemon)
+        bot_thread = threading.Thread(
+            target=_thread_entry, name="NcatBot-Thread", daemon=daemon
+        )
         bot_thread.start()
 
         # 阻塞当前线程，直到 Bot 启动成功或失败
@@ -281,15 +284,15 @@ class LifecycleManager:
     async def shutdown(self):
         """
         异步安全关闭 Bot
-        
+
         取消后台任务并等待清理完成。推荐在测试 teardown 中使用。
         清理工作由 _core_execution 的 finally 块中的 _cleanup() 完成。
         """
         if not self._running:
             return
-        
+
         LOG.info("正在安全关闭 Bot...")
-        
+
         if self._main_task and not self._main_task.done():
             self._main_task.cancel()
             try:
@@ -302,7 +305,7 @@ class LifecycleManager:
     def bot_exit(self):
         """
         退出 Bot (支持在异步或同步环境中调用)
-        
+
         触发后台任务的取消，清理由 _core_execution 的 finally 块完成。
         """
         if not self._running:
@@ -310,7 +313,7 @@ class LifecycleManager:
             return
 
         LOG.info("正在请求退出 Bot...")
-        
+
         # 取消后台任务，清理由 finally 块的 _cleanup() 完成
         if self._main_task and not self._main_task.done():
             self._main_task.cancel()

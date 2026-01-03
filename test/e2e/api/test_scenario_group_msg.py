@@ -12,10 +12,6 @@
 5. 发送合并转发消息
 """
 
-import sys
-from pathlib import Path
-
-
 from .framework import test_case, APITestSuite
 from .utils import model_to_dict, ensure_test_image
 
@@ -60,7 +56,9 @@ class GroupMessageScenarioTests(APITestSuite):
         content = "[E2E 场景测试] 消息生命周期测试 - 即将撤回 🔄"
         # post_group_msg 返回 str 类型的 message_id
         image_file = ensure_test_image(data)
-        message_id = await api.post_group_msg(group_id=int(target_group), text=content, image=image_file)
+        message_id = await api.post_group_msg(
+            group_id=int(target_group), text=content, image=image_file
+        )
         assert message_id, "发送消息失败，未获取到 message_id"
 
         # 2. 查询消息详情
@@ -172,7 +170,9 @@ class GroupMessageScenarioTests(APITestSuite):
         count = messages_data.get("history_query", {}).get("count", 10)
 
         # get_group_msg_history 返回 List[GroupMessageEvent]
-        messages = await api.get_group_msg_history(group_id=int(target_group), count=count)
+        messages = await api.get_group_msg_history(
+            group_id=int(target_group), count=count
+        )
 
         return {
             "count": len(messages),
@@ -212,7 +212,9 @@ class GroupMessageScenarioTests(APITestSuite):
         inner_fc = ForwardConstructor(user_id="10001", nickname="内层用户A")
         inner_fc.attach_text("[E2E 场景测试] 嵌套转发内层消息 1️⃣")
         inner_fc.attach_text("[E2E 场景测试] 嵌套转发内层消息 2️⃣")
-        inner_fc.attach_image("https://storage.moegirl.org.cn/moegirl/commons/3/30/%E6%B4%9B%E5%A4%A9%E4%BE%9DV4%E5%AE%98%E6%96%B9%E6%B8%B2%E6%9F%932.png")
+        inner_fc.attach_image(
+            "https://storage.moegirl.org.cn/moegirl/commons/3/30/%E6%B4%9B%E5%A4%A9%E4%BE%9DV4%E5%AE%98%E6%96%B9%E6%B8%B2%E6%9F%932.png"
+        )
         inner_forward = inner_fc.to_forward()
 
         # ========== 构建外层转发消息（综合场景） ==========
@@ -256,7 +258,9 @@ class GroupMessageScenarioTests(APITestSuite):
         return {
             "scenario": "comprehensive",
             "outer_node_count": len(forward.content) if forward.content else 0,
-            "inner_node_count": len(inner_forward.content) if inner_forward.content else 0,
+            "inner_node_count": len(inner_forward.content)
+            if inner_forward.content
+            else 0,
             "is_multi_user": True,
             "is_nested": True,
             "has_image": True,
@@ -292,7 +296,9 @@ class GroupMessageScenarioTests(APITestSuite):
         message_id = await api.send_group_custom_music(
             group_id=int(target_group),
             url=music_info.get("url", "https://music.163.com"),
-            audio=music_info.get("audio", "https://music.163.com/song/media/outer/url?id=1.mp3"),
+            audio=music_info.get(
+                "audio", "https://music.163.com/song/media/outer/url?id=1.mp3"
+            ),
             title=music_info.get("title", "E2E测试音乐"),
             content=music_info.get("content", "测试歌手"),
             image=music_info.get("image", "https://via.placeholder.com/300"),

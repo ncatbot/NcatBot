@@ -2,4 +2,3 @@ name = "config_test_plugin"
 version = "1.0.0"
 main = "main"
 description = "配置测试插件 - 测试与 PluginConfigService 的协作"
-

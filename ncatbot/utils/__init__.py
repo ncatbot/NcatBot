@@ -10,8 +10,16 @@ from ncatbot.utils.thread_pool import run_coroutine
 from ncatbot.utils.assets import *  # noqa: F401,F403
 
 __all__ = [
-    "ncatbot_config", "config", "get_log", "status", "Status",
-    "gen_url_with_proxy", "post_json", "get_json",
-    "NcatBotError", "NcatBotValueError", "NcatBotConnectionError",
+    "ncatbot_config",
+    "config",
+    "get_log",
+    "status",
+    "Status",
+    "gen_url_with_proxy",
+    "post_json",
+    "get_json",
+    "NcatBotError",
+    "NcatBotValueError",
+    "NcatBotConnectionError",
     "run_coroutine",
 ]

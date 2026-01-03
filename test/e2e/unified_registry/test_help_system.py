@@ -41,7 +41,7 @@ class TestHelpSystemE2E:
     @pytest.mark.asyncio
     async def test_plugin_loads_and_basic_help(self):
         """测试插件加载和基础帮助功能（综合测试）
-        
+
         测试内容：
         - 插件加载成功
         - 基础命令的帮助生成
@@ -61,34 +61,34 @@ class TestHelpSystemE2E:
             assert any("help_params" in path for path in all_commands.keys())
             assert any("help_options" in path for path in all_commands.keys())
             assert any("help_complex" in path for path in all_commands.keys())
-            
+
             # 2. 测试基础命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
                 if "help_basic" in path:
                     cmd_spec = spec
                     break
-            
+
             assert cmd_spec is not None
-            
+
             generator = HelpGenerator()
             help_text = generator.generate_command_help(cmd_spec)
-            
+
             assert "📋 命令: help_basic" in help_text
             assert "基础命令描述" in help_text
             assert "💡 用法:" in help_text
-            
+
             # 3. 测试无描述命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
                 if "help_no_desc" in path:
                     cmd_spec = spec
                     break
-            
+
             assert cmd_spec is not None
-            
+
             help_text = generator.generate_command_help(cmd_spec)
-            
+
             assert "📋 命令: help_no_desc" in help_text
             assert "📝 描述:" not in help_text
 
@@ -97,7 +97,7 @@ class TestHelpSystemE2E:
     @pytest.mark.asyncio
     async def test_help_with_aliases_and_params(self):
         """测试带别名和参数的命令帮助（综合测试）
-        
+
         测试内容：
         - 带别名命令的帮助生成
         - 带参数命令的帮助生成
@@ -113,7 +113,7 @@ class TestHelpSystemE2E:
 
             all_commands = command_registry.get_all_commands()
             generator = HelpGenerator()
-            
+
             # 1. 测试带别名命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
@@ -129,7 +129,7 @@ class TestHelpSystemE2E:
             assert "📋 别名:" in help_text
             assert "ha" in help_text
             assert "halias" in help_text
-            
+
             # 2. 测试带参数命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
@@ -147,7 +147,7 @@ class TestHelpSystemE2E:
             assert "--output" in help_text
             assert "(可选)" in help_text
             assert "默认值: out.txt" in help_text
-            
+
             # 3. 测试带选择值参数的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
@@ -166,7 +166,7 @@ class TestHelpSystemE2E:
     @pytest.mark.asyncio
     async def test_help_with_options_and_groups(self):
         """测试带选项和选项组的命令帮助（综合测试）
-        
+
         测试内容：
         - 带选项命令的帮助生成
         - 带选项组命令的帮助生成
@@ -181,7 +181,7 @@ class TestHelpSystemE2E:
 
             all_commands = command_registry.get_all_commands()
             generator = HelpGenerator()
-            
+
             # 1. 测试带选项命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
@@ -200,7 +200,7 @@ class TestHelpSystemE2E:
             assert "显示全部" in help_text
             assert "--force" in help_text
             assert "强制执行" in help_text
-            
+
             # 2. 测试带选项组命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
@@ -224,7 +224,7 @@ class TestHelpSystemE2E:
     @pytest.mark.asyncio
     async def test_complex_command_and_utilities(self):
         """测试复杂命令和工具函数（综合测试）
-        
+
         测试内容：
         - 复杂组合命令的帮助生成
         - 从注册表生成命令列表
@@ -240,7 +240,7 @@ class TestHelpSystemE2E:
 
             all_commands = command_registry.get_all_commands()
             generator = HelpGenerator()
-            
+
             # 1. 测试复杂组合命令的帮助生成
             cmd_spec = None
             for path, spec in all_commands.items():
@@ -265,7 +265,7 @@ class TestHelpSystemE2E:
             assert "compression" in help_text
             assert "--gzip (默认)" in help_text
             assert "🌰 示例:" in help_text
-            
+
             # 2. 测试从注册表生成命令列表
             # 过滤出测试插件的命令
             test_commands = [
@@ -281,7 +281,7 @@ class TestHelpSystemE2E:
             assert "help_params" in list_text
             assert "help_options" in list_text
             assert "💡 使用 /<命令名> --help 查看详细帮助" in list_text
-            
+
             # 3. 测试使用注册命令的错误格式化
             cmd_spec = None
             for path, spec in all_commands.items():

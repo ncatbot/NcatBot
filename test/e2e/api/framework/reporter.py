@@ -110,8 +110,7 @@ class TestReporter:
 
         # 失败详情
         failed = [
-            r for r in self.results
-            if r.status in [TestStatus.FAILED, TestStatus.ERROR]
+            r for r in self.results if r.status in [TestStatus.FAILED, TestStatus.ERROR]
         ]
         if failed:
             lines.extend(self._format_failures(failed))

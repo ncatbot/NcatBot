@@ -23,7 +23,7 @@ def test_case(
 
     Args:
         name: 测试名称
-        description: 测试描述  
+        description: 测试描述
         category: 测试分类
         api_endpoint: API 端点
         expected: 预期结果描述

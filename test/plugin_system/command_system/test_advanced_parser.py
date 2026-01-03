@@ -434,4 +434,3 @@ if __name__ == "__main__":
     print(f"选项: {result.options}")
     print(f"命名参数: {result.named_params}")
     print(f"元素: {[e.content for e in result.elements]}")
-

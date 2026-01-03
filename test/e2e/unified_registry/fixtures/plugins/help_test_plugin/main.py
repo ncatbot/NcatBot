@@ -35,7 +35,9 @@ class HelpTestPlugin(NcatBotPlugin):
 
     # ==================== 带别名命令 ====================
 
-    @command_registry.command("help_alias", aliases=["ha", "halias"], description="带别名命令")
+    @command_registry.command(
+        "help_alias", aliases=["ha", "halias"], description="带别名命令"
+    )
     async def alias_cmd(self, event: MessageEvent):
         """带别名命令"""
         await event.reply("alias")
@@ -88,7 +90,9 @@ class HelpTestPlugin(NcatBotPlugin):
 
     # ==================== 复杂组合命令 ====================
 
-    @command_registry.command("help_complex", description="复杂组合命令，测试完整帮助生成")
+    @command_registry.command(
+        "help_complex", description="复杂组合命令，测试完整帮助生成"
+    )
     @param(name="source", help="源文件路径")
     @param(name="dest", default="backup", help="目标路径")
     @option(short_name="v", long_name="verbose", help="详细输出")
@@ -113,4 +117,3 @@ class HelpTestPlugin(NcatBotPlugin):
             f"source={source}, dest={dest}, compression={compression}, "
             f"verbose={verbose}, force={force}"
         )
-

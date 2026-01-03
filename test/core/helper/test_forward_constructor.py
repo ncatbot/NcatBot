@@ -1,7 +1,6 @@
 """Tests for ncatbot.core.helper.forward_constructor module."""
 
 import pytest
-from unittest.mock import MagicMock
 
 
 class TestForwardConstructorInit:
@@ -20,10 +19,7 @@ class TestForwardConstructorInit:
         """Test initialization with custom values."""
         from ncatbot.core.helper.forward_constructor import ForwardConstructor
 
-        fc = ForwardConstructor(
-            user_id="999999",
-            nickname="CustomUser"
-        )
+        fc = ForwardConstructor(user_id="999999", nickname="CustomUser")
         assert fc.user_id == "999999"
         assert fc.nickname == "CustomUser"
 
@@ -34,7 +30,7 @@ class TestForwardConstructorInit:
 
         node = Node(user_id="111", nickname="Test", content=MessageArray(Text("Hello")))
         fc = ForwardConstructor(content=[node])
-        
+
         assert len(fc.content) == 1
 
 
@@ -47,7 +43,7 @@ class TestForwardConstructorSetAuthor:
 
         fc = ForwardConstructor()
         fc.set_author("888888", "NewUser")
-        
+
         assert fc.user_id == "888888"
         assert fc.nickname == "NewUser"
 
@@ -63,7 +59,7 @@ class TestForwardConstructorAttach:
         fc = ForwardConstructor()
         content = MessageArray(Text("Hello"))
         fc.attach(content)
-        
+
         assert len(fc.content) == 1
         assert fc.content[0].user_id == "123456"
         assert fc.content[0].nickname == "QQ用户"
@@ -76,7 +72,7 @@ class TestForwardConstructorAttach:
         fc = ForwardConstructor()
         content = MessageArray(Text("Hello"))
         fc.attach(content, user_id="777777", nickname="SpecialUser")
-        
+
         assert fc.content[0].user_id == "777777"
         assert fc.content[0].nickname == "SpecialUser"
 
@@ -87,7 +83,7 @@ class TestForwardConstructorAttach:
 
         fc = ForwardConstructor()
         fc.attach_message(MessageArray(Text("Test message")))
-        
+
         assert len(fc.content) == 1
 
     def test_attach_text(self):
@@ -96,7 +92,7 @@ class TestForwardConstructorAttach:
 
         fc = ForwardConstructor()
         fc.attach_text("Simple text message")
-        
+
         assert len(fc.content) == 1
 
     def test_attach_text_with_author(self):
@@ -105,7 +101,7 @@ class TestForwardConstructorAttach:
 
         fc = ForwardConstructor()
         fc.attach_text("Text", user_id="555555", nickname="TextAuthor")
-        
+
         assert fc.content[0].user_id == "555555"
         assert fc.content[0].nickname == "TextAuthor"
 
@@ -115,7 +111,7 @@ class TestForwardConstructorAttach:
 
         fc = ForwardConstructor()
         fc.attach_image("http://example.com/image.png")
-        
+
         assert len(fc.content) == 1
 
     def test_attach_file(self):
@@ -124,7 +120,7 @@ class TestForwardConstructorAttach:
 
         fc = ForwardConstructor()
         fc.attach_file("/path/to/file.txt")
-        
+
         assert len(fc.content) == 1
 
     def test_attach_video(self):
@@ -133,7 +129,7 @@ class TestForwardConstructorAttach:
 
         fc = ForwardConstructor()
         fc.attach_video("/path/to/video.mp4")
-        
+
         assert len(fc.content) == 1
 
 
@@ -148,11 +144,15 @@ class TestForwardConstructorAttachForward:
         fc = ForwardConstructor()
         nested_forward = Forward(
             content=[
-                Node(user_id="111", nickname="Inner", content=MessageArray(Text("Nested")))
+                Node(
+                    user_id="111",
+                    nickname="Inner",
+                    content=MessageArray(Text("Nested")),
+                )
             ]
         )
         fc.attach_forward(nested_forward)
-        
+
         assert len(fc.content) == 1
 
     def test_attach_forward_empty_content_raises(self):
@@ -162,7 +162,7 @@ class TestForwardConstructorAttachForward:
 
         fc = ForwardConstructor()
         empty_forward = Forward(content=None)
-        
+
         with pytest.raises(ValueError, match="content 不能为空"):
             fc.attach_forward(empty_forward)
 
@@ -177,7 +177,7 @@ class TestForwardConstructorToForward:
 
         fc = ForwardConstructor()
         forward = fc.to_forward()
-        
+
         assert isinstance(forward, Forward)
         assert forward.content == []
 
@@ -190,9 +190,9 @@ class TestForwardConstructorToForward:
         fc.attach_text("Message 1")
         fc.attach_text("Message 2")
         fc.attach_text("Message 3")
-        
+
         forward = fc.to_forward()
-        
+
         assert isinstance(forward, Forward)
         assert len(forward.content) == 3
 
@@ -205,15 +205,15 @@ class TestForwardConstructorMultipleMessages:
         from ncatbot.core.helper.forward_constructor import ForwardConstructor
 
         fc = ForwardConstructor()
-        
+
         fc.set_author("111111", "User1")
         fc.attach_text("Hello from User1")
-        
+
         fc.set_author("222222", "User2")
         fc.attach_text("Hello from User2")
-        
+
         fc.attach_text("Another message", user_id="333333", nickname="User3")
-        
+
         assert len(fc.content) == 3
         assert fc.content[0].user_id == "111111"
         assert fc.content[1].user_id == "222222"
@@ -224,12 +224,12 @@ class TestForwardConstructorMultipleMessages:
         from ncatbot.core.helper.forward_constructor import ForwardConstructor
 
         fc = ForwardConstructor()
-        
+
         fc.attach_text("Text message")
         fc.attach_image("http://example.com/image.png")
         fc.attach_file("/path/to/file.txt")
         fc.attach_video("/path/to/video.mp4")
-        
+
         assert len(fc.content) == 4
 
     def test_chained_operations(self):
@@ -237,17 +237,17 @@ class TestForwardConstructorMultipleMessages:
         from ncatbot.core.helper.forward_constructor import ForwardConstructor
 
         fc = ForwardConstructor(user_id="000000", nickname="Bot")
-        
+
         # Set author and add multiple messages
         fc.set_author("111111", "User1")
         fc.attach_text("Message 1")
         fc.attach_text("Message 2")
-        
-        fc.set_author("222222", "User2")  
+
+        fc.set_author("222222", "User2")
         fc.attach_text("Message 3")
-        
+
         forward = fc.to_forward()
-        
+
         assert len(forward.content) == 3
         # First two messages should use User1
         assert forward.content[0].user_id == "111111"

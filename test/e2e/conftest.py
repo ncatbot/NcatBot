@@ -2,15 +2,10 @@
 E2E 测试全局配置
 """
 
-import pytest
-import pytest_asyncio
-
 
 def pytest_configure(config):
     """配置 pytest"""
-    config.addinivalue_line(
-        "markers", "asyncio: mark test as async"
-    )
+    config.addinivalue_line("markers", "asyncio: mark test as async")
 
 
 # 注意：共享 MockServer 的方案在实践中存在连接复用问题

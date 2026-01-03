@@ -107,7 +107,9 @@ class ParamsTestPlugin(NcatBotPlugin):
     # ==================== 选项组 ====================
 
     @command_registry.command("export")
-    @option_group(name="format", choices=["json", "csv", "xml"], default="json", help="导出格式")
+    @option_group(
+        name="format", choices=["json", "csv", "xml"], default="json", help="导出格式"
+    )
     async def export_cmd(
         self,
         event: MessageEvent,
@@ -140,4 +142,3 @@ class ParamsTestPlugin(NcatBotPlugin):
         if force:
             result += " [强制模式]"
         await event.reply(result)
-

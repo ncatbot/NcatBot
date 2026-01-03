@@ -20,8 +20,9 @@ class CommandGroup:
 
     支持嵌套的命令组织结构。
     """
+
     _current_plugin_name: str = ""
-    
+
     def __init__(
         self,
         name: str,
@@ -174,7 +175,13 @@ class ModernRegistry:
     def set_current_plugin_name(cls, plugin_name: str):
         cls.root_group.set_current_plugin_name(plugin_name)
 
-    def command(self, name: str, aliases: Optional[List[str]] = None, description: Optional[str] = None, **kwargs):
+    def command(
+        self,
+        name: str,
+        aliases: Optional[List[str]] = None,
+        description: Optional[str] = None,
+        **kwargs,
+    ):
         """注册根级命令"""
         if "prefixes" not in kwargs:
             kwargs["prefixes"] = self.prefixes

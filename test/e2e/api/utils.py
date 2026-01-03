@@ -15,10 +15,10 @@ from typing import Any
 def model_to_dict(obj: Any) -> Any:
     """
     将模型对象转换为字典
-    
+
     Args:
         obj: 要转换的对象（模型对象、字典或其他）
-    
+
     Returns:
         转换后的字典或字符串表示
     """
@@ -34,18 +34,19 @@ def model_to_dict(obj: Any) -> Any:
 def create_test_file(file_path: str, content: str = None) -> str:
     """
     创建测试文件
-    
+
     Args:
         file_path: 文件路径
         content: 文件内容，如果为空则使用默认内容
-    
+
     Returns:
         创建的文件路径
     """
     if content is None:
         import datetime
+
         content = f"E2E 测试文件内容 - 生成时间: {datetime.datetime.now()}"
-    
+
     os.makedirs(os.path.dirname(file_path) or "/tmp", exist_ok=True)
     with open(file_path, "w", encoding="utf-8") as f:
         f.write(content)
@@ -55,12 +56,12 @@ def create_test_file(file_path: str, content: str = None) -> str:
 def create_test_image(image_path: str) -> str:
     """
     创建测试图片（1x1 PNG）
-    
+
     创建一个简单的 1x1 像素 PNG 图片用于测试
-    
+
     Args:
         image_path: 图片文件路径
-    
+
     Returns:
         创建的图片路径
     """
@@ -77,12 +78,12 @@ def create_test_image(image_path: str) -> str:
 def ensure_test_image(data: dict) -> str:
     """
     确保测试图片存在，返回图片路径
-    
+
     优先返回配置的 URL 图片，如果不存在则创建本地测试图片
-    
+
     Args:
         data: 测试配置数据
-    
+
     Returns:
         图片路径或 URL
     """
@@ -103,4 +104,8 @@ def ensure_test_image(data: dict) -> str:
         except Exception:
             pass
 
-    return local_image if os.path.exists(local_image) else "https://via.placeholder.com/300x200.png"
+    return (
+        local_image
+        if os.path.exists(local_image)
+        else "https://via.placeholder.com/300x200.png"
+    )

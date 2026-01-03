@@ -6,7 +6,7 @@
 from dataclasses import dataclass
 from typing import List, Dict, Any, Tuple
 
-from .tokenizer import Token, TokenType, NonTextToken
+from .tokenizer import Token, TokenType
 
 
 @dataclass
@@ -86,9 +86,7 @@ class CommandParser:
 
             elif token.type in (TokenType.WORD, TokenType.QUOTED_STRING):
                 element = Element(
-                    type="text",
-                    content=token.value,
-                    position=len(elements)
+                    type="text", content=token.value, position=len(elements)
                 )
                 elements.append(element)
                 i += 1
@@ -120,7 +118,7 @@ class CommandParser:
         tokens: List[Token],
         index: int,
         options: Dict[str, bool],
-        named_params: Dict[str, Any]
+        named_params: Dict[str, Any],
     ) -> int:
         """处理短选项"""
         token = tokens[index]
@@ -141,7 +139,7 @@ class CommandParser:
         tokens: List[Token],
         index: int,
         options: Dict[str, bool],
-        named_params: Dict[str, Any]
+        named_params: Dict[str, Any],
     ) -> int:
         """处理长选项"""
         token = tokens[index]
@@ -163,18 +161,11 @@ class CommandParser:
             and tokens[index + 1].type == TokenType.SEPARATOR
             and index + 2 < len(tokens)
             and tokens[index + 2].type != TokenType.EOF
-            and tokens[index + 2].type in (
-                TokenType.WORD,
-                TokenType.QUOTED_STRING,
-                TokenType.NON_TEXT_ELEMENT
-            )
+            and tokens[index + 2].type
+            in (TokenType.WORD, TokenType.QUOTED_STRING, TokenType.NON_TEXT_ELEMENT)
         )
 
-    def _parse_assignment(
-        self,
-        tokens: List[Token],
-        index: int
-    ) -> Tuple[str, Any]:
+    def _parse_assignment(self, tokens: List[Token], index: int) -> Tuple[str, Any]:
         """解析选项赋值"""
         option_name = tokens[index].value
         value_token = tokens[index + 2]
@@ -189,4 +180,3 @@ class CommandParser:
 
 # 保持向后兼容的别名
 AdvancedCommandParser = CommandParser
-

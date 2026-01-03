@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, List, Literal, Union
 from ..utils import APIComponent, APIReturnStatus
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
+    pass
 
 from .models import (
     EssenceMessage,
@@ -196,9 +196,7 @@ class GroupInfoMixin(APIComponent):
         status = APIReturnStatus(result)
         return GroupMemberInfo(**status.data)
 
-    async def get_group_member_list(
-        self, group_id: Union[str, int]
-    ) -> GroupMemberList:
+    async def get_group_member_list(self, group_id: Union[str, int]) -> GroupMemberList:
         """
         获取群成员列表
 
@@ -215,9 +213,7 @@ class GroupInfoMixin(APIComponent):
         status = APIReturnStatus(result)
         return GroupMemberList(status.data)
 
-    async def get_group_shut_list(
-        self, group_id: Union[str, int]
-    ) -> GroupMemberList:
+    async def get_group_shut_list(self, group_id: Union[str, int]) -> GroupMemberList:
         """
         获取群禁言列表
 

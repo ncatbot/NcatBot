@@ -11,10 +11,6 @@
 4. 群相册：获取列表 → 上传图片
 """
 
-import sys
-from pathlib import Path
-
-
 from .framework import test_case, APITestSuite
 from .utils import model_to_dict, create_test_file, create_test_image
 
@@ -96,7 +92,9 @@ class GroupFileScenarioTests(APITestSuite):
             group_id=int(target_group),
             file=file_path_2,
             name=file_name_2,
-            folder=folder_id if folder_id else "/" + folder_name,  # 使用文件夹 ID 或路径
+            folder=folder_id
+            if folder_id
+            else "/" + folder_name,  # 使用文件夹 ID 或路径
         )
 
         # 5. 查询文件夹内容验证
@@ -145,10 +143,14 @@ class GroupFileScenarioTests(APITestSuite):
                 "result": model_to_dict(upload_result_2),
             },
             "step5_verify_folder": {
-                "folder_files_count": len(folder_files) if isinstance(folder_files, list) else "N/A",
+                "folder_files_count": len(folder_files)
+                if isinstance(folder_files, list)
+                else "N/A",
                 "file_in_folder_found": uploaded_file_in_folder is not None,
                 "uploaded_file": uploaded_file_in_folder,
-                "query_result": folder_files if not isinstance(folder_files, list) else "查询成功",
+                "query_result": folder_files
+                if not isinstance(folder_files, list)
+                else "查询成功",
             },
         }
 
@@ -175,7 +177,7 @@ class GroupFileScenarioTests(APITestSuite):
         # 1. 发送文本文件
         file_path = "/tmp/e2e_post_file.txt"
         create_test_file(file_path, f"E2E 测试 - POST文件 {time.time()}")
-        
+
         try:
             file_msg_id = await api.post_group_file(
                 group_id=int(target_group),
@@ -188,7 +190,7 @@ class GroupFileScenarioTests(APITestSuite):
         # 2. 发送图片
         image_path = "/tmp/e2e_post_image.png"
         create_test_image(image_path)
-        
+
         try:
             image_msg_id = await api.post_group_file(
                 group_id=int(target_group),
@@ -250,7 +252,10 @@ class GroupAlbumScenarioTests(APITestSuite):
                 "albums": albums[:3] if albums else [],
             }
         except Exception as e:
-            result["step1_get_albums"] = {"error": str(e), "note": "此 API 可能不受支持"}
+            result["step1_get_albums"] = {
+                "error": str(e),
+                "note": "此 API 可能不受支持",
+            }
 
         # 2. 尝试上传图片（如果获取列表成功）
         if result["step1_get_albums"] and "error" not in result["step1_get_albums"]:
@@ -271,7 +276,10 @@ class GroupAlbumScenarioTests(APITestSuite):
                     "result": model_to_dict(upload_result),
                 }
             except Exception as e:
-                result["step2_upload"] = {"error": str(e), "note": "此 API 可能不受支持"}
+                result["step2_upload"] = {
+                    "error": str(e),
+                    "note": "此 API 可能不受支持",
+                }
         else:
             result["step2_upload"] = {"skipped": True, "reason": "获取相册列表失败"}
 

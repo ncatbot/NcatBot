@@ -1,6 +1,7 @@
 """
 message_segments 子模块专用 pytest fixtures
 """
+
 import pytest
 from typing import Any, Dict, List
 

@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 NcatBot API 端到端测试入口
 
@@ -49,7 +48,7 @@ sys.path.insert(0, str(current_dir))
 
 try:
     # 尝试作为模块导入
-    from framework import (
+    from framework import (  # noqa: E402
         TestCase,
         TestConfig,
         TestRunner,
@@ -57,23 +56,25 @@ try:
         TestReporter,
         collect_all_tests,
         Colors,
-        print_header,
     )
 except ImportError:
     # 直接导入文件
-    from framework.types import TestCase
-    from framework.config import TestConfig
-    from framework.runner import TestRunner, InteractiveTestRunner
-    from framework.reporter import TestReporter
-    from framework.decorators import collect_all_tests
-    from framework.output import Colors, print_header
+    from framework.types import TestCase  # noqa: E402
+    from framework.config import TestConfig  # noqa: E402
+    from framework.runner import TestRunner, InteractiveTestRunner  # noqa: E402
+    from framework.reporter import TestReporter  # noqa: E402
+    from framework.decorators import collect_all_tests  # noqa: E402
+    from framework.output import Colors  # noqa: E402
 
 # 直接导入测试套件
-from test_scenario_basic import BasicInfoScenarioTests
-from test_scenario_group_msg import GroupMessageScenarioTests
-from test_scenario_group_file import GroupFileScenarioTests, GroupAlbumScenarioTests
-from test_scenario_friend import FriendInteractionScenarioTests
-from test_scenario_admin import (
+from test_scenario_basic import BasicInfoScenarioTests  # noqa: E402
+from test_scenario_group_msg import GroupMessageScenarioTests  # noqa: E402
+from test_scenario_group_file import (  # noqa: E402
+    GroupFileScenarioTests,
+    GroupAlbumScenarioTests,
+)
+from test_scenario_friend import FriendInteractionScenarioTests  # noqa: E402
+from test_scenario_admin import (  # noqa: E402
     GroupAdminScenarioTests,
     GroupAdminActionTests,
     DangerousAdminTests,
@@ -133,7 +134,7 @@ def filter_tests(
     if skip_to is not None:
         # skip_to 是 1-based，转换为 0-based 索引
         if skip_to > 0 and skip_to <= len(tests):
-            filtered = tests[skip_to - 1:]
+            filtered = tests[skip_to - 1 :]
         elif skip_to > len(tests):
             print(
                 f"{Colors.RED}错误: 指定的序号 {skip_to} 超过总测试数 {len(tests)}{Colors.ENDC}"
@@ -186,21 +187,21 @@ async def setup_connection():
     services = ServiceManager()
     services.register(MessageRouter)
     services.register(PreUploadService)
-    
+
     # 加载消息路由服务
     await services.load("message_router")
     router = services.message_router
-    
+
     # 启动消息监听（必须在发送请求前启动）
     router.start_listening()
-    
+
     # 加载预上传服务（使用 message_router 的连接）
     await services.load("preupload")
 
     # 创建 API（传入 service_manager 以支持预上传）
     api = BotAPI(router.send, service_manager=services)
     print(f"{Colors.GREEN}连接成功!{Colors.ENDC}")
-    
+
     # 显示预上传服务状态
     if api._preupload_available:
         print(f"{Colors.GREEN}预上传服务已启用{Colors.ENDC}")
@@ -209,7 +210,9 @@ async def setup_connection():
 
     try:
         login_info = await api.get_login_info()
-        print(f"{Colors.GREEN}当前登录: {login_info.nickname} ({login_info.user_id}){Colors.ENDC}")
+        print(
+            f"{Colors.GREEN}当前登录: {login_info.nickname} ({login_info.user_id}){Colors.ENDC}"
+        )
     except Exception as e:
         print(f"{Colors.YELLOW}警告: 无法获取登录信息 - {e}{Colors.ENDC}")
 
@@ -252,7 +255,9 @@ async def main():
     all_tests = collect_all_tests(*ALL_TEST_SUITES)
 
     # 过滤测试
-    tests = filter_tests(all_tests, category=args.category, tag=args.tag, skip_to=args.skip_to)
+    tests = filter_tests(
+        all_tests, category=args.category, tag=args.tag, skip_to=args.skip_to
+    )
 
     if not tests:
         print(f"{Colors.RED}没有匹配的测试用例{Colors.ENDC}")

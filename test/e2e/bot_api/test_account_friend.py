@@ -102,14 +102,12 @@ class TestFriendOperations:
         assert result is not None, "点赞操作应返回结果"
 
         # 验证 API 调用参数
-        api_suite.assert_api_called_with(
-            "send_like",
-            user_id=standard_user_id,
-            times=1
-        )
+        api_suite.assert_api_called_with("send_like", user_id=standard_user_id, times=1)
 
     @pytest.mark.asyncio
-    async def test_message_read_status(self, api_suite, standard_user_id, standard_group_id):
+    async def test_message_read_status(
+        self, api_suite, standard_user_id, standard_group_id
+    ):
         """
         消息已读状态测试
 
@@ -127,4 +125,3 @@ class TestFriendOperations:
         api_suite.clear_call_history()
         await api.mark_private_msg_as_read(user_id=standard_user_id)
         api_suite.assert_api_called("mark_private_msg_as_read")
-

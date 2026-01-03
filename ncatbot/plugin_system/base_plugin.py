@@ -9,7 +9,6 @@
 from uuid import UUID
 from pathlib import Path
 from typing import Any, Dict, List, Set, Union, TYPE_CHECKING, Optional, Callable
-from concurrent.futures import ThreadPoolExecutor
 
 from ncatbot.utils import get_log
 from ncatbot.core import EventBus, NcatBotEvent
@@ -18,7 +17,11 @@ from ncatbot.core.service import ServiceManager
 if TYPE_CHECKING:
     from .builtin_mixin.ncatbot_plugin import NcatBotPlugin
     from .loader import PluginLoader
-    from ncatbot.core.service.builtin import RBACService, PluginConfigService, PluginConfig
+    from ncatbot.core.service.builtin import (
+        RBACService,
+        PluginConfigService,
+        PluginConfig,
+    )
 
 LOG = get_log("BasePlugin")
 
@@ -26,7 +29,7 @@ LOG = get_log("BasePlugin")
 class BasePlugin:
     """
     插件系统基础类（纯声明）
-    
+
     此类仅声明插件的属性和生命周期方法接口。
     实际初始化逻辑在 NcatBotPlugin 中实现。
     """
@@ -96,8 +99,8 @@ class BasePlugin:
 
     @property
     def meta_data(self) -> Dict[str, Any]:
-        if hasattr(self, "_meta_data") and isinstance(self._meta_data, dict): # type: ignore
-            md = dict(self._meta_data) # type: ignore
+        if hasattr(self, "_meta_data") and isinstance(self._meta_data, dict):  # type: ignore
+            md = dict(self._meta_data)  # type: ignore
             md.setdefault("name", getattr(self, "name", "Unknown"))
             md.setdefault("version", getattr(self, "version", "0.0.0"))
             md.setdefault("author", getattr(self, "author", "Unknown"))
@@ -113,7 +116,7 @@ class BasePlugin:
             "dependencies": self.dependencies,
             "config": self.config,
         }.copy()
-    
+
     @property
     def rbac(self) -> "RBACService":
         return self.services.rbac  # type: ignore
@@ -134,7 +137,9 @@ class BasePlugin:
     ) -> UUID:
         """注册事件处理器。"""
         if event_type in ["group_message", "private_message"]:
-            LOG.warning(f"使用了 deprecated 事件类型: {event_type}, 请使用 ncatbot.message_event 代替")
+            LOG.warning(
+                f"使用了 deprecated 事件类型: {event_type}, 请使用 ncatbot.message_event 代替"
+            )
         handler_id = self._event_bus.subscribe(
             event_type, handler, priority, timeout, plugin=self
         )
@@ -159,7 +164,7 @@ class BasePlugin:
 
     def get_plugin(self, name: str) -> Optional["NcatBotPlugin"]:
         """根据插件名称获取插件实例。"""
-        return self._loader.get_plugin(name) # type: ignore
+        return self._loader.get_plugin(name)  # type: ignore
 
     def list_plugins(self, *, obj: bool = False) -> List[Union[str, "BasePlugin"]]:
         """插件列表。"""

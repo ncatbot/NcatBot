@@ -20,7 +20,7 @@ def load_rbac_data(path: Path) -> Optional[Dict[str, Any]]:
     """从文件加载 RBAC 数据"""
     if not path.exists():
         return None
-    
+
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
 
@@ -53,9 +53,7 @@ def serialize_rbac_state(
             }
             for name, data in users.items()
         },
-        "role_users": {
-            role: list(users) for role, users in role_users.items()
-        },
+        "role_users": {role: list(users) for role, users in role_users.items()},
         "role_inheritance": role_inheritance.copy(),
         "permissions": permissions_trie,
     }

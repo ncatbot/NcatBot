@@ -1,7 +1,5 @@
 """Tests for ncatbot.plugin_system.pluginsys_err module."""
 
-import pytest
-
 
 class TestPluginSystemError:
     """Tests for base PluginSystemError class."""
@@ -21,9 +19,7 @@ class TestPluginCircularDependencyError:
         """Test string representation."""
         from ncatbot.plugin_system.pluginsys_err import PluginCircularDependencyError
 
-        error = PluginCircularDependencyError(
-            dependency_chain=["A", "B", "C", "A"]
-        )
+        error = PluginCircularDependencyError(dependency_chain=["A", "B", "C", "A"])
         msg = str(error)
         assert "循环依赖" in msg
         assert "A -> B -> C -> A" in msg
@@ -31,7 +27,8 @@ class TestPluginCircularDependencyError:
     def test_circular_dependency_is_plugin_system_error(self):
         """Test inheritance."""
         from ncatbot.plugin_system.pluginsys_err import (
-            PluginCircularDependencyError, PluginSystemError
+            PluginCircularDependencyError,
+            PluginSystemError,
         )
 
         error = PluginCircularDependencyError(dependency_chain=["A", "B"])
@@ -66,8 +63,7 @@ class TestPluginLoadError:
         from ncatbot.plugin_system.pluginsys_err import PluginLoadError
 
         error = PluginLoadError(
-            plugin_name="BrokenPlugin",
-            reason="Syntax error in main.py"
+            plugin_name="BrokenPlugin", reason="Syntax error in main.py"
         )
         msg = str(error)
         assert "BrokenPlugin" in msg
@@ -93,7 +89,7 @@ class TestPluginDependencyError:
         error = PluginDependencyError(
             plugin_name="MyPlugin",
             missing_dependency="DatabasePlugin",
-            version_constraints=">=1.0.0"
+            version_constraints=">=1.0.0",
         )
         msg = str(error)
         assert "MyPlugin" in msg
@@ -113,7 +109,7 @@ class TestPluginVersionError:
             plugin_name="MyPlugin",
             required_plugin="CorePlugin",
             required_version=">=2.0.0",
-            actual_version="1.5.0"
+            actual_version="1.5.0",
         )
         msg = str(error)
         assert "MyPlugin" in msg
@@ -131,8 +127,7 @@ class TestPluginUnloadError:
         from ncatbot.plugin_system.pluginsys_err import PluginUnloadError
 
         error = PluginUnloadError(
-            plugin_name="RunningPlugin",
-            reason="Has pending tasks"
+            plugin_name="RunningPlugin", reason="Has pending tasks"
         )
         msg = str(error)
         assert "RunningPlugin" in msg
@@ -147,10 +142,7 @@ class TestInvalidPluginStateError:
         """Test string representation."""
         from ncatbot.plugin_system.pluginsys_err import InvalidPluginStateError
 
-        error = InvalidPluginStateError(
-            plugin_name="StatePlugin",
-            state="CORRUPTED"
-        )
+        error = InvalidPluginStateError(plugin_name="StatePlugin", state="CORRUPTED")
         msg = str(error)
         assert "StatePlugin" in msg
         assert "无效状态" in msg
@@ -168,8 +160,7 @@ class TestEventHandlerError:
             __module__ = "test_module"
 
         error = EventHandlerError(
-            error_info="Handler raised exception",
-            handler=MockHandler()
+            error_info="Handler raised exception", handler=MockHandler()
         )
         msg = str(error)
         assert "test_module" in msg
@@ -184,8 +175,7 @@ class TestPluginInitError:
         from ncatbot.plugin_system.pluginsys_err import PluginInitError
 
         error = PluginInitError(
-            plugin_name="InitPlugin",
-            reason="Failed to connect to database"
+            plugin_name="InitPlugin", reason="Failed to connect to database"
         )
         msg = str(error)
         assert "InitPlugin" in msg
@@ -201,9 +191,7 @@ class TestPluginDataError:
         from ncatbot.plugin_system.pluginsys_err import PluginDataError
 
         error = PluginDataError(
-            plugin_name="DataPlugin",
-            operation="保存",
-            reason="Disk full"
+            plugin_name="DataPlugin", operation="保存", reason="Disk full"
         )
         msg = str(error)
         assert "DataPlugin" in msg
@@ -220,8 +208,7 @@ class TestPluginValidationError:
         from ncatbot.plugin_system.pluginsys_err import PluginValidationError
 
         error = PluginValidationError(
-            plugin_name="BadPlugin",
-            missing_attrs=["name", "version"]
+            plugin_name="BadPlugin", missing_attrs=["name", "version"]
         )
         msg = str(error)
         assert "BadPlugin" in msg
@@ -240,7 +227,7 @@ class TestPluginWorkspaceError:
         error = PluginWorkspaceError(
             plugin_name="WorkspacePlugin",
             path="/data/plugins/workspace",
-            reason="Permission denied"
+            reason="Permission denied",
         )
         msg = str(error)
         assert "WorkspacePlugin" in msg

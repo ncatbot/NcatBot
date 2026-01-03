@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, List, Literal, Optional, Union
 from ..utils import APIComponent, APIReturnStatus, check_exclusive_argument
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
     from ncatbot.core import (
         GroupMessageEvent,
         PrivateMessageEvent,
@@ -81,7 +80,7 @@ class MessageRetrieveMixin(APIComponent):
         )
         status = APIReturnStatus(result)
         data = status.data
-        
+
         # 根据 message_type 选择正确的事件类型
         if data.get("message_type") == "private":
             return PrivateMessageEvent(**data)
@@ -104,7 +103,12 @@ class MessageRetrieveMixin(APIComponent):
             {"message_id": message_id},
         )
         status = APIReturnStatus(result)
-        return Forward.from_dict({"type": "forward", "data": {"id": str(message_id), "content": status.data.get("messages")}})
+        return Forward.from_dict(
+            {
+                "type": "forward",
+                "data": {"id": str(message_id), "content": status.data.get("messages")},
+            }
+        )
 
     async def get_friend_msg_history(
         self,

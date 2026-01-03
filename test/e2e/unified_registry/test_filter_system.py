@@ -14,16 +14,12 @@ from pathlib import Path
 import pytest
 
 from ncatbot.utils.testing import E2ETestSuite
-from ncatbot.utils import status
 from ncatbot.core.service.builtin.unified_registry.filter_system.base import (
-    BaseFilter,
     CombinedFilter,
 )
 from ncatbot.core.service.builtin.unified_registry.filter_system.builtin import (
     GroupFilter,
     PrivateFilter,
-    AdminFilter,
-    RootFilter,
     CustomFilter,
     TrueFilter,
     NonSelfFilter,

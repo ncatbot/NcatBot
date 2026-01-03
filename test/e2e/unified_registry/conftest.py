@@ -25,9 +25,9 @@ async def basic_command_suite():
     await suite.setup()
     suite.index_plugin(str(BASIC_PLUGIN_DIR))
     await suite.register_plugin("basic_command_plugin")
-    
+
     yield suite
-    
+
     await suite.teardown()
 
 
@@ -38,9 +38,9 @@ async def filter_suite():
     await suite.setup()
     suite.index_plugin(str(FILTER_PLUGIN_DIR))
     await suite.register_plugin("filter_test_plugin")
-    
+
     yield suite
-    
+
     await suite.teardown()
 
 
@@ -51,9 +51,9 @@ async def params_suite():
     await suite.setup()
     suite.index_plugin(str(PARAMS_PLUGIN_DIR))
     await suite.register_plugin("params_test_plugin")
-    
+
     yield suite
-    
+
     await suite.teardown()
 
 
@@ -64,9 +64,9 @@ async def groups_suite():
     await suite.setup()
     suite.index_plugin(str(GROUPS_PLUGIN_DIR))
     await suite.register_plugin("command_groups_plugin")
-    
+
     yield suite
-    
+
     await suite.teardown()
 
 

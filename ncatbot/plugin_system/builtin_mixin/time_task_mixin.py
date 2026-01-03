@@ -34,7 +34,7 @@ class TimeTaskScheduler:
         threading.Thread(target=self.loop, daemon=True).start()
 
     def loop(self):
-        return 
+        return
         while True:
             self.step()
             time.sleep(0.2)

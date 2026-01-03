@@ -39,4 +39,3 @@ class HelloPlugin(NcatBotPlugin):
         if verbose:
             reply += " (verbose)"
         await event.reply(reply)
-

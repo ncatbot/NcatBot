@@ -210,9 +210,11 @@ class StringTokenizer:
             self.position += 1
 
         if not option_name:
-            while self.position < self.length and not self.text[self.position].isspace():
+            while (
+                self.position < self.length and not self.text[self.position].isspace()
+            ):
                 self.position += 1
-            self._add_token(TokenType.WORD, self.text[start_pos:self.position])
+            self._add_token(TokenType.WORD, self.text[start_pos : self.position])
             return
 
         self._add_token(TokenType.LONG_OPTION, option_name)
@@ -228,9 +230,11 @@ class StringTokenizer:
             self.position += 1
 
         if not options:
-            while self.position < self.length and not self.text[self.position].isspace():
+            while (
+                self.position < self.length and not self.text[self.position].isspace()
+            ):
                 self.position += 1
-            self._add_token(TokenType.WORD, self.text[start_pos:self.position])
+            self._add_token(TokenType.WORD, self.text[start_pos : self.position])
             return
 
         self._add_token(TokenType.SHORT_OPTION, options)

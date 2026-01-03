@@ -75,4 +75,3 @@ class BasicCommandPlugin(NcatBotPlugin):
     async def status_cmd(self, event: MessageEvent):
         """带别名的状态命令"""
         await event.reply("机器人运行正常")
-

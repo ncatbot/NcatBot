@@ -3,7 +3,6 @@
 from typing import Dict, List, Callable, Optional, Union, Any
 from dataclasses import dataclass
 from .base import BaseFilter
-from .builtin import CustomFilter
 from ncatbot.utils import get_log
 
 LOG = get_log(__name__)
@@ -24,8 +23,9 @@ class FilterRegistry:
     支持两种注册方式：
     1. filter_registry.register_filter(name, filter_instance)
     """
+
     _current_plugin_name: str = ""
-    
+
     def __init__(self):
         self._filters: Dict[str, FilterEntry] = {}
         self._function_filters: Dict[str, Callable] = {}
@@ -54,7 +54,6 @@ class FilterRegistry:
             name=name, filter_instance=filter_instance, metadata=metadata or {}
         )
         LOG.debug(f"注册过滤器实例: {name} -> {filter_instance}")
-
 
     # 为函数添加过滤器
     def add_filter_to_function(
@@ -118,7 +117,9 @@ class FilterRegistry:
     def revoke_plugin(self, plugin_name: str):
         """撤销插件的过滤器"""
         deleted_filters = [
-            name for name in self._function_filters.keys() if name.split("::")[0] == plugin_name
+            name
+            for name in self._function_filters.keys()
+            if name.split("::")[0] == plugin_name
         ]
         for name in deleted_filters:
             del self._function_filters[name]

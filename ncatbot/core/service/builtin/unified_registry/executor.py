@@ -11,7 +11,7 @@ from ncatbot.utils import get_log
 from .filter_system.validator import FilterValidator
 
 if TYPE_CHECKING:
-    from ncatbot.core import MessageEvent
+    pass
 
 LOG = get_log("FunctionExecutor")
 
@@ -59,7 +59,7 @@ class FunctionExecutor:
         func: Callable,
         event,  # MessageEvent 或 BaseEvent
         *args,
-        **kwargs
+        **kwargs,
     ):
         """执行函数（带过滤器验证和插件上下文）
 
@@ -96,4 +96,3 @@ class FunctionExecutor:
     def clear_cache(self) -> None:
         """清理插件映射缓存"""
         self._func_plugin_map.clear()
-

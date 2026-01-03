@@ -7,7 +7,7 @@ NapCat 配置管理模块
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Optional
+from typing import Optional
 from urllib.parse import urlparse
 
 from ....utils import get_log, ncatbot_config

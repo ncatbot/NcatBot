@@ -4,4 +4,3 @@ main = "plugin.py"
 entry_class = "LifecyclePlugin"
 author = "test"
 description = "生命周期插件 - 测试 on_load/on_close"
-

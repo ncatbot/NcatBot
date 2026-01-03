@@ -8,17 +8,20 @@ import re
 
 T = TypeVar("T", bound=MessageSegment)
 
+
 @dataclass
-class Text(str): # 兼容 4.4.x Text 类型
+class Text(str):  # 兼容 4.4.x Text 类型
     type: ClassVar[str] = "text"
     text: str
     pass
 
+
 @dataclass
-class AtAll():
+class AtAll:
     type: ClassVar[str] = "at"
     qq: str = "all"
     pass
+
 
 def parse_cq_code_to_onebot11(
     cq_string: str,
@@ -90,6 +93,7 @@ def parse_cq_code_to_onebot11(
 
     return message_segments
 
+
 def parse_message_segments(data: Any) -> List[MessageSegment]:
     if isinstance(data, dict):
         return [parse_message_segment(data)]
@@ -107,14 +111,16 @@ def parse_message_segments(data: Any) -> List[MessageSegment]:
         return segments
     return []
 
+
 class MessageArray(MessageArrayDTO):
     """消息段数组封装类，继承自 MessageArrayDTO"""
+
     def __init__(self, *args, **kwargs):
         if "message" in kwargs:
             super().__init__(**kwargs)
         else:
             super().__init__(message=parse_message_segments(args))
-            
+
     # -------------------
     # region 构造用接口
     # -------------------
@@ -136,14 +142,14 @@ class MessageArray(MessageArrayDTO):
 
     def add_image(self, image: Union[str, Image]):
         """添加图片消息段
-        
+
         Args:
             image: 可以是字符串路径/URL 或 Image 对象
                 - URL: "http://example.com/image.jpg"
                 - FilePath: "/path/to/image.jpg"
                 - Base64: "base64://..."
                 - Image 对象: Image(file="...")
-        
+
         Returns:
             self: 支持链式调用
         """
@@ -186,11 +192,13 @@ class MessageArray(MessageArrayDTO):
 
     @overload
     def filter(self, cls: None = None) -> List[MessageSegment]: ...
-    
+
     @overload
     def filter(self, cls: Type[T]) -> List[T]: ...
 
-    def filter(self, cls: Union[Type[T], None] = None) -> Union[List[MessageSegment], List[T]]:
+    def filter(
+        self, cls: Union[Type[T], None] = None
+    ) -> Union[List[MessageSegment], List[T]]:
         if cls is None:
             return self.message
         msg = []
@@ -219,7 +227,7 @@ class MessageArray(MessageArrayDTO):
     def is_user_at(self, user_id: Union[str, int], all_except: bool = False) -> bool:
         user_id = str(user_id)
         all_at = False
-        
+
         for at in self.filter(At):
             if at.qq == user_id:
                 return True
@@ -227,7 +235,7 @@ class MessageArray(MessageArrayDTO):
                 all_at = True
         return not all_except and all_at
 
-    def __iter__(self): # type: ignore
+    def __iter__(self):  # type: ignore
         return self.message.__iter__()
 
     def __len__(self):

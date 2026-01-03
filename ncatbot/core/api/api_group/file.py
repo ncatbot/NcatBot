@@ -11,7 +11,6 @@ from typing import TYPE_CHECKING, Optional, Union
 from ..utils import APIComponent, APIReturnStatus, get_log
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
     from ncatbot.core import File
 
 LOG = get_log("GroupFileMixin")
@@ -52,9 +51,7 @@ class GroupFileMixin(APIComponent):
         )
         APIReturnStatus.raise_if_failed(result)
 
-    async def trans_group_file(
-        self, group_id: Union[str, int], file_id: str
-    ) -> None:
+    async def trans_group_file(self, group_id: Union[str, int], file_id: str) -> None:
         """
         转存群文件为永久文件
 
@@ -127,10 +124,15 @@ class GroupFileMixin(APIComponent):
         """
         # 预上传处理
         processed_file = await self._preupload_file(file, "file")
-        
+
         result = await self._request_raw(
             "/upload_group_file",
-            {"group_id": group_id, "file": processed_file, "name": name, "folder": folder},
+            {
+                "group_id": group_id,
+                "file": processed_file,
+                "name": name,
+                "folder": folder,
+            },
         )
         APIReturnStatus.raise_if_failed(result)
 
@@ -160,9 +162,12 @@ class GroupFileMixin(APIComponent):
         """
         from ..utils import require_exactly_one
         from ..api_message.group_send import GroupMessageMixin
-        
+
         require_exactly_one(
-            image, record, video, file,
+            image,
+            record,
+            video,
+            file,
             names=["image", "record", "video", "file"],
         )
 
@@ -208,9 +213,7 @@ class GroupFileMixin(APIComponent):
         # TODO: 实现此功能
         return None
 
-    async def delete_group_file(
-        self, group_id: Union[str, int], file_id: str
-    ) -> None:
+    async def delete_group_file(self, group_id: Union[str, int], file_id: str) -> None:
         """
         删除群文件
 
@@ -284,9 +287,7 @@ class GroupFileMixin(APIComponent):
         status = APIReturnStatus(result)
         return status.data
 
-    async def get_group_file_url(
-        self, group_id: Union[str, int], file_id: str
-    ) -> str:
+    async def get_group_file_url(self, group_id: Union[str, int], file_id: str) -> str:
         """
         获取群文件下载链接
 

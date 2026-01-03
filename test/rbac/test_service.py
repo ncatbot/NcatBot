@@ -75,7 +75,7 @@ class TestRoleManagement:
     def test_add_duplicate_role(self, rbac_service):
         """测试添加重复角色"""
         rbac_service.add_role("admin")
-        
+
         with pytest.raises(ValueError, match="已存在"):
             rbac_service.add_role("admin")
 
@@ -101,9 +101,9 @@ class TestRoleManagement:
         rbac_service.add_role("admin")
         rbac_service.add_role("moderator")
         rbac_service.set_role_inheritance("admin", "moderator")
-        
+
         rbac_service.remove_role("moderator")
-        
+
         # admin 不应该再继承 moderator
         assert "moderator" not in rbac_service._role_inheritance.get("admin", [])
 
@@ -112,9 +112,9 @@ class TestRoleManagement:
         rbac_service.add_role("admin")
         rbac_service.add_user("user1")
         rbac_service.assign_role("user", "user1", "admin")
-        
+
         rbac_service.remove_role("admin")
-        
+
         # user1 不应该再有 admin 角色
         assert "admin" not in rbac_service._users["user1"]["roles"]
 
@@ -127,20 +127,20 @@ class TestRoleInheritance:
         rbac_service.add_role("admin")
         rbac_service.add_role("member")
         rbac_service.set_role_inheritance("admin", "member")
-        
+
         assert "member" in rbac_service._role_inheritance.get("admin", [])
 
     def test_inheritance_nonexistent_role(self, rbac_service):
         """测试不存在的角色继承"""
         rbac_service.add_role("admin")
-        
+
         with pytest.raises(ValueError, match="不存在"):
             rbac_service.set_role_inheritance("admin", "member")
 
     def test_inheritance_self(self, rbac_service):
         """测试角色不能继承自身"""
         rbac_service.add_role("admin")
-        
+
         with pytest.raises(ValueError, match="不能继承自身"):
             rbac_service.set_role_inheritance("admin", "admin")
 
@@ -149,10 +149,10 @@ class TestRoleInheritance:
         rbac_service.add_role("admin")
         rbac_service.add_role("moderator")
         rbac_service.add_role("member")
-        
+
         rbac_service.set_role_inheritance("admin", "moderator")
         rbac_service.set_role_inheritance("moderator", "member")
-        
+
         with pytest.raises(ValueError, match="循环继承"):
             rbac_service.set_role_inheritance("member", "admin")
 
@@ -169,7 +169,7 @@ class TestUserManagement:
     def test_add_duplicate_user(self, rbac_service):
         """测试添加重复用户"""
         rbac_service.add_user("user1")
-        
+
         with pytest.raises(ValueError, match="已存在"):
             rbac_service.add_user("user1")
 
@@ -200,9 +200,9 @@ class TestUserManagement:
         rbac_service.add_role("admin")
         rbac_service.add_user("user1")
         rbac_service.assign_role("user", "user1", "admin")
-        
+
         rbac_service.remove_user("user1")
-        
+
         assert "user1" not in rbac_service._role_users["admin"]
 
 
@@ -214,7 +214,7 @@ class TestRoleAssignment:
         rbac_service.add_role("admin")
         rbac_service.add_user("user1")
         rbac_service.assign_role("user", "user1", "admin")
-        
+
         assert "admin" in rbac_service._users["user1"]["roles"]
         assert "user1" in rbac_service._role_users["admin"]
 
@@ -222,21 +222,21 @@ class TestRoleAssignment:
         """测试分配角色时自动创建用户"""
         rbac_service.add_role("admin")
         rbac_service.assign_role("user", "user1", "admin", create_user=True)
-        
+
         assert rbac_service.user_exists("user1")
         assert "admin" in rbac_service._users["user1"]["roles"]
 
     def test_assign_role_no_create_user(self, rbac_service):
         """测试分配角色不创建用户"""
         rbac_service.add_role("admin")
-        
+
         with pytest.raises(ValueError, match="不存在"):
             rbac_service.assign_role("user", "user1", "admin", create_user=False)
 
     def test_assign_nonexistent_role(self, rbac_service):
         """测试分配不存在的角色"""
         rbac_service.add_user("user1")
-        
+
         with pytest.raises(ValueError, match="不存在"):
             rbac_service.assign_role("user", "user1", "admin")
 
@@ -246,7 +246,7 @@ class TestRoleAssignment:
         rbac_service.add_user("user1")
         rbac_service.assign_role("user", "user1", "admin")
         rbac_service.unassign_role("user", "user1", "admin")
-        
+
         assert "admin" not in rbac_service._users["user1"]["roles"]
         assert "user1" not in rbac_service._role_users["admin"]
 
@@ -258,21 +258,21 @@ class TestPermissionGrant:
         """测试授予用户权限"""
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick")
-        
+
         assert "plugin.admin.kick" in rbac_service._users["user1"]["whitelist"]
 
     def test_grant_to_role(self, rbac_service):
         """测试授予角色权限"""
         rbac_service.add_role("admin")
         rbac_service.grant("role", "admin", "plugin.admin.kick")
-        
+
         assert "plugin.admin.kick" in rbac_service._roles["admin"]["whitelist"]
 
     def test_grant_blacklist(self, rbac_service):
         """测试授予黑名单权限"""
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick", mode="black")
-        
+
         assert "plugin.admin.kick" in rbac_service._users["user1"]["blacklist"]
 
     def test_grant_removes_opposite(self, rbac_service):
@@ -280,7 +280,7 @@ class TestPermissionGrant:
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick", mode="black")
         rbac_service.grant("user", "user1", "plugin.admin.kick", mode="white")
-        
+
         assert "plugin.admin.kick" in rbac_service._users["user1"]["whitelist"]
         assert "plugin.admin.kick" not in rbac_service._users["user1"]["blacklist"]
 
@@ -288,22 +288,24 @@ class TestPermissionGrant:
         """测试授予权限时自动创建权限"""
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick", create_permission=True)
-        
+
         assert rbac_service.permission_exists("plugin.admin.kick")
 
     def test_grant_no_create_permission(self, rbac_service):
         """测试授予权限不创建权限"""
         rbac_service.add_user("user1")
-        
+
         with pytest.raises(ValueError, match="不存在"):
-            rbac_service.grant("user", "user1", "plugin.admin.kick", create_permission=False)
+            rbac_service.grant(
+                "user", "user1", "plugin.admin.kick", create_permission=False
+            )
 
     def test_revoke_from_user(self, rbac_service):
         """测试撤销用户权限"""
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick")
         rbac_service.revoke("user", "user1", "plugin.admin.kick")
-        
+
         assert "plugin.admin.kick" not in rbac_service._users["user1"]["whitelist"]
 
     def test_revoke_from_role(self, rbac_service):
@@ -311,7 +313,7 @@ class TestPermissionGrant:
         rbac_service.add_role("admin")
         rbac_service.grant("role", "admin", "plugin.admin.kick")
         rbac_service.revoke("role", "admin", "plugin.admin.kick")
-        
+
         assert "plugin.admin.kick" not in rbac_service._roles["admin"]["whitelist"]
 
 
@@ -328,7 +330,7 @@ class TestPermissionCheck:
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick", mode="white")
         rbac_service.grant("user", "user1", "plugin.admin.kick", mode="black")
-        
+
         # 黑名单优先，应该被拒绝
         # 注意：grant 会移除相反列表，所以这里只有黑名单
         assert not rbac_service.check("user1", "plugin.admin.kick")
@@ -361,7 +363,7 @@ class TestPermissionCheck:
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick")
         rbac_service.grant("user", "user1", "plugin.admin.ban")
-        
+
         # 精确匹配
         assert rbac_service.check("user1", "plugin.admin.kick")
         assert rbac_service.check("user1", "plugin.admin.ban")
@@ -375,13 +377,13 @@ class TestCacheClearing:
         """测试权限变更时清理缓存"""
         rbac_service.add_user("user1")
         rbac_service.grant("user", "user1", "plugin.admin.kick")
-        
+
         # 首次检查，结果会被缓存
         assert rbac_service.check("user1", "plugin.admin.kick")
-        
+
         # 撤销权限
         rbac_service.revoke("user", "user1", "plugin.admin.kick")
-        
+
         # 缓存应该被清理，返回新结果
         assert not rbac_service.check("user1", "plugin.admin.kick")
 
@@ -391,11 +393,10 @@ class TestCacheClearing:
         rbac_service.add_user("user1")
         rbac_service.grant("role", "admin", "plugin.admin.kick")
         rbac_service.assign_role("user", "user1", "admin")
-        
+
         assert rbac_service.check("user1", "plugin.admin.kick")
-        
+
         # 撤销角色
         rbac_service.unassign_role("user", "user1", "admin")
-        
-        assert not rbac_service.check("user1", "plugin.admin.kick")
 
+        assert not rbac_service.check("user1", "plugin.admin.kick")

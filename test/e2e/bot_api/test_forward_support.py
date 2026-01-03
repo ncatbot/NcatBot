@@ -31,7 +31,7 @@ class TestForwardMessage:
             news=["预览文本1", "预览文本2"],
             prompt="[聊天记录]",
             summary="查看 2 条转发消息",
-            source="群聊的聊天记录"
+            source="群聊的聊天记录",
         )
         # send_forward_msg 应该返回 message_id
         assert result is not None
@@ -81,10 +81,7 @@ class TestGroupAdminExtended:
         api = api_suite.api
 
         # 1. 设置群备注
-        await api.set_group_remark(
-            group_id=int(standard_group_id),
-            remark="测试群备注"
-        )
+        await api.set_group_remark(group_id=int(standard_group_id), remark="测试群备注")
         api_suite.assert_api_called("set_group_remark")
 
         # 2. 群签到
@@ -104,26 +101,15 @@ class TestGroupAdminExtended:
         api = api_suite.api
 
         # 1. 开启全群禁言
-        await api.set_group_whole_ban(
-            group_id=int(standard_group_id),
-            enable=True
-        )
+        await api.set_group_whole_ban(group_id=int(standard_group_id), enable=True)
         api_suite.assert_api_called_with(
-            "set_group_whole_ban",
-            group_id=int(standard_group_id),
-            enable=True
+            "set_group_whole_ban", group_id=int(standard_group_id), enable=True
         )
 
         # 2. 关闭全群禁言
         api_suite.clear_call_history()
-        await api.set_group_whole_ban(
-            group_id=int(standard_group_id),
-            enable=False
-        )
-        api_suite.assert_api_called_with(
-            "set_group_whole_ban",
-            enable=False
-        )
+        await api.set_group_whole_ban(group_id=int(standard_group_id), enable=False)
+        api_suite.assert_api_called_with("set_group_whole_ban", enable=False)
 
 
 class TestAccountExtended:
@@ -143,19 +129,13 @@ class TestAccountExtended:
 
         # 1. 设置 QQ 资料
         await api.set_qq_profile(
-            nickname="测试昵称",
-            personal_note="测试签名",
-            sex="未知"
+            nickname="测试昵称", personal_note="测试签名", sex="未知"
         )
         api_suite.assert_api_called("set_qq_profile")
 
         # 2. 设置在线状态
         api_suite.clear_call_history()
-        await api.set_online_status(
-            status=11,
-            ext_status=0,
-            battery_status=100
-        )
+        await api.set_online_status(status=11, ext_status=0, battery_status=100)
         api_suite.assert_api_called("set_online_status")
 
         # 3. 设置个人长昵称
@@ -175,10 +155,7 @@ class TestAccountExtended:
         api = api_suite.api
 
         # 1. 设置好友备注
-        await api.set_friend_remark(
-            user_id=int(standard_user_id),
-            remark="测试备注"
-        )
+        await api.set_friend_remark(user_id=int(standard_user_id), remark="测试备注")
         api_suite.assert_api_called("set_friend_remark")
 
         # 2. 获取用户状态
@@ -186,4 +163,3 @@ class TestAccountExtended:
         status = await api.nc_get_user_status(user_id=int(standard_user_id))
         assert status is not None, "用户状态不能为空"
         api_suite.assert_api_called("nc_get_user_status")
-

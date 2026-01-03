@@ -16,7 +16,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from .client import IAPIClient
+    pass
 
 
 # =============================================================================
@@ -120,7 +120,6 @@ class AccountAPI(APIComponent):
         APIReturnStatus.raise_if_failed(result)
 
     async def set_qq_avatar(self, file: str) -> None:
-        
         """
         设置 QQ 头像
 

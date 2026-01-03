@@ -2,4 +2,3 @@ name = "basic_test_plugin"
 version = "1.0.0"
 main = "main"
 description = "基础测试插件 - 仅测试基本生命周期"
-

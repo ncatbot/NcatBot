@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, List, Optional, Union
 from ..utils import APIComponent, APIReturnStatus, get_log
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
+    pass
 
 LOG = get_log("GroupAdminMixin")
 
@@ -28,9 +28,7 @@ class GroupAdminMixin(APIComponent):
     # 群设置
     # -------------------------------------------------------------------------
 
-    async def set_group_remark(
-        self, group_id: Union[str, int], remark: str
-    ) -> None:
+    async def set_group_remark(self, group_id: Union[str, int], remark: str) -> None:
         """
         设置群备注
 
@@ -112,7 +110,7 @@ class GroupAdminMixin(APIComponent):
         """
         # 预上传处理
         processed_file = await self._preupload_file(file, "image")
-        
+
         result = await self._request_raw(
             "/upload_image_to_qun_album",
             {
@@ -128,9 +126,7 @@ class GroupAdminMixin(APIComponent):
     # 群管理
     # -------------------------------------------------------------------------
 
-    async def set_group_avatar(
-        self, group_id: Union[str, int], file: str
-    ) -> None:
+    async def set_group_avatar(self, group_id: Union[str, int], file: str) -> None:
         """
         设置群头像
 
@@ -140,16 +136,14 @@ class GroupAdminMixin(APIComponent):
         """
         # 预上传处理
         processed_file = await self._preupload_file(file, "image")
-        
+
         result = await self._request_raw(
             "/set_group_avatar",
             {"group_id": group_id, "file": processed_file},
         )
         APIReturnStatus.raise_if_failed(result)
 
-    async def set_group_name(
-        self, group_id: Union[str, int], name: str
-    ) -> None:
+    async def set_group_name(self, group_id: Union[str, int], name: str) -> None:
         """
         设置群名称
 
@@ -222,26 +216,18 @@ class GroupAdminMixin(APIComponent):
     # 消息发送方法占位（由 MessageAPI 实现）
     # -------------------------------------------------------------------------
 
-    async def send_group_image(
-        self, group_id: Union[str, int], image: str
-    ) -> str:
+    async def send_group_image(self, group_id: Union[str, int], image: str) -> str:
         """发送群图片（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")
 
-    async def send_group_record(
-        self, group_id: Union[str, int], file: str
-    ) -> str:
+    async def send_group_record(self, group_id: Union[str, int], file: str) -> str:
         """发送群语音（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")
 
-    async def send_group_video(
-        self, group_id: Union[str, int], video: str
-    ) -> str:
+    async def send_group_video(self, group_id: Union[str, int], video: str) -> str:
         """发送群视频（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")
 
-    async def send_group_file(
-        self, group_id: Union[str, int], file: str
-    ) -> str:
+    async def send_group_file(self, group_id: Union[str, int], file: str) -> str:
         """发送群文件（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")

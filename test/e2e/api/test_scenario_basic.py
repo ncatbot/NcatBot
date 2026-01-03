@@ -11,10 +11,6 @@
 4. 获取群成员列表和成员信息
 """
 
-import sys
-from pathlib import Path
-
-
 from .framework import test_case, APITestSuite
 from .utils import model_to_dict
 
@@ -232,7 +228,9 @@ class BasicInfoScenarioTests(APITestSuite):
                 # members 中的元素是 GroupMemberInfo 对象
                 {"user_id": m.user_id, "nickname": m.nickname}
                 for m in members[:5]
-            ] if members else [],
+            ]
+            if members
+            else [],
         }
 
 

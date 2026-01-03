@@ -4,7 +4,7 @@ import pytest
 import tempfile
 import os
 import yaml
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestConfigCreation:
@@ -235,7 +235,9 @@ class TestConfigLoad:
         """Test load handles missing file gracefully."""
         from ncatbot.utils.config.config import Config
 
-        with patch("ncatbot.utils.config.config.CONFIG_PATH", "/nonexistent/config.yaml"):
+        with patch(
+            "ncatbot.utils.config.config.CONFIG_PATH", "/nonexistent/config.yaml"
+        ):
             config = Config.load()
             # 应该返回默认配置
             assert isinstance(config, Config)
@@ -372,4 +374,3 @@ class TestConfigStr:
         assert "987654321" in result
         assert "BOTQQ" in result
         assert "ROOT" in result
-

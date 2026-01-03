@@ -34,4 +34,3 @@ class BasicTestPlugin(NcatBotPlugin):
         cls.load_count = 0
         cls.unload_count = 0
         cls.init_called = False
-

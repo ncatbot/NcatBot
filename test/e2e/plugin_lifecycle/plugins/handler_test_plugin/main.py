@@ -53,4 +53,3 @@ class HandlerTestPlugin(NcatBotPlugin):
         cls.message_events = []
         cls.custom_events = []
         cls.handler_ids = []
-

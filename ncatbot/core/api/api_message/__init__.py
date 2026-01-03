@@ -27,7 +27,7 @@ from .forward import ForwardMessageMixin
 from .retrieve import MessageRetrieveMixin
 
 # 工具函数
-from .validation import validate_msg
+from .validation import validate_msg as validate_msg
 
 if TYPE_CHECKING:
     from ..client import IAPIClient
@@ -36,6 +36,7 @@ if TYPE_CHECKING:
 # =============================================================================
 # MessageAPI 组合类
 # =============================================================================
+
 
 @generate_sync_methods
 class MessageAPI(

@@ -37,6 +37,7 @@ class TestMessageRouterInit:
 
     def test_init_with_callback(self):
         """测试带回调初始化"""
+
         async def callback(data):
             pass
 
@@ -197,7 +198,7 @@ class TestOnMessage:
         event_data = {
             "post_type": "message",
             "message_type": "group",
-            "message": "Hello"
+            "message": "Hello",
         }
 
         await router._on_message(event_data)
@@ -304,4 +305,3 @@ class TestStartListening:
         result = router.start_listening()
 
         assert result is None
-

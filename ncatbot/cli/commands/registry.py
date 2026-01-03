@@ -76,8 +76,8 @@ class CommandRegistry:
 
             # Register aliases
             if aliases:
-                for aliases in aliases:
-                    self.aliases[aliases] = name
+                for alias in aliases:
+                    self.aliases[alias] = name
 
             # Register category
             if category:

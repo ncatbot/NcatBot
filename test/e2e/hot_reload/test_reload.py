@@ -5,7 +5,6 @@
 """
 
 import pytest
-import asyncio
 
 from ncatbot.core import NcatBotEvent
 from ncatbot.utils.testing import E2ETestSuite
@@ -39,10 +38,10 @@ class TestReload:
         await loader.load_plugin(PLUGIN_NAME)
 
         # 验证命令已恢复
-        assert check_command_registered("reload_test_cmd"), \
+        assert check_command_registered("reload_test_cmd"), (
             "命令 'reload_test_cmd' 应该已恢复"
-        assert check_alias_registered("hrt"), \
-            "别名 'hrt' 应该已恢复"
+        )
+        assert check_alias_registered("hrt"), "别名 'hrt' 应该已恢复"
 
     @pytest.mark.asyncio
     async def test_reload_restores_handlers(self, test_suite: E2ETestSuite):
@@ -60,8 +59,9 @@ class TestReload:
         await loader.load_plugin(PLUGIN_NAME)
 
         # 验证处理器已恢复
-        assert check_handler_registered(test_suite, PLUGIN_NAME) > 0, \
+        assert check_handler_registered(test_suite, PLUGIN_NAME) > 0, (
             "事件处理器应该已恢复"
+        )
 
     @pytest.mark.asyncio
     async def test_reload_preserves_config_values(self, test_suite: E2ETestSuite):
@@ -73,7 +73,9 @@ class TestReload:
         await loader.load_plugin(PLUGIN_NAME)
 
         # 设置配置值（使用异步版本确保串行保存）
-        await config_service.set_atomic_async(PLUGIN_NAME, "test_string", "modified_value")
+        await config_service.set_atomic_async(
+            PLUGIN_NAME, "test_string", "modified_value"
+        )
         await config_service.set_atomic_async(PLUGIN_NAME, "reload_count", 10)
 
         # 卸载插件
@@ -146,8 +148,7 @@ class TestReload:
 
         # 发布测试事件
         test_event = NcatBotEvent(
-            "ncatbot.hot_reload_test_event",
-            data={"test": "value1"}
+            "ncatbot.hot_reload_test_event", data={"test": "value1"}
         )
         await test_suite.event_bus.publish(test_event)
         assert plugin_class.HANDLER_CALL_COUNT > 0
@@ -167,14 +168,12 @@ class TestReload:
 
         # 再次发布测试事件
         test_event = NcatBotEvent(
-            "ncatbot.hot_reload_test_event",
-            data={"test": "value2"}
+            "ncatbot.hot_reload_test_event", data={"test": "value2"}
         )
         await test_suite.event_bus.publish(test_event)
 
         # 验证处理器被调用
-        assert plugin_class.HANDLER_CALL_COUNT > 0, \
-            "重载后事件处理器应该工作"
+        assert plugin_class.HANDLER_CALL_COUNT > 0, "重载后事件处理器应该工作"
 
     @pytest.mark.asyncio
     async def test_full_hot_reload_cycle(self, test_suite: E2ETestSuite):

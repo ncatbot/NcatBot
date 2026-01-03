@@ -122,3 +122,13 @@ skip_covered = false
 
 [tool.coverage.html]
 directory = "htmlcov"
+
+[tool.codespell]
+ignore-words-list = "ans"
+
+[tool.ruff.lint.per-file-ignores]
+# 这些文件使用 star imports 来导出公共 API
+"ncatbot/core/event/__init__.py" = ["F405"]
+"ncatbot/core/event/parser.py" = ["F405"]
+"ncatbot/core/event/events.py" = ["F405"]
+"ncatbot/core/event/message_segments/__init__.py" = ["F405"]

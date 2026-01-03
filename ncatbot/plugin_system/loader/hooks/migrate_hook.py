@@ -152,7 +152,9 @@ def auto_migrate_plugin_code(
 
     total_files = sum(len(r) for r in results.values())
     if total_files > 0:
-        LOG.info("代码迁移完成，共迁移 %d 个插件中的 %d 个文件", len(results), total_files)
+        LOG.info(
+            "代码迁移完成，共迁移 %d 个插件中的 %d 个文件", len(results), total_files
+        )
         for plugin_name, plugin_results in results.items():
             for result in plugin_results:
                 LOG.debug("  %s: %s", plugin_name, result.file_path.name)
@@ -196,4 +198,3 @@ def interactive_migrate_plugins(
             migrate_plugin(entry, remove_req=remove_req, dry_run=dry_run)
         except Exception as e:
             LOG.info(" ERROR: %s", e)
-

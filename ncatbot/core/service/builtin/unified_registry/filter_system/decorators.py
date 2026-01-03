@@ -21,14 +21,30 @@ if TYPE_CHECKING:
 
 __all__ = [
     # 权限装饰器
-    "admin_only", "root_only", "private_only", "group_only",
+    "admin_only",
+    "root_only",
+    "private_only",
+    "group_only",
     # 事件装饰器
-    "on_message", "on_message_sent", "on_notice", "on_request",
-    "on_group_at", "on_group_poke",
-    "on_group_increase", "on_group_decrease", "on_group_request",
+    "on_message",
+    "on_message_sent",
+    "on_notice",
+    "on_request",
+    "on_group_at",
+    "on_group_poke",
+    "on_group_increase",
+    "on_group_decrease",
+    "on_group_request",
     # 过滤器装饰器
-    "filter", "admin_filter", "group_admin_filter", "group_owner_filter", "root_filter",
-    "private_filter", "group_filter", "admin_group_filter", "admin_private_filter",
+    "filter",
+    "admin_filter",
+    "group_admin_filter",
+    "group_owner_filter",
+    "root_filter",
+    "private_filter",
+    "group_filter",
+    "admin_group_filter",
+    "admin_private_filter",
     # 工具类
     "FilterDecorator",
 ]
@@ -57,6 +73,7 @@ def filter(*filters: Union[str, "BaseFilter"]):
 # 事件装饰器
 # ==========================================================================
 
+
 def on_request(func: Callable) -> Callable:
     """请求事件装饰器"""
     return event_registry.request_handler(func)
@@ -74,7 +91,9 @@ def on_group_poke(func: Callable) -> Callable:
     def poke_filter(event) -> bool:
         return isinstance(event, NoticeEvent) and event.sub_type == "poke"
 
-    decorated_func = filter(GroupFilter(), CustomFilter(poke_filter, "poke_filter"))(func)
+    decorated_func = filter(GroupFilter(), CustomFilter(poke_filter, "poke_filter"))(
+        func
+    )
     return on_notice(decorated_func)
 
 
@@ -104,7 +123,9 @@ def on_group_increase(func: Callable) -> Callable:
     def increase_filter(event) -> bool:
         return isinstance(event, NoticeEvent) and event.notice_type == "group_increase"
 
-    decorated_func = filter(GroupFilter(), CustomFilter(increase_filter, "group_increase_filter"))(func)
+    decorated_func = filter(
+        GroupFilter(), CustomFilter(increase_filter, "group_increase_filter")
+    )(func)
     return on_notice(decorated_func)
 
 
@@ -115,7 +136,9 @@ def on_group_decrease(func: Callable) -> Callable:
     def decrease_filter(event) -> bool:
         return isinstance(event, NoticeEvent) and event.notice_type == "group_decrease"
 
-    decorated_func = filter(GroupFilter(), CustomFilter(decrease_filter, "group_decrease_filter"))(func)
+    decorated_func = filter(
+        GroupFilter(), CustomFilter(decrease_filter, "group_decrease_filter")
+    )(func)
     return on_notice(decorated_func)
 
 
@@ -126,13 +149,16 @@ def on_group_request(func: Callable) -> Callable:
     def request_filter(event) -> bool:
         return isinstance(event, RequestEvent)
 
-    decorated_func = filter(GroupFilter(), CustomFilter(request_filter, "group_request_filter"))(func)
+    decorated_func = filter(
+        GroupFilter(), CustomFilter(request_filter, "group_request_filter")
+    )(func)
     return on_request(decorated_func)
 
 
 # ==========================================================================
 # 过滤器装饰器
 # ==========================================================================
+
 
 class FilterDecorator:
     """过滤器装饰器包装器
@@ -145,6 +171,7 @@ class FilterDecorator:
 
     def __call__(self, func: Callable) -> Callable:
         from .registry import filter_registry
+
         filter_registry.add_filter_to_function(func, self.filter)
         return func
 
@@ -184,5 +211,9 @@ private_only = private_filter
 group_only = group_filter
 
 # 组合过滤器
-admin_group_filter = FilterDecorator(CombinedFilter(GroupFilter(), AdminFilter(), "and"))
-admin_private_filter = FilterDecorator(CombinedFilter(PrivateFilter(), AdminFilter(), "and"))
+admin_group_filter = FilterDecorator(
+    CombinedFilter(GroupFilter(), AdminFilter(), "and")
+)
+admin_private_filter = FilterDecorator(
+    CombinedFilter(PrivateFilter(), AdminFilter(), "and")
+)

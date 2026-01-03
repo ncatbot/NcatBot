@@ -14,7 +14,7 @@ class Image(DownloadableMessageSegment):
     type: ClassVar[str] = "image"
     sub_type: int = 0
     image_type: Optional[Literal["flash", "normal"]] = None
-    
+
     @classmethod
     def from_dict(cls, data):
         if "type" in data.get("data", {}):
@@ -30,6 +30,7 @@ class Image(DownloadableMessageSegment):
             image_type = data["data"].pop("image_type")
             data["data"]["type"] = 1 if image_type == "flash" else 0
         return data
+
 
 class Record(DownloadableMessageSegment):
     type: ClassVar[str] = "record"

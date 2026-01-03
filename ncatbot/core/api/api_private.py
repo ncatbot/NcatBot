@@ -17,7 +17,7 @@ from .utils import (
 )
 
 if TYPE_CHECKING:
-    from .client import IAPIClient
+    pass
 
 LOG = get_log("PrivateAPI")
 
@@ -55,7 +55,7 @@ class PrivateAPI(APIComponent):
         """
         # 预上传处理
         processed_file = await self._preupload_file(file, "file")
-        
+
         result = await self._request_raw(
             "/upload_private_file",
             {"user_id": user_id, "file": processed_file, "name": name},
@@ -104,7 +104,10 @@ class PrivateAPI(APIComponent):
             四个参数中必须且只能提供一个
         """
         require_exactly_one(
-            image, record, video, file,
+            image,
+            record,
+            video,
+            file,
             names=["image", "record", "video", "file"],
         )
 
@@ -145,26 +148,18 @@ class PrivateAPI(APIComponent):
     # region 占位方法（由 MessageAPI 实现）
     # -------------------------------------------------------------------------
 
-    async def send_private_image(
-        self, user_id: Union[str, int], image: str
-    ) -> str:
+    async def send_private_image(self, user_id: Union[str, int], image: str) -> str:
         """发送私聊图片（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")
 
-    async def send_private_record(
-        self, user_id: Union[str, int], file: str
-    ) -> str:
+    async def send_private_record(self, user_id: Union[str, int], file: str) -> str:
         """发送私聊语音（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")
 
-    async def send_private_video(
-        self, user_id: Union[str, int], video: str
-    ) -> str:
+    async def send_private_video(self, user_id: Union[str, int], video: str) -> str:
         """发送私聊视频（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")
 
-    async def send_private_file(
-        self, user_id: Union[str, int], file: str
-    ) -> str:
+    async def send_private_file(self, user_id: Union[str, int], file: str) -> str:
         """发送私聊文件（应由 MessageAPI 实现）"""
         raise NotImplementedError("This method should be implemented by MessageAPI")

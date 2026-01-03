@@ -15,7 +15,6 @@ from ncatbot.utils.testing import E2ETestSuite
 from ncatbot.core.service.builtin.unified_registry import command_registry
 from ncatbot.core.service.builtin.unified_registry.command_system.analyzer.decorator_validator import (
     DecoratorValidator,
-    _DecoratorValidatorImpl,
 )
 from ncatbot.core.service.builtin.unified_registry.command_system.utils import (
     CommandRegistrationError,

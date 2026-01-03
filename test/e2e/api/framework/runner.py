@@ -16,54 +16,70 @@ from .output import Colors, print_header, print_section
 def format_result(result: Any, indent: int = 2, max_depth: int = 3) -> str:
     """格式化结果输出"""
     prefix = " " * indent
-    
+
     if result is None:
         return f"{prefix}{Colors.DIM}(None){Colors.ENDC}"
-    
+
     # 处理模型对象
-    if hasattr(result, '__dict__') and not isinstance(result, (str, int, float, bool)):
-        result = {k: v for k, v in vars(result).items() if not k.startswith('_')}
-    
+    if hasattr(result, "__dict__") and not isinstance(result, (str, int, float, bool)):
+        result = {k: v for k, v in vars(result).items() if not k.startswith("_")}
+
     if isinstance(result, dict):
         lines = []
         for key, value in result.items():
             if isinstance(value, (dict, list)):
                 if max_depth > 0:
                     try:
-                        formatted = json.dumps(value, ensure_ascii=False, indent=2, default=str)
-                        formatted = "\n".join(prefix + "  " + line for line in formatted.split("\n"))
-                        lines.append(f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}:\n{formatted}")
-                    except:
-                        lines.append(f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}: {value}")
+                        formatted = json.dumps(
+                            value, ensure_ascii=False, indent=2, default=str
+                        )
+                        formatted = "\n".join(
+                            prefix + "  " + line for line in formatted.split("\n")
+                        )
+                        lines.append(
+                            f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}:\n{formatted}"
+                        )
+                    except Exception:
+                        lines.append(
+                            f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}: {value}"
+                        )
                 else:
                     lines.append(f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}: ...")
-            elif hasattr(value, '__dict__') and not isinstance(value, (str, int, float, bool)):
+            elif hasattr(value, "__dict__") and not isinstance(
+                value, (str, int, float, bool)
+            ):
                 # 嵌套模型对象
-                nested = {k: v for k, v in vars(value).items() if not k.startswith('_')}
+                nested = {k: v for k, v in vars(value).items() if not k.startswith("_")}
                 lines.append(f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}: {nested}")
             else:
                 lines.append(f"{prefix}{Colors.CYAN}{key}{Colors.ENDC}: {value}")
         return "\n".join(lines)
-    
+
     if isinstance(result, list):
         if len(result) == 0:
             return f"{prefix}{Colors.DIM}(空列表){Colors.ENDC}"
         # 处理列表中的模型对象
         processed = []
         for item in result[:5]:
-            if hasattr(item, '__dict__') and not isinstance(item, (str, int, float, bool)):
-                processed.append({k: v for k, v in vars(item).items() if not k.startswith('_')})
+            if hasattr(item, "__dict__") and not isinstance(
+                item, (str, int, float, bool)
+            ):
+                processed.append(
+                    {k: v for k, v in vars(item).items() if not k.startswith("_")}
+                )
             else:
                 processed.append(item)
         try:
             formatted = json.dumps(processed, ensure_ascii=False, indent=2, default=str)
             formatted = "\n".join(prefix + line for line in formatted.split("\n"))
             if len(result) > 5:
-                formatted += f"\n{prefix}{Colors.DIM}... 共 {len(result)} 项{Colors.ENDC}"
+                formatted += (
+                    f"\n{prefix}{Colors.DIM}... 共 {len(result)} 项{Colors.ENDC}"
+                )
             return formatted
-        except:
+        except Exception:
             return f"{prefix}{result}"
-    
+
     return f"{prefix}{result}"
 
 
@@ -93,7 +109,7 @@ class TestRunner:
         try:
             actual = await test_case.func(self.api, self.config)
             result.actual_result = actual
-            
+
             # 运行验证器
             passed, message = test_case.validate(actual)
             if passed:
@@ -101,13 +117,13 @@ class TestRunner:
             else:
                 result.status = TestStatus.FAILED
                 result.error = message or "验证失败"
-            
+
             result.finished_at = datetime.now()
         except AssertionError as e:
             result.error = str(e) or "断言失败"
             result.status = TestStatus.FAILED
             result.finished_at = datetime.now()
-        except Exception as e:
+        except Exception:
             result.error = traceback.format_exc()
             result.status = TestStatus.ERROR
             result.finished_at = datetime.now()
@@ -121,14 +137,14 @@ class TestRunner:
         passed = 0
         failed = 0
         errors = 0
-        
+
         print(f"\n{Colors.BOLD}开始运行 {total} 个测试...{Colors.ENDC}\n")
-        
+
         for i, test_case in enumerate(test_cases, 1):
             print(f"[{i}/{total}] {test_case.name}...", end=" ", flush=True)
             result = await self.run_single_test(test_case)
             self.results.append(result)
-            
+
             if result.status == TestStatus.PASSED:
                 print(f"{Colors.GREEN}✓ PASSED{Colors.ENDC}")
                 passed += 1
@@ -143,10 +159,12 @@ class TestRunner:
                 failed += 1
             elif result.status == TestStatus.ERROR:
                 print(f"{Colors.RED}✗ ERROR{Colors.ENDC}")
-                error_line = result.error.splitlines()[-1] if result.error else 'Unknown error'
+                error_line = (
+                    result.error.splitlines()[-1] if result.error else "Unknown error"
+                )
                 print(f"  {Colors.DIM}{error_line}{Colors.ENDC}")
                 errors += 1
-        
+
         # 打印总结
         print(f"\n{Colors.BOLD}{'=' * 40}{Colors.ENDC}")
         print(f"{Colors.BOLD}测试结果:{Colors.ENDC}")
@@ -156,18 +174,22 @@ class TestRunner:
         if errors > 0:
             print(f"  {Colors.RED}错误: {errors}{Colors.ENDC}")
         print(f"  总计: {total}")
-        
+
         # 显示失败/错误的详情
-        failures = [r for r in self.results if r.status in (TestStatus.FAILED, TestStatus.ERROR)]
+        failures = [
+            r for r in self.results if r.status in (TestStatus.FAILED, TestStatus.ERROR)
+        ]
         if failures:
             print(f"\n{Colors.RED}失败/错误详情:{Colors.ENDC}")
             for r in failures:
-                status_color = Colors.YELLOW if r.status == TestStatus.FAILED else Colors.RED
+                status_color = (
+                    Colors.YELLOW if r.status == TestStatus.FAILED else Colors.RED
+                )
                 print(f"  {status_color}• {r.test_case.name}{Colors.ENDC}")
                 if r.error:
                     for line in r.error.strip().split("\n")[-3:]:
                         print(f"    {Colors.DIM}{line}{Colors.ENDC}")
-        
+
         return self.results
 
 
@@ -345,5 +367,5 @@ class InteractiveTestRunner(TestRunner):
             print(f"\n{Colors.RED}{Colors.BOLD}失败的测试:{Colors.ENDC}")
             for r in self.results:
                 if r.status in [TestStatus.FAILED, TestStatus.ERROR]:
-                    msg = r.human_comment or r.error or '无说明'
+                    msg = r.human_comment or r.error or "无说明"
                     print(f"  - {r.test_case.name}: {msg}")

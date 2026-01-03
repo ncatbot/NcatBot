@@ -15,9 +15,17 @@ from typing import Optional, TYPE_CHECKING
 import psutil
 
 import ncatbot
-from ncatbot.core import MessageEvent, NcatBotEvent, GroupMessageEvent, PrivateMessageEvent
+from ncatbot.core import (
+    MessageEvent,
+    NcatBotEvent,
+    GroupMessageEvent,
+    PrivateMessageEvent,
+)
 from ncatbot.core.service.builtin.unified_registry import (
-    command_registry, root_filter, option_group, admin_filter,
+    command_registry,
+    root_filter,
+    option_group,
+    admin_filter,
 )
 from ncatbot.utils import get_log, PermissionGroup
 
@@ -31,7 +39,7 @@ LOG = get_log("SystemManager")
 
 class SystemManager(NcatBotPlugin):
     """系统管理插件"""
-    
+
     version = "4.1.0"
     name = "system_manager"
     author = "huan-yp"
@@ -45,7 +53,7 @@ class SystemManager(NcatBotPlugin):
         """插件加载"""
         # 消息事件兼容层
         self.register_handler("ncatbot.message_event", self._handle_message_event)
-        
+
         # 订阅消息事件以触发命令和过滤器处理
         self.event_bus.subscribe(
             "re:ncatbot.message_event|ncatbot.message_sent_event",
@@ -76,12 +84,12 @@ class SystemManager(NcatBotPlugin):
     async def _on_plugin_reload_requested(self, plugin_folder: str) -> bool:
         """
         插件热重载回调
-        
+
         由 FileWatcherService 在检测到文件变化时调用。
-        
+
         Args:
             plugin_folder: 发生变化的插件文件夹名
-            
+
         Returns:
             是否成功处理
         """
@@ -89,15 +97,15 @@ class SystemManager(NcatBotPlugin):
         if plugin_name is None:
             LOG.warning(f"无法找到插件目录 {plugin_folder} 对应的插件名称")
             return False
-        
+
         try:
             # 卸载插件
             await self._loader.unload_plugin(plugin_name)
             LOG.info(f"已卸载插件: {plugin_name}")
-            
+
             # 短暂延迟后重新加载
             await asyncio.sleep(0.02)
-            
+
             # 加载插件
             await self._loader.load_plugin(plugin_name)
             LOG.info(f"已加载插件: {plugin_name}")
@@ -136,7 +144,9 @@ class SystemManager(NcatBotPlugin):
         """查看 NcatBot 状态"""
         text = "ncatbot 状态:\n"
         text += f"插件数量: {len(self._loader.plugins)}\n"
-        text += f"插件列表: {', '.join([p.name for p in self._loader.plugins.values()])}\n"
+        text += (
+            f"插件列表: {', '.join([p.name for p in self._loader.plugins.values()])}\n"
+        )
         text += f"CPU 使用率: {psutil.cpu_percent()}%\n"
         text += f"内存使用率: {psutil.virtual_memory().percent}%\n"
         text += f"NcatBot 版本: {ncatbot.__version__}\n"
@@ -184,6 +194,8 @@ class SystemManager(NcatBotPlugin):
             return
         try:
             _, newvalue = plugin.set_config(config_name, value)
-            await event.reply(f"插件 {plugin_name} 配置 {config_name} 更新为 {newvalue}")
+            await event.reply(
+                f"插件 {plugin_name} 配置 {config_name} 更新为 {newvalue}"
+            )
         except Exception as e:
             await event.reply(f"插件 {plugin_name} 配置 {config_name} 更新失败: {e}")

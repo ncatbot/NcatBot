@@ -3,12 +3,11 @@ from pathlib import Path
 from types import ModuleType
 from typing import Dict, List, Optional, Type, Union
 
-from ncatbot.utils import ncatbot_config, get_log, status
+from ncatbot.utils import get_log
 
 from ..base_plugin import BasePlugin
 from ncatbot.core import EventBus
 from ncatbot.core.service import ServiceManager
-from ncatbot.core.service.builtin.unified_registry import command_registry, filter_registry
 from ..pluginsys_err import (
     PluginDependencyError,
     PluginVersionError,
@@ -39,7 +38,7 @@ class PluginLoader:
         self._debug = debug
         self._importer = _ModuleImporter()
         self._resolver = _DependencyResolver()
-        
+
         # 服务管理器由外部注入
         self._service_manager = service_manager
 
@@ -56,7 +55,7 @@ class PluginLoader:
         """
         Instantiate plugin_class and initialize it. kwargs may contain manifest-derived
         metadata and other extras; they will be forwarded to the plugin constructor.
-        
+
         注入 service_manager，插件通过它获取各种服务。
         """
         plugin = plugin_class(
@@ -135,16 +134,17 @@ class PluginLoader:
 
     def index_external_plugin(self, plugin_dir: str) -> Optional[str]:
         """索引一个外部插件文件夹
-        
+
         读取插件的元数据并写入索引，之后可以使用 load_plugin 加载。
-        
+
         Args:
             plugin_dir: 插件文件夹的路径
-            
+
         Returns:
             插件名称，如果索引失败则返回 None
         """
         from pathlib import Path
+
         return self._importer.index_external_plugin(Path(plugin_dir))
 
     async def unload_plugin(self, name: str, **kwargs) -> bool:

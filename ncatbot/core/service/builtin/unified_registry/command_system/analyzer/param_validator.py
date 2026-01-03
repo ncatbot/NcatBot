@@ -148,7 +148,7 @@ class ParamsValidator:
         """
         # 延迟导入避免循环引用
         from ncatbot.core.event.message_segments import MessageSegment
-        
+
         param_list = self.actual_params  # 实际的命令参数
         LOG.debug(param_list)
         param_types = []

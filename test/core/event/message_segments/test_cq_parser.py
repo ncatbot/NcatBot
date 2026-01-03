@@ -1,7 +1,6 @@
 """
 CQ 码解析测试 - 测试 parse_cq_code_to_onebot11 和 parse_message_segments 函数
 """
-import pytest
 
 from ncatbot.core import (
     AtAll,
@@ -9,7 +8,6 @@ from ncatbot.core import (
     parse_message_segments,
 )
 from ncatbot.core import PlainText, At, Face
-from ncatbot.core import MessageSegment
 
 
 class TestParseCQCodeToOneBot11:
@@ -56,7 +54,9 @@ class TestParseCQCodeToOneBot11:
 
     def test_parse_multiple_params(self):
         """测试多参数 CQ 码"""
-        result = parse_cq_code_to_onebot11("[CQ:image,file=123.jpg,url=http://example.com]")
+        result = parse_cq_code_to_onebot11(
+            "[CQ:image,file=123.jpg,url=http://example.com]"
+        )
         assert len(result) == 1
         assert result[0]["type"] == "image"
         assert result[0]["data"]["file"] == "123.jpg"

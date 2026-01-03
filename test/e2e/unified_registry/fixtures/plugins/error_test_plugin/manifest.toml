@@ -3,4 +3,3 @@ version = "1.0.0"
 description = "异常处理测试插件"
 main = "main.py"
 entry_class = "ErrorTestPlugin"
-

@@ -106,9 +106,7 @@ class ImportReplacementRule(MigrationRule):
                     new_names.append(new_name)
 
             if self.old_import != self.new_import:
-                changes.append(
-                    f"导入路径变更: {self.old_import} -> {self.new_import}"
-                )
+                changes.append(f"导入路径变更: {self.old_import} -> {self.new_import}")
 
             return f"{indent}from {self.new_import} import {', '.join(new_names)}"
 
@@ -126,9 +124,7 @@ class ImportReplacementRule(MigrationRule):
             indent = match.group(1)
             alias_part = match.group(2) or ""
             if self.old_import != self.new_import:
-                changes.append(
-                    f"导入路径变更: {self.old_import} -> {self.new_import}"
-                )
+                changes.append(f"导入路径变更: {self.old_import} -> {self.new_import}")
             return f"{indent}import {self.new_import}{alias_part}"
 
         new_content = re.sub(pattern, replace_import, content, flags=re.MULTILINE)
@@ -243,8 +239,12 @@ class SelectiveImportReplacementRule(MigrationRule):
 
         # 匹配多行导入语句: from xxx import (\n  a,\n  b,\n)
         # 以及单行导入: from xxx import a, b
-        multiline_pattern = rf"^(\s*)from\s+{re.escape(self.old_import)}\s+import\s+\(([^)]+)\)"
-        singleline_pattern = rf"^(\s*)from\s+{re.escape(self.old_import)}\s+import\s+([^(\n]+)$"
+        multiline_pattern = (
+            rf"^(\s*)from\s+{re.escape(self.old_import)}\s+import\s+\(([^)]+)\)"
+        )
+        singleline_pattern = (
+            rf"^(\s*)from\s+{re.escape(self.old_import)}\s+import\s+([^(\n]+)$"
+        )
 
         def process_import(match: re.Match, is_multiline: bool) -> str:
             indent = match.group(1)
@@ -252,9 +252,7 @@ class SelectiveImportReplacementRule(MigrationRule):
 
             # 分割导入的名称（处理换行和空白）
             import_items = [
-                n.strip()
-                for n in re.split(r"[,\n]", imports_str)
-                if n.strip()
+                n.strip() for n in re.split(r"[,\n]", imports_str) if n.strip()
             ]
 
             # 分类：需要迁移的 vs 保留的

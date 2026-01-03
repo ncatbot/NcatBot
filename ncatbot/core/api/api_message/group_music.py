@@ -15,7 +15,7 @@ from ..utils import (
 )
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
+    pass
 
 
 # =============================================================================

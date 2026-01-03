@@ -2,4 +2,3 @@ name = "full_feature_plugin"
 version = "2.0.0"
 main = "main"
 description = "完整功能测试插件 - 测试所有服务的协作"
-

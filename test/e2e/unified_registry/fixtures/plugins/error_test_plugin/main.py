@@ -52,4 +52,3 @@ class ErrorTestPlugin(NcatBotPlugin):
         if not value.isdigit():
             raise ValueError(f"期望数字字符串，但收到: {value}")
         await event.reply(f"数字字符串: {value}")
-

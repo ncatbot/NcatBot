@@ -2,9 +2,15 @@
 from enum import Enum
 
 __all__ = [
-    "PostType", "MessageType", "NoticeType", "NotifySubType",
-    "RequestType", "MetaEventType", "EventType"
+    "PostType",
+    "MessageType",
+    "NoticeType",
+    "NotifySubType",
+    "RequestType",
+    "MetaEventType",
+    "EventType",
 ]
+
 
 class PostType(str, Enum):
     MESSAGE = "message"
@@ -13,9 +19,11 @@ class PostType(str, Enum):
     REQUEST = "request"
     META_EVENT = "meta_event"
 
+
 class MessageType(str, Enum):
     PRIVATE = "private"
     GROUP = "group"
+
 
 class NoticeType(str, Enum):
     GROUP_UPLOAD = "group_upload"
@@ -28,14 +36,17 @@ class NoticeType(str, Enum):
     FRIEND_RECALL = "friend_recall"
     NOTIFY = "notify"
 
+
 class NotifySubType(str, Enum):
     POKE = "poke"
     LUCKY_KING = "lucky_king"
     HONOR = "honor"
 
+
 class RequestType(str, Enum):
     FRIEND = "friend"
     GROUP = "group"
+
 
 class MetaEventType(str, Enum):
     LIFECYCLE = "lifecycle"
@@ -45,9 +56,10 @@ class MetaEventType(str, Enum):
 class EventType(str, Enum):
     """
     统一的事件类型枚举
-    
+
     简化为五大类事件：消息、消息发送、通知、请求、元事件
     """
+
     MESSAGE = "message_event"
     MESSAGE_SENT = "message_sent_event"
     NOTICE = "notice_event"

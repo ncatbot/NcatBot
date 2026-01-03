@@ -1,7 +1,7 @@
 """Tests for ncatbot.utils.config.napcat module."""
 
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestNapCatConfigCreation:
@@ -194,7 +194,10 @@ class TestNapCatConfigSecurityCheck:
     def test_security_check_auto_generate_webui_token(self):
         """Test security check auto-generates WebUI token when user accepts."""
         from ncatbot.utils.config.napcat import NapCatConfig
-        from ncatbot.utils.config.utils import strong_password_check, generate_strong_password
+        from ncatbot.utils.config.utils import (
+            strong_password_check,
+            generate_strong_password,
+        )
 
         config = NapCatConfig(
             ws_listen_ip="localhost",
@@ -260,7 +263,8 @@ class TestNapCatConfigValidate:
             config.validate()
             # 应该发出警告
             warning_calls = [
-                call for call in mock_logger.warning.call_args_list
+                call
+                for call in mock_logger.warning.call_args_list
                 if "监听地址" in str(call) or "不匹配" in str(call)
             ]
             assert len(warning_calls) > 0
@@ -324,4 +328,3 @@ class TestNapCatConfigAsDict:
         assert data["ws_uri"] == "ws://test:3001"
         assert data["ws_token"] == "test_token"
         assert data["enable_webui"] is True
-

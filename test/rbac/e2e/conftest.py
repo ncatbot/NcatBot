@@ -38,16 +38,15 @@ def rbac_service_for_e2e():
     """提供 E2E 测试用的 RBAC 服务"""
     Path("data").mkdir(exist_ok=True)
     cleanup_test_storage()
-    
+
     service = RBACService(storage_path=str(TEST_STORAGE))
-    
+
     # 设置为全局访问管理器
     old_manager = status.global_access_manager
     status.global_access_manager = service
-    
+
     yield service
-    
+
     # 恢复原状态
     status.global_access_manager = old_manager
     cleanup_test_storage()
-

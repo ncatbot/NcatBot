@@ -7,7 +7,7 @@ import inspect
 from dataclasses import dataclass
 from typing import Tuple, List, Any, Dict, Optional, TYPE_CHECKING
 
-from ..command_system.utils import CommandSpec, OptionSpec, OptionGroupSpec, ParameterSpec
+from ..command_system.utils import CommandSpec
 from ncatbot.utils import get_log
 from ..command_system.lexer.message_tokenizer import MessageTokenizer
 
@@ -109,10 +109,7 @@ class ArgumentBinder:
             raise
 
     def _skip_command_words(
-        self,
-        elements: List,
-        path_words: Tuple[str, ...],
-        prefixes: List[str]
+        self, elements: List, path_words: Tuple[str, ...], prefixes: List[str]
     ) -> int:
         """跳过命令词，返回跳过后的索引"""
         skip_idx = 0
@@ -144,10 +141,7 @@ class ArgumentBinder:
         return skip_idx
 
     def _validate_arg_count(
-        self,
-        spec: CommandSpec,
-        elements: List,
-        skip_idx: int
+        self, spec: CommandSpec, elements: List, skip_idx: int
     ) -> None:
         """验证参数数量"""
         actual_args_count = len(elements[skip_idx:])
@@ -157,7 +151,8 @@ class ArgumentBinder:
             name
             for name, param in sig.parameters.items()
             if param.default is inspect.Parameter.empty
-            and param.kind in (
+            and param.kind
+            in (
                 inspect.Parameter.POSITIONAL_ONLY,
                 inspect.Parameter.POSITIONAL_OR_KEYWORD,
             )
@@ -169,9 +164,7 @@ class ArgumentBinder:
             raise MissingArgumentError(required_args_count, actual_args_count)
 
     def _bind_named_args(
-        self,
-        spec: CommandSpec,
-        named_params: Dict[str, Any]
+        self, spec: CommandSpec, named_params: Dict[str, Any]
     ) -> Dict[str, Any]:
         """绑定命名参数"""
         bound_kwargs = {}
@@ -185,9 +178,7 @@ class ArgumentBinder:
         return bound_kwargs
 
     def _bind_options(
-        self,
-        spec: CommandSpec,
-        options: Dict[str, bool]
+        self, spec: CommandSpec, options: Dict[str, bool]
     ) -> Dict[str, Any]:
         """绑定选项"""
         bound_kwargs = {}
@@ -200,11 +191,7 @@ class ArgumentBinder:
 
         return bound_kwargs
 
-    def _bind_positional_args(
-        self,
-        spec: CommandSpec,
-        elements: List
-    ) -> List[Any]:
+    def _bind_positional_args(self, spec: CommandSpec, elements: List) -> List[Any]:
         """绑定位置参数"""
         bound_args = []
         param_types = spec.param_types
@@ -226,9 +213,7 @@ class ArgumentBinder:
         return bound_args
 
     def _get_option_binding(
-        self,
-        spec: CommandSpec,
-        option_name: str
+        self, spec: CommandSpec, option_name: str
     ) -> Optional[Dict[str, Any]]:
         """获取选项绑定结果"""
         # 查找普通选项
@@ -244,10 +229,7 @@ class ArgumentBinder:
         return None
 
     def _get_param_binding(
-        self,
-        spec: CommandSpec,
-        param_name: str,
-        value: Any
+        self, spec: CommandSpec, param_name: str, value: Any
     ) -> Optional[Dict[str, Any]]:
         """获取参数绑定结果"""
         param = spec.find_param(param_name)

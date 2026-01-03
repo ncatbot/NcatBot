@@ -12,7 +12,7 @@ import pytest
 import pytest_asyncio
 import logging
 
-from ncatbot.utils.testing import E2ETestSuite, get_standard_data
+from ncatbot.utils.testing import E2ETestSuite
 from ncatbot.core.api.utils import (
     NapCatAPIError,
     APIValidationError,
@@ -37,15 +37,11 @@ class TestAPIReturnStatusErrors:
 
     def test_raise_if_failed_with_error_response(self):
         """测试错误响应抛出异常"""
-        error_response = {
-            "retcode": -1,
-            "message": "群不存在",
-            "data": None
-        }
-        
+        error_response = {"retcode": -1, "message": "群不存在", "data": None}
+
         with pytest.raises(NapCatAPIError) as exc_info:
             APIReturnStatus.raise_if_failed(error_response)
-        
+
         assert "群不存在" in str(exc_info.value)
         assert exc_info.value.retcode == -1
 
@@ -54,9 +50,9 @@ class TestAPIReturnStatusErrors:
         success_response = {
             "retcode": 0,
             "message": "ok",
-            "data": {"result": "success"}
+            "data": {"result": "success"},
         }
-        
+
         # 不应该抛出异常
         APIReturnStatus.raise_if_failed(success_response)
 
@@ -66,27 +62,27 @@ class TestAPIReturnStatusErrors:
             "retcode": 100,
             "message": "权限不足",
         }
-        
+
         with pytest.raises(NapCatAPIError) as exc_info:
             APIReturnStatus(error_response)
-        
+
         assert exc_info.value.retcode == 100
 
     def test_api_return_status_is_success(self):
         """测试 is_success 属性"""
         success_response = {"retcode": 0, "message": "ok", "data": None}
         status = APIReturnStatus(success_response)
-        
+
         assert status.is_success
         assert bool(status)
 
     def test_api_return_status_with_unknown_error(self):
         """测试未知错误消息"""
         error_response = {"retcode": -1}  # 没有 message
-        
+
         with pytest.raises(NapCatAPIError) as exc_info:
             APIReturnStatus.raise_if_failed(error_response)
-        
+
         assert "Unknown error" in str(exc_info.value)
 
 
@@ -97,7 +93,7 @@ class TestParameterValidation:
         """测试所有参数都为 None 时抛出异常"""
         with pytest.raises(APIValidationError) as exc_info:
             require_at_least_one(None, None, None, names=["a", "b", "c"])
-        
+
         assert "至少需要提供以下参数之一" in str(exc_info.value)
         assert "a" in str(exc_info.value)
 
@@ -143,7 +139,7 @@ class TestNapCatAPIError:
         """测试错误信息被正确记录"""
         with caplog.at_level(logging.ERROR):
             error = NapCatAPIError("测试错误信息", retcode=404)
-        
+
         assert error.info == "测试错误信息"
         assert error.retcode == 404
         assert "测试错误信息" in str(error)
@@ -151,13 +147,13 @@ class TestNapCatAPIError:
     def test_error_logs_stacktrace_in_debug(self, caplog):
         """测试 debug 模式下记录堆栈"""
         from ncatbot.utils import ncatbot_config
-        
+
         original_debug = ncatbot_config.debug
         try:
             ncatbot_config.debug = True
             with caplog.at_level(logging.INFO):
-                error = NapCatAPIError("Debug 模式测试")
-            
+                _error = NapCatAPIError("Debug 模式测试")
+
             # 验证堆栈被记录（在 debug 模式下）
             # 注意：这取决于具体的实现
         finally:
@@ -166,7 +162,7 @@ class TestNapCatAPIError:
 
 class TestAPICallErrors:
     """测试 API 调用错误处理
-    
+
     注意：这些测试依赖于 MockServer 的具体实现。
     """
 
@@ -175,14 +171,14 @@ class TestAPICallErrors:
         """测试 API 返回错误 retcode 时的处理"""
         # 这个测试验证 APIReturnStatus 正确处理错误响应
         error_response = {"retcode": -1, "message": "测试错误"}
-        
+
         with pytest.raises(NapCatAPIError):
             APIReturnStatus.raise_if_failed(error_response)
 
 
 class TestAPIConnectionErrors:
     """测试 API 连接错误处理
-    
+
     注意：这些测试验证基础的 API 可用性检查逻辑。
     """
 
@@ -201,7 +197,6 @@ class TestValidationError:
         """测试验证错误消息"""
         with caplog.at_level(logging.ERROR):
             error = APIValidationError("无效的群号格式")
-        
+
         assert "参数验证失败" in str(error)
         assert "无效的群号格式" in str(error)
-

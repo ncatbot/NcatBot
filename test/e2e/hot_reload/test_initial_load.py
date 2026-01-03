@@ -13,12 +13,12 @@ from .conftest import (
     check_alias_registered,
     check_config_registered,
     check_handler_registered,
-    RELOAD_PLUGIN_DIR,
 )
 
 
 PLUGIN_NAME = "reload_test_plugin"
 PLUGIN_ROOT = Path(__file__).parent / "fixtures" / "plugins"
+
 
 class TestInitialLoad:
     """插件初始加载测试"""
@@ -44,10 +44,12 @@ class TestInitialLoad:
         await loader.load_external_plugins(PLUGIN_ROOT)
         await asyncio.sleep(0.01)
 
-        assert check_command_registered("reload_test_cmd"), \
+        assert check_command_registered("reload_test_cmd"), (
             "命令 'reload_test_cmd' 应该已注册"
-        assert check_command_registered("hot_reload_config"), \
+        )
+        assert check_command_registered("hot_reload_config"), (
             "命令 'hot_reload_config' 应该已注册"
+        )
 
     @pytest.mark.asyncio
     async def test_aliases_registered_on_load(self, test_suite: E2ETestSuite):
@@ -56,10 +58,8 @@ class TestInitialLoad:
         await loader.load_external_plugins(PLUGIN_ROOT)
         await asyncio.sleep(0.01)
 
-        assert check_alias_registered("hrt"), \
-            "别名 'hrt' 应该已注册"
-        assert check_alias_registered("hrc"), \
-            "别名 'hrc' 应该已注册"
+        assert check_alias_registered("hrt"), "别名 'hrt' 应该已注册"
+        assert check_alias_registered("hrc"), "别名 'hrc' 应该已注册"
 
     @pytest.mark.asyncio
     async def test_config_registered_on_load(self, test_suite: E2ETestSuite):
@@ -68,8 +68,7 @@ class TestInitialLoad:
         await loader.load_external_plugins(PLUGIN_ROOT)
         await asyncio.sleep(0.01)
 
-        assert check_config_registered(test_suite, PLUGIN_NAME), \
-            "插件配置应该已注册"
+        assert check_config_registered(test_suite, PLUGIN_NAME), "插件配置应该已注册"
 
         config_service = test_suite.services.plugin_config
         registered = config_service.get_registered_configs(PLUGIN_NAME)

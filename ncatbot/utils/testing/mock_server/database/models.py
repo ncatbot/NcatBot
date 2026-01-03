@@ -12,13 +12,14 @@ from typing import List, Optional
 @dataclass
 class MockUser:
     """用户数据"""
+
     user_id: str
     nickname: str
     sex: str = "unknown"
     age: int = 0
     remark: str = ""
     level: int = 0
-    
+
     def to_dict(self) -> dict:
         return {
             "user_id": self.user_id,
@@ -33,6 +34,7 @@ class MockUser:
 @dataclass
 class MockGroupMember:
     """群成员数据"""
+
     user_id: str
     nickname: str
     card: str = ""
@@ -41,7 +43,7 @@ class MockGroupMember:
     last_sent_time: int = 0
     level: str = "1"
     title: str = ""
-    
+
     def to_dict(self) -> dict:
         return {
             "user_id": self.user_id,
@@ -58,13 +60,14 @@ class MockGroupMember:
 @dataclass
 class MockGroup:
     """群数据"""
+
     group_id: str
     group_name: str
     member_count: int = 0
     max_member_count: int = 500
     owner_id: str = ""
     members: List[MockGroupMember] = field(default_factory=list)
-    
+
     def to_dict(self) -> dict:
         return {
             "group_id": self.group_id,
@@ -73,7 +76,7 @@ class MockGroup:
             "max_member_count": self.max_member_count,
             "owner_id": self.owner_id,
         }
-    
+
     def get_member(self, user_id: str) -> Optional[MockGroupMember]:
         """获取群成员"""
         for member in self.members:
@@ -85,6 +88,7 @@ class MockGroup:
 @dataclass
 class MockMessage:
     """消息数据"""
+
     message_id: str
     message_type: str  # group, private
     user_id: str
@@ -95,7 +99,7 @@ class MockMessage:
     time: int = 0
     sender: dict = field(default_factory=dict)
     message_seq: int = 0
-    
+
     def to_dict(self) -> dict:
         data = {
             "message_id": self.message_id,
@@ -117,6 +121,7 @@ class MockMessage:
 @dataclass
 class MockFile:
     """文件数据"""
+
     file_id: str
     file_name: str
     file_size: int = 0
@@ -127,7 +132,7 @@ class MockFile:
     download_times: int = 0
     uploader: str = ""
     uploader_name: str = ""
-    
+
     def to_dict(self) -> dict:
         return {
             "file_id": self.file_id,
@@ -146,6 +151,7 @@ class MockFile:
 @dataclass
 class MockFolder:
     """文件夹数据"""
+
     folder_id: str
     folder_name: str
     create_time: int = 0
@@ -154,7 +160,7 @@ class MockFolder:
     total_file_count: int = 0
     files: List[MockFile] = field(default_factory=list)
     subfolders: List["MockFolder"] = field(default_factory=list)
-    
+
     def to_dict(self) -> dict:
         return {
             "folder_id": self.folder_id,
@@ -164,18 +170,17 @@ class MockFolder:
             "creator_name": self.creator_name,
             "total_file_count": self.total_file_count or len(self.files),
         }
-    
+
     def get_file(self, file_id: str) -> Optional[MockFile]:
         """获取文件"""
         for f in self.files:
             if f.file_id == file_id:
                 return f
         return None
-    
+
     def get_subfolder(self, folder_id: str) -> Optional["MockFolder"]:
         """获取子文件夹"""
         for sf in self.subfolders:
             if sf.folder_id == folder_id:
                 return sf
         return None
-

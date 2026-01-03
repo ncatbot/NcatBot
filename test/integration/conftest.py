@@ -1,50 +1,49 @@
 """
 集成测试共享 fixtures
 """
+
 import asyncio
 import pytest
 from typing import Any, Callable, Dict, List, Optional, Awaitable
-from unittest.mock import MagicMock, AsyncMock
 from pathlib import Path
 import tempfile
 import shutil
 
 from ncatbot.core.client.event_bus import EventBus
-from ncatbot.core.client.dispatcher import EventDispatcher
 from ncatbot.core.service import ServiceManager, BaseService
-from ncatbot.core.api import BotAPI
 
 
 # =============================================================================
 # Mock WebSocket
 # =============================================================================
 
+
 class MockWebSocket:
     """模拟 WebSocket 连接"""
-    
+
     def __init__(self):
         self.connected = False
         self.sent_messages: List[dict] = []
         self.message_callback: Optional[Callable[[dict], Awaitable[None]]] = None
         self._message_queue: asyncio.Queue = asyncio.Queue()
-    
+
     async def connect(self) -> None:
         self.connected = True
-    
+
     async def disconnect(self) -> None:
         self.connected = False
-    
+
     async def send(self, data: dict) -> None:
         self.sent_messages.append(data)
-    
+
     def set_message_callback(self, callback: Callable[[dict], Awaitable[None]]) -> None:
         self.message_callback = callback
-    
+
     async def simulate_receive(self, data: dict) -> None:
         """模拟接收消息"""
         if self.message_callback:
             await self.message_callback(data)
-    
+
     async def listen(self) -> None:
         """模拟监听（立即返回，测试中手动触发消息）"""
         pass
@@ -52,26 +51,26 @@ class MockWebSocket:
 
 class MockMessageRouter(BaseService):
     """模拟消息路由服务"""
-    
+
     name = "message_router"
     description = "Mock message router for testing"
-    
+
     def __init__(self, **config):
         super().__init__(**config)
         self.websocket = MockWebSocket()
         self._event_callback: Optional[Callable[[dict], Awaitable[None]]] = None
         self._responses: Dict[str, dict] = {}
-    
+
     async def on_load(self) -> None:
         await self.websocket.connect()
-    
+
     async def on_close(self) -> None:
         await self.websocket.disconnect()
-    
+
     def set_event_callback(self, callback: Callable[[dict], Awaitable[None]]) -> None:
         self._event_callback = callback
         self.websocket.set_message_callback(self._on_message)
-    
+
     async def _on_message(self, data: dict) -> None:
         """处理收到的消息"""
         if "echo" in data:
@@ -80,17 +79,19 @@ class MockMessageRouter(BaseService):
         elif self._event_callback:
             # 事件
             await self._event_callback(data)
-    
-    async def send(self, action: str, params: Optional[dict] = None, timeout: float = 30.0) -> dict:
+
+    async def send(
+        self, action: str, params: Optional[dict] = None, timeout: float = 30.0
+    ) -> dict:
         """模拟发送 API 请求"""
         self.websocket.sent_messages.append({"action": action, "params": params})
         # 返回预设响应或默认成功
         return self._responses.get(action, {"status": "ok", "retcode": 0, "data": {}})
-    
+
     def set_response(self, action: str, response: dict) -> None:
         """设置特定 action 的响应"""
         self._responses[action] = response
-    
+
     async def simulate_event(self, event_data: dict) -> None:
         """模拟收到事件"""
         await self.websocket.simulate_receive(event_data)
@@ -100,42 +101,45 @@ class MockMessageRouter(BaseService):
 # Mock API
 # =============================================================================
 
+
 class MockBotAPI:
     """模拟 BotAPI"""
-    
+
     def __init__(self):
         self._calls: List[tuple] = []
-    
+
     def get_calls(self) -> List[tuple]:
         return self._calls
-    
+
     def get_last_call(self) -> Optional[tuple]:
         return self._calls[-1] if self._calls else None
-    
+
     def clear_calls(self) -> None:
         self._calls.clear()
-    
+
     async def post_group_msg(self, group_id, text, **kwargs):
         self._calls.append(("post_group_msg", group_id, text, kwargs))
         return {"message_id": "12345"}
-    
+
     async def post_private_msg(self, user_id, text, **kwargs):
         self._calls.append(("post_private_msg", user_id, text, kwargs))
         return {"message_id": "12346"}
-    
+
     async def set_group_kick(self, group_id, user_id, **kwargs):
         self._calls.append(("set_group_kick", group_id, user_id, kwargs))
         return {}
-    
+
     async def set_group_ban(self, group_id, user_id, duration, **kwargs):
         self._calls.append(("set_group_ban", group_id, user_id, duration, kwargs))
         return {}
-    
+
     def __getattr__(self, name):
         """处理其他 API 调用"""
+
         async def mock_method(*args, **kwargs):
             self._calls.append((name, args, kwargs))
             return {}
+
         return mock_method
 
 
@@ -143,30 +147,31 @@ class MockBotAPI:
 # Test Plugin
 # =============================================================================
 
+
 class TestPlugin:
     """用于测试的简单插件"""
-    
+
     name = "test_plugin"
     version = "1.0.0"
     author = "Test"
     description = "Test plugin"
     dependencies = {}
-    
+
     def __init__(self):
         self.load_count = 0
         self.close_count = 0
         self.events_received: List[Any] = []
         self._handlers_id = set()
-    
+
     def _init_(self):
         pass
-    
+
     async def on_load(self):
         self.load_count += 1
-    
+
     async def on_close(self):
         self.close_count += 1
-    
+
     def handle_event(self, event):
         self.events_received.append(event)
 
@@ -174,6 +179,7 @@ class TestPlugin:
 # =============================================================================
 # Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def event_bus():
@@ -222,7 +228,7 @@ def sample_message_event():
         "message": [{"type": "text", "data": {"text": "Hello"}}],
         "raw_message": "Hello",
         "font": 14,
-        "sender": {"user_id": "3051561876", "nickname": "测试用户", "role": "member"}
+        "sender": {"user_id": "3051561876", "nickname": "测试用户", "role": "member"},
     }
 
 
@@ -240,7 +246,7 @@ def sample_private_message_event():
         "message": [{"type": "text", "data": {"text": "Hi"}}],
         "raw_message": "Hi",
         "font": 14,
-        "sender": {"user_id": "3051561876", "nickname": "测试用户"}
+        "sender": {"user_id": "3051561876", "nickname": "测试用户"},
     }
 
 
@@ -255,7 +261,7 @@ def sample_notice_event():
         "sub_type": "approve",
         "group_id": "701784439",
         "operator_id": "123456",
-        "user_id": "789012"
+        "user_id": "789012",
     }
 
 
@@ -269,7 +275,7 @@ def sample_request_event():
         "request_type": "friend",
         "user_id": "3051561876",
         "comment": "请加我好友",
-        "flag": "request_flag_123"
+        "flag": "request_flag_123",
     }
 
 
@@ -281,5 +287,5 @@ def sample_meta_event():
         "self_id": "1550507358",
         "post_type": "meta_event",
         "meta_event_type": "lifecycle",
-        "sub_type": "connect"
+        "sub_type": "connect",
     }

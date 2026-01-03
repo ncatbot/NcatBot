@@ -12,7 +12,6 @@ from ..utils import APIComponent, MessageAPIReturnStatus, check_exclusive_argume
 from ncatbot.utils import NcatBotValueError
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
     from ncatbot.core import GroupMessageEvent, Forward
 
 
@@ -49,7 +48,9 @@ class ForwardMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        check_exclusive_argument(group_id, user_id, names=["group_id", "user_id"], error=True)
+        check_exclusive_argument(
+            group_id, user_id, names=["group_id", "user_id"], error=True
+        )
 
         data = {
             "messages": messages,

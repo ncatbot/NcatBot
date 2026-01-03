@@ -66,6 +66,7 @@ class MessageTokenizer:
     def _is_text_segment(self, segment) -> bool:
         """判断是否为文本段"""
         from ncatbot.core.event.message_segments.primitives import PlainText
+
         return isinstance(segment, PlainText)
 
 

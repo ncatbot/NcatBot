@@ -22,6 +22,7 @@ class TestLifecycleManagerInit:
     def test_init_with_required_components(self, event_bus, mock_services):
         """测试使用必需组件初始化"""
         from ncatbot.core.client.registry import EventRegistry
+
         registry = EventRegistry(event_bus)
 
         manager = LifecycleManager(mock_services, event_bus, registry)
@@ -37,6 +38,7 @@ class TestLifecycleManagerInit:
     def test_init_state(self, event_bus, mock_services):
         """测试初始状态"""
         from ncatbot.core.client.registry import EventRegistry
+
         registry = EventRegistry(event_bus)
 
         manager = LifecycleManager(mock_services, event_bus, registry)
@@ -52,6 +54,7 @@ class TestPrepareStartup:
     @pytest.fixture
     def manager(self, event_bus, mock_services):
         from ncatbot.core.client.registry import EventRegistry
+
         registry = EventRegistry(event_bus)
         return LifecycleManager(mock_services, event_bus, registry)
 
@@ -61,7 +64,7 @@ class TestPrepareStartup:
         """测试正常模式启动准备"""
         mock_config.debug = False
 
-        result = manager._prepare_startup(mock=False)
+        manager._prepare_startup(mock=False)
 
         assert manager._test_mode is False  # 非 test 模式 (Mock 模式)
         assert manager._running is True
@@ -74,7 +77,7 @@ class TestPrepareStartup:
         """测试 mock 模式启动准备（不启动 NapCat）"""
         mock_config.debug = False
 
-        result = manager._prepare_startup(mock=True)
+        manager._prepare_startup(mock=True)
 
         assert manager._test_mode is True  # test 模式 (Mock 模式)
         assert manager._running is True
@@ -105,6 +108,7 @@ class TestShutdown:
     @pytest.fixture
     def manager(self, event_bus, mock_services):
         from ncatbot.core.client.registry import EventRegistry
+
         registry = EventRegistry(event_bus)
         return LifecycleManager(mock_services, event_bus, registry)
 
@@ -155,6 +159,7 @@ class TestBotExit:
     @pytest.fixture
     def manager(self, event_bus, mock_services):
         from ncatbot.core.client.registry import EventRegistry
+
         registry = EventRegistry(event_bus)
         return LifecycleManager(mock_services, event_bus, registry)
 
@@ -188,6 +193,7 @@ class TestCleanup:
     @pytest.fixture
     def manager(self, event_bus, mock_services):
         from ncatbot.core.client.registry import EventRegistry
+
         registry = EventRegistry(event_bus)
         return LifecycleManager(mock_services, event_bus, registry)
 
@@ -231,10 +237,18 @@ class TestLegalArgs:
     def test_legal_args_contains_expected_keys(self):
         """测试 LEGAL_ARGS 包含预期的键"""
         expected = {
-            "bt_uin", "root", "ws_uri", "webui_uri",
-            "ws_token", "webui_token", "ws_listen_ip",
-            "remote_mode", "enable_webui", "enable_webui_interaction",
-            "debug", "mock", "skip_plugin_load"
+            "bt_uin",
+            "root",
+            "ws_uri",
+            "webui_uri",
+            "ws_token",
+            "webui_token",
+            "ws_listen_ip",
+            "remote_mode",
+            "enable_webui",
+            "enable_webui_interaction",
+            "debug",
+            "mock",
+            "skip_plugin_load",
         }
         assert set(LEGAL_ARGS) == expected
-

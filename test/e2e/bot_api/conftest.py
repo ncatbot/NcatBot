@@ -7,7 +7,7 @@ BotAPI 端到端测试配置
 import pytest
 import pytest_asyncio
 
-from ncatbot.utils.testing import E2ETestSuite, get_standard_data
+from ncatbot.utils.testing import E2ETestSuite
 
 
 @pytest_asyncio.fixture
@@ -36,4 +36,3 @@ def standard_group_id() -> str:
 def standard_user_id() -> str:
     """标准测试用户 ID (来自 get_standard_data 中的好友)"""
     return "100001"
-

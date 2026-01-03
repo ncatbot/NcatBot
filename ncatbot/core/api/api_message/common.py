@@ -12,7 +12,7 @@ from ..utils import APIComponent, APIReturnStatus
 from ncatbot.utils import NcatBotValueError
 
 if TYPE_CHECKING:
-    from ..client import IAPIClient
+    pass
 
 
 # =============================================================================

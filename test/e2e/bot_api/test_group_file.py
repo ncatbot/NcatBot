@@ -30,8 +30,7 @@ class TestGroupFileQuery:
 
         # 1. 获取群根目录文件列表
         root_files = await api.get_group_root_files(
-            group_id=int(standard_group_id),
-            file_count=20
+            group_id=int(standard_group_id), file_count=20
         )
         assert root_files is not None, "根目录文件列表不能为空"
         api_suite.assert_api_called("get_group_root_files")
@@ -41,7 +40,7 @@ class TestGroupFileQuery:
         folder_files = await api.get_group_files_by_folder(
             group_id=int(standard_group_id),
             folder_id="folder_001",  # 使用标准测试数据中的文件夹
-            file_count=20
+            file_count=20,
         )
         assert folder_files is not None, "文件夹内容不能为空"
         api_suite.assert_api_called("get_group_files_by_folder")
@@ -50,7 +49,7 @@ class TestGroupFileQuery:
         api_suite.clear_call_history()
         file_url = await api.get_group_file_url(
             group_id=int(standard_group_id),
-            file_id="file_001"  # 使用标准测试数据中的文件
+            file_id="file_001",  # 使用标准测试数据中的文件
         )
         assert file_url is not None, "文件 URL 不能为空"
         api_suite.assert_api_called("get_group_file_url")
@@ -75,13 +74,11 @@ class TestGroupFileOperations:
 
         # 1. 创建文件夹
         await api.create_group_file_folder(
-            group_id=int(standard_group_id),
-            folder_name="测试文件夹"
+            group_id=int(standard_group_id), folder_name="测试文件夹"
         )
         api_suite.assert_api_called("create_group_file_folder")
         api_suite.assert_api_called_with(
-            "create_group_file_folder",
-            folder_name="测试文件夹"
+            "create_group_file_folder", folder_name="测试文件夹"
         )
 
         # 2. 上传文件（使用 URL 形式）
@@ -90,7 +87,7 @@ class TestGroupFileOperations:
             group_id=int(standard_group_id),
             file="https://example.com/test.txt",
             name="test_upload.txt",
-            folder="/"
+            folder="/",
         )
         api_suite.assert_api_called("upload_group_file")
 
@@ -99,23 +96,19 @@ class TestGroupFileOperations:
         await api.rename_group_file(
             group_id=int(standard_group_id),
             file_id="file_001",
-            new_name="renamed_file.txt"
+            new_name="renamed_file.txt",
         )
         api_suite.assert_api_called("rename_group_file")
 
         # 4. 删除文件
         api_suite.clear_call_history()
-        await api.delete_group_file(
-            group_id=int(standard_group_id),
-            file_id="file_001"
-        )
+        await api.delete_group_file(group_id=int(standard_group_id), file_id="file_001")
         api_suite.assert_api_called("delete_group_file")
 
         # 5. 删除文件夹
         api_suite.clear_call_history()
         await api.delete_group_folder(
-            group_id=int(standard_group_id),
-            folder_id="folder_001"
+            group_id=int(standard_group_id), folder_id="folder_001"
         )
         api_suite.assert_api_called("delete_group_folder")
 
@@ -135,13 +128,11 @@ class TestGroupFileOperations:
             group_id=int(standard_group_id),
             file_id="file_002",
             current_parent_directory="/",
-            target_parent_directory="folder_001"
+            target_parent_directory="folder_001",
         )
         api_suite.assert_api_called("move_group_file")
         api_suite.assert_api_called_with(
-            "move_group_file",
-            file_id="file_002",
-            target_parent_directory="folder_001"
+            "move_group_file", file_id="file_002", target_parent_directory="folder_001"
         )
 
 
@@ -163,7 +154,7 @@ class TestPrivateFile:
         await api.upload_private_file(
             user_id=int(standard_user_id),
             file="https://example.com/private_file.txt",
-            name="private_upload.txt"
+            name="private_upload.txt",
         )
         api_suite.assert_api_called("upload_private_file")
 
@@ -185,10 +176,6 @@ class TestPrivateFile:
         api = api_suite.api
 
         # 获取文件信息
-        file_info = await api.get_file(
-            file_id="test_file_id",
-            file="test_file"
-        )
+        file_info = await api.get_file(file_id="test_file_id", file="test_file")
         assert file_info is not None, "文件信息不能为空"
         api_suite.assert_api_called("get_file")
-

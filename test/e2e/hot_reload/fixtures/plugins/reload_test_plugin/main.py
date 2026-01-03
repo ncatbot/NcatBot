@@ -31,17 +31,19 @@ class ReloadTestPlugin(NcatBotPlugin):
     # 生命周期追踪（类变量）
     load_count: int = 0
     unload_count: int = 0
-    
+
     # 用于验证重载的标记值
     MARKER_VALUE: str = "original"
-    
+
     # 模块级变量引用
     HANDLER_CALL_COUNT = 0
 
     async def on_load(self):
         ReloadTestPlugin.load_count += 1
-        LOG.info(f"ReloadTestPlugin on_load (count: {self.load_count}, marker: {self.MARKER_VALUE})")
-        
+        LOG.info(
+            f"ReloadTestPlugin on_load (count: {self.load_count}, marker: {self.MARKER_VALUE})"
+        )
+
         # 注册配置项
         self.services.plugin_config.register_config(
             self.name, "reload_count", 0, "重载次数计数", value_type=int
@@ -49,30 +51,23 @@ class ReloadTestPlugin(NcatBotPlugin):
         self.services.plugin_config.register_config(
             self.name, "test_string", "default", "测试字符串", value_type=str
         )
-        
+
         # 注册事件处理器
-        self.register_handler(
-            "ncatbot.hot_reload_test_event",
-            self._on_test_event
-        )
+        self.register_handler("ncatbot.hot_reload_test_event", self._on_test_event)
 
     async def on_close(self):
         ReloadTestPlugin.unload_count += 1
         LOG.info(f"ReloadTestPlugin on_close (count: {self.unload_count})")
 
     @command_registry.command(
-        name="reload_test_cmd",
-        aliases=["hrt"],
-        description="热重载测试命令"
+        name="reload_test_cmd", aliases=["hrt"], description="热重载测试命令"
     )
     async def test_command(self, event: MessageEvent):
         """测试命令，返回当前的响应内容"""
         await event.reply(COMMAND_RESPONSE)
 
     @command_registry.command(
-        name="hot_reload_config",
-        aliases=["hrc"],
-        description="热重载配置命令"
+        name="hot_reload_config", aliases=["hrc"], description="热重载配置命令"
     )
     async def config_command(self, event: MessageEvent):
         """配置命令，返回当前配置值"""

@@ -1,9 +1,10 @@
 """
 Client 模块测试共享 fixtures
 """
+
 import asyncio
 from typing import Any, Dict
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 
@@ -14,6 +15,7 @@ from ncatbot.core.client.registry import EventRegistry
 
 
 # ==================== EventBus Fixtures ====================
+
 
 @pytest.fixture
 def event_bus():
@@ -28,6 +30,7 @@ def event_bus_short_timeout():
 
 
 # ==================== Mock Fixtures ====================
+
 
 @pytest.fixture
 def mock_api():
@@ -53,6 +56,7 @@ def mock_adapter():
 def mock_services():
     """Mock 的 ServiceManager 实例"""
     from ncatbot.core.service import ServiceManager
+
     services = MagicMock(spec=ServiceManager)
     services.load_all = AsyncMock()
     services.close_all = AsyncMock()
@@ -64,7 +68,7 @@ def mock_services():
 
     def mock_register(service_class, **config):
         """Mock register 方法"""
-        service_name = getattr(service_class, 'name', service_class.__name__.lower())
+        service_name = getattr(service_class, "name", service_class.__name__.lower())
         services._service_classes[service_name] = service_class
         services._service_configs[service_name] = config
         # 创建服务实例作为属性
@@ -78,6 +82,7 @@ def mock_services():
 
 # ==================== EventRegistry Fixtures ====================
 
+
 @pytest.fixture
 def event_registry(event_bus):
     """创建 EventRegistry 实例"""
@@ -86,6 +91,7 @@ def event_registry(event_bus):
 
 # ==================== EventDispatcher Fixtures ====================
 
+
 @pytest.fixture
 def event_dispatcher(event_bus, mock_api):
     """创建 EventDispatcher 实例"""
@@ -93,6 +99,7 @@ def event_dispatcher(event_bus, mock_api):
 
 
 # ==================== Sample Event Data Fixtures ====================
+
 
 @pytest.fixture
 def sample_message_event_data() -> Dict[str, Any]:
@@ -117,10 +124,10 @@ def sample_message_event_data() -> Dict[str, Any]:
             "area": "",
             "level": "1",
             "role": "member",
-            "title": ""
+            "title": "",
         },
         "time": 1640000000,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
@@ -140,10 +147,10 @@ def sample_private_message_event_data() -> Dict[str, Any]:
             "user_id": 987654321,
             "nickname": "TestUser",
             "sex": "unknown",
-            "age": 0
+            "age": 0,
         },
         "time": 1640000001,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
@@ -158,7 +165,7 @@ def sample_notice_event_data() -> Dict[str, Any]:
         "operator_id": 111111111,
         "user_id": 222222222,
         "time": 1640000002,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
@@ -174,7 +181,7 @@ def sample_request_event_data() -> Dict[str, Any]:
         "comment": "请求加群",
         "flag": "flag_123456",
         "time": 1640000003,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
@@ -188,7 +195,7 @@ def sample_friend_request_event_data() -> Dict[str, Any]:
         "comment": "请求添加好友",
         "flag": "flag_789012",
         "time": 1640000004,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
@@ -200,7 +207,7 @@ def sample_meta_event_data() -> Dict[str, Any]:
         "meta_event_type": "lifecycle",
         "sub_type": "connect",
         "time": 1640000005,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
@@ -210,17 +217,15 @@ def sample_heartbeat_event_data() -> Dict[str, Any]:
     return {
         "post_type": "meta_event",
         "meta_event_type": "heartbeat",
-        "status": {
-            "online": True,
-            "good": True
-        },
+        "status": {"online": True, "good": True},
         "interval": 5000,
         "time": 1640000006,
-        "self_id": 111111111
+        "self_id": 111111111,
     }
 
 
 # ==================== NcatBotEvent Fixtures ====================
+
 
 @pytest.fixture
 def ncatbot_event():
@@ -231,15 +236,19 @@ def ncatbot_event():
 @pytest.fixture
 def ncatbot_message_event():
     """创建一个消息类型的 NcatBotEvent"""
-    return NcatBotEvent("ncatbot.message", {
-        "message_type": "group",
-        "group_id": 123456789,
-        "user_id": 987654321,
-        "message": "Hello!"
-    })
+    return NcatBotEvent(
+        "ncatbot.message",
+        {
+            "message_type": "group",
+            "group_id": 123456789,
+            "user_id": 987654321,
+            "message": "Hello!",
+        },
+    )
 
 
 # ==================== Mock Event Objects ====================
+
 
 @pytest.fixture
 def mock_group_message_event():
@@ -313,6 +322,7 @@ def mock_heartbeat_event():
 
 
 # ==================== Helper Functions ====================
+
 
 def create_ncatbot_event(event_type: str, data: Any) -> NcatBotEvent:
     """辅助函数：创建 NcatBotEvent"""

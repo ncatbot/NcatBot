@@ -411,4 +411,3 @@ if __name__ == "__main__":
     print(f"  命名参数: {result['named_params']}")
 
     print("\n命令系统已准备就绪，可以处理各种复杂的命令行输入！✨")
-

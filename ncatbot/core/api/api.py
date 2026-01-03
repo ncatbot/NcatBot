@@ -52,7 +52,9 @@ class BotAPI(AccountAPI, GroupAPI, MessageAPI, PrivateAPI, SupportAPI):
 
     def __init__(
         self,
-        async_callback: Callable[[str, Optional[Dict[str, Any]]], Coroutine[Any, Any, Dict]],
+        async_callback: Callable[
+            [str, Optional[Dict[str, Any]]], Coroutine[Any, Any, Dict]
+        ],
         service_manager: Optional["ServiceManager"] = None,
     ):
         """
@@ -73,7 +75,7 @@ class BotAPI(AccountAPI, GroupAPI, MessageAPI, PrivateAPI, SupportAPI):
 
     @classmethod
     def from_client(
-        cls, 
+        cls,
         client: IAPIClient,
         service_manager: Optional["ServiceManager"] = None,
     ) -> "BotAPI":

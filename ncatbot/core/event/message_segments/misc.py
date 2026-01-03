@@ -50,4 +50,3 @@ class Json(MessageSegment):
 class Markdown(MessageSegment):
     type: ClassVar[str] = "markdown"
     content: str
-

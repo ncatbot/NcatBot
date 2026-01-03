@@ -19,18 +19,24 @@ from ncatbot.core.service.builtin.unified_registry import (
     param,
     option_group,
 )
+
 # 过滤器系统：导入所有过滤器、装饰器和基础类
 from ncatbot.core.service.builtin.unified_registry.filter_system import *  # noqa: F401,F403
 
 # 动态构建 __all__
 __all__ = [
-    "BasePlugin", "PluginLoader",
+    "BasePlugin",
+    "PluginLoader",
     "NcatBotPlugin",
-    "filter_registry", "command_registry", "option", "param", "option_group",
-    
+    "filter_registry",
+    "command_registry",
+    "option",
+    "param",
+    "option_group",
     "NcatBotEvent",
 ]
 
 # 从 filter_system 扩展 __all__
 from ncatbot.core.service.builtin.unified_registry import filter_system
+
 __all__.extend(getattr(filter_system, "__all__", []))  # type: ignore

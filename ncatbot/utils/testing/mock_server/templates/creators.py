@@ -114,4 +114,3 @@ def create_folder_data(
         "files": files or [],
         "folders": folders or [],
     }
-

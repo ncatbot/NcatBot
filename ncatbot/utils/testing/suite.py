@@ -24,13 +24,13 @@ LOG = get_log("E2ETestSuite")
 class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
     """
     端到端测试套件
-    
+
     提供完整的测试环境，包括：
     - Mock 模式的 BotClient（连接到 MockServer）
     - 插件注册和卸载
     - 事件注入（通过 MockServer）
     - API 调用断言
-    
+
     使用示例（pytest-asyncio fixture）：
     ```python
     @pytest_asyncio.fixture
@@ -39,7 +39,7 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
         await suite.setup()
         yield suite
         await suite.teardown()
-    
+
     @pytest.mark.asyncio
     async def test_example(test_suite):
         await test_suite.register_plugin("my_plugin")
@@ -47,9 +47,9 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
         test_suite.assert_api_called("send_group_msg")
     ```
     """
-    
+
     _port_counter = 16700
-    
+
     def __init__(
         self,
         bt_uin: str = "123456789",
@@ -58,7 +58,7 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
     ):
         """
         初始化测试套件
-        
+
         Args:
             bt_uin: 模拟的机器人 QQ 号
             mock_server: MockServer 实例（可选，未提供时自动创建）
@@ -70,19 +70,19 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
         self._client: Optional["BotClient"] = None
         self._registered_plugins: List[str] = []
         self._owns_mock_server = False
-    
+
     # ==================== 生命周期 ====================
-    
+
     async def setup(self, use_shared_server: bool = False) -> "BotClient":
         """异步设置测试环境
-        
+
         Args:
             use_shared_server: 是否使用已提供的共享 MockServer（优化性能）
         """
         from ncatbot.core import BotClient
         from ncatbot.utils import ncatbot_config
         from .mock_server import NapCatMockServer, get_standard_data
-        
+
         # 自动创建 MockServer（仅在未提供时）
         if not self._mock_server:
             # 如果没有提供共享 server，创建新的
@@ -90,17 +90,16 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
             if port is None:
                 E2ETestSuite._port_counter += 1
                 port = E2ETestSuite._port_counter
-            
+
             self._mock_server = NapCatMockServer(
-                port=port,
-                initial_data=get_standard_data()
+                port=port, initial_data=get_standard_data()
             )
             await self._mock_server.start()
             self._owns_mock_server = True
-        
+
         # 配置 WebSocket URI 指向 MockServer
         ncatbot_config.napcat.ws_uri = self._mock_server.uri
-        
+
         # 创建并启动 BotClient（与 run_backend 使用相同的初始化逻辑）
         BotClient.reset_singleton()
         self._client = BotClient()
@@ -109,7 +108,7 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
             mock=True,
             skip_plugin_load=True,
         )
-        
+
         # 设置反向引用，供 TestHelper 使用
         self._client._test_suite = self
 
@@ -124,45 +123,45 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
             await self._client.shutdown()
             self._client = None
             self._registered_plugins.clear()
-        
+
         if self._owns_mock_server and self._mock_server:
             await self._mock_server.stop()
             self._mock_server = None
             self._owns_mock_server = False
 
         LOG.info("测试套件已清理")
-    
+
     async def __aenter__(self) -> "E2ETestSuite":
         await self.setup()
         return self
-    
+
     async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
         await self.teardown()
-    
+
     # ==================== 属性访问 ====================
-    
+
     @property
     def client(self) -> "BotClient":
         """获取 BotClient 实例"""
         if not self._client:
             raise RuntimeError("测试套件未启动，请先调用 setup()")
         return self._client
-    
+
     @property
     def event_bus(self):
         """获取 EventBus"""
         return self.client.event_bus
-    
+
     @property
     def services(self):
         """获取 ServiceManager"""
         return self.client.services
-    
+
     @property
     def api(self) -> "BotAPI":
         """获取 BotAPI"""
         return self.client.api
-    
+
     @property
     def mock_server(self) -> Optional["NapCatMockServer"]:
         """获取 MockServer 实例"""
@@ -171,24 +170,22 @@ class E2ETestSuite(PluginMixin, InjectorMixin, AssertionMixin):
 
 @asynccontextmanager
 async def create_test_suite_with_mock_server(
-    initial_data: Optional[dict] = None,
-    port: int = 16700,
-    **suite_kwargs
+    initial_data: Optional[dict] = None, port: int = 16700, **suite_kwargs
 ):
     """
     创建带有 MockServer 的测试套件
-    
+
     自动启动 MockServer 并配置测试套件。
-    
+
     Args:
         initial_data: 初始数据，默认使用 get_standard_data()
         port: MockServer 端口，默认 16700
         **suite_kwargs: 传递给 E2ETestSuite 的其他参数
     """
     from .mock_server import NapCatMockServer, get_standard_data
-    
+
     data = initial_data or get_standard_data()
-    
+
     async with NapCatMockServer(port=port, initial_data=data) as server:
         suite = E2ETestSuite(mock_server=server, **suite_kwargs)
         await suite.setup()

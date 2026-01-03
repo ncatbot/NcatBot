@@ -52,11 +52,9 @@ from .mock_server import (
 )
 
 
-
-
 __all__ = [
     # 测试套件
-    "E2ETestSuite", 
+    "E2ETestSuite",
     "create_test_suite_with_mock_server",
     "EventFactory",
     # Mock Server（WebSocket 模式）

@@ -256,9 +256,7 @@ class LinuxOps(PlatformOps):
         return Path.home() / "Napcat/opt/QQ/resources/app/app_launcher/napcat"
 
     def is_napcat_running(self, uin: Optional[str] = None) -> bool:
-        process = subprocess.Popen(
-            ["bash", "napcat", "status"], stdout=subprocess.PIPE
-        )
+        process = subprocess.Popen(["bash", "napcat", "status"], stdout=subprocess.PIPE)
         process.wait()
         stdout = process.stdout
         if stdout is None:

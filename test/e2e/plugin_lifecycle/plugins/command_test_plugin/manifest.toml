@@ -2,4 +2,3 @@ name = "command_test_plugin"
 version = "1.0.0"
 main = "main"
 description = "命令测试插件 - 测试与 unified_registry 的协作"
-

@@ -115,10 +115,15 @@ class NapCatService:
             LOG.info("NapCat 服务器离线或未登录")
             return False
 
-        LOG.info(f"NapCat 服务器 {ncatbot_config.napcat.ws_uri} 在线, 正在检查账号状态...")
+        LOG.info(
+            f"NapCat 服务器 {ncatbot_config.napcat.ws_uri} 在线, 正在检查账号状态..."
+        )
 
         # 跳过 WebUI 交互检查
-        if not ncatbot_config.napcat.enable_webui and not ncatbot_config.enable_webui_interaction:
+        if (
+            not ncatbot_config.napcat.enable_webui
+            and not ncatbot_config.enable_webui_interaction
+        ):
             LOG.warning(
                 f"跳过基于 WebUI 交互的检查, "
                 f"请自行确保 NapCat 已登录正确的 QQ {ncatbot_config.bt_uin}"

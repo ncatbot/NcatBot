@@ -10,10 +10,6 @@
 3. 上传私聊文件
 """
 
-import sys
-from pathlib import Path
-
-
 from .framework import test_case, APITestSuite
 from .utils import model_to_dict, create_test_file
 
@@ -97,7 +93,9 @@ class FriendInteractionScenarioTests(APITestSuite):
             raise ValueError("需要配置 target_user")
 
         friends_data = data.get("friends", {})
-        like_count = friends_data.get("friend_operations", {}).get("send_like_count", 10)
+        like_count = friends_data.get("friend_operations", {}).get(
+            "send_like_count", 10
+        )
 
         # 1. 好友点赞
         await api.send_like(user_id=int(target_user), times=like_count)
@@ -106,7 +104,11 @@ class FriendInteractionScenarioTests(APITestSuite):
         await api.friend_poke(user_id=int(target_user))
 
         return {
-            "step1_like": {"user_id": target_user, "times": like_count, "status": "success"},
+            "step1_like": {
+                "user_id": target_user,
+                "times": like_count,
+                "status": "success",
+            },
             "step2_poke": {"user_id": target_user, "status": "success"},
         }
 

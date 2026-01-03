@@ -21,7 +21,10 @@ try:
     # 尝试相对导入（当作为模块使用时）
     from .test_scenario_basic import BasicInfoScenarioTests
     from .test_scenario_group_msg import GroupMessageScenarioTests
-    from .test_scenario_group_file import GroupFileScenarioTests, GroupAlbumScenarioTests
+    from .test_scenario_group_file import (
+        GroupFileScenarioTests,
+        GroupAlbumScenarioTests,
+    )
     from .test_scenario_friend import FriendInteractionScenarioTests
     from .test_scenario_admin import (
         GroupAdminScenarioTests,

@@ -39,8 +39,14 @@ class FullFeaturePlugin(NcatBotPlugin):
 
     async def _handle_message(self, event):
         # event.data 是实际的消息事件
-        raw_msg = getattr(event.data, "raw_message", str(event.data)[:20]) if hasattr(event, "data") else str(event)[:20]
-        FullFeaturePlugin.handler_events.append(f"message:{raw_msg[:20] if isinstance(raw_msg, str) else raw_msg}")
+        raw_msg = (
+            getattr(event.data, "raw_message", str(event.data)[:20])
+            if hasattr(event, "data")
+            else str(event)[:20]
+        )
+        FullFeaturePlugin.handler_events.append(
+            f"message:{raw_msg[:20] if isinstance(raw_msg, str) else raw_msg}"
+        )
 
     async def _handle_custom(self, event):
         FullFeaturePlugin.handler_events.append(f"custom:{event}")
@@ -78,4 +84,3 @@ class FullFeaturePlugin(NcatBotPlugin):
         cls.command_executions = []
         cls.handler_events = []
         cls.config_operations = []
-

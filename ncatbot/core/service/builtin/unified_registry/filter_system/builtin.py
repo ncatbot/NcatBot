@@ -6,9 +6,16 @@ from ncatbot.utils.assets.literals import PermissionGroup
 from .base import BaseFilter
 
 __all__ = [
-    "GroupFilter", "PrivateFilter", "MessageSentFilter", "AdminFilter",
-    "GroupAdminFilter", "GroupOwnerFilter", "RootFilter", "NonSelfFilter",
-    "TrueFilter", "CustomFilter",
+    "GroupFilter",
+    "PrivateFilter",
+    "MessageSentFilter",
+    "AdminFilter",
+    "GroupAdminFilter",
+    "GroupOwnerFilter",
+    "RootFilter",
+    "NonSelfFilter",
+    "TrueFilter",
+    "CustomFilter",
 ]
 
 if TYPE_CHECKING:

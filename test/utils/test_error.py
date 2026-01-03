@@ -1,8 +1,7 @@
 """Tests for ncatbot.utils.error module."""
 
-import sys
 import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestNcatBotError:
@@ -12,10 +11,10 @@ class TestNcatBotError:
         """Test basic NcatBotError creation."""
         from ncatbot.utils.error import NcatBotError
 
-        with patch.object(NcatBotError, "logger") as mock_logger:
+        with patch.object(NcatBotError, "logger"):
             with pytest.raises(NcatBotError) as exc_info:
                 raise NcatBotError("Test error message", log=False)
-            
+
             assert str(exc_info.value) == "Test error message"
 
     def test_ncatbot_error_with_logging(self):
@@ -25,12 +24,12 @@ class TestNcatBotError:
         with patch.object(NcatBotError, "logger") as mock_logger:
             with patch("ncatbot.utils.error.ncatbot_config") as mock_config:
                 mock_config.debug = False
-                
+
                 try:
                     raise NcatBotError("Logged error")
                 except NcatBotError:
                     pass
-                
+
                 mock_logger.error.assert_called_once()
 
     def test_ncatbot_error_no_logging(self):
@@ -42,7 +41,7 @@ class TestNcatBotError:
                 raise NcatBotError("No log error", log=False)
             except NcatBotError:
                 pass
-            
+
             mock_logger.error.assert_not_called()
 
     def test_ncatbot_error_debug_mode_stacktrace(self):
@@ -52,12 +51,12 @@ class TestNcatBotError:
         with patch.object(NcatBotError, "logger") as mock_logger:
             with patch("ncatbot.utils.error.ncatbot_config") as mock_config:
                 mock_config.debug = True
-                
+
                 try:
                     raise NcatBotError("Debug error")
                 except NcatBotError:
                     pass
-                
+
                 # Both error and info (stacktrace) should be called
                 mock_logger.error.assert_called_once()
                 mock_logger.info.assert_called_once()
@@ -73,7 +72,7 @@ class TestAdapterEventError:
         with patch.object(AdapterEventError, "logger"):
             with pytest.raises(AdapterEventError) as exc_info:
                 raise AdapterEventError("Adapter error", log=False)
-            
+
             assert str(exc_info.value) == "Adapter error"
 
     def test_adapter_event_error_with_logging(self):
@@ -83,12 +82,12 @@ class TestAdapterEventError:
         with patch.object(AdapterEventError, "logger") as mock_logger:
             with patch("ncatbot.utils.error.ncatbot_config") as mock_config:
                 mock_config.debug = False
-                
+
                 try:
                     raise AdapterEventError("Logged adapter error")
                 except AdapterEventError:
                     pass
-                
+
                 mock_logger.error.assert_called_once()
 
 
@@ -102,7 +101,7 @@ class TestNcatBotValueError:
         with patch.object(NcatBotError, "logger"):
             with pytest.raises(NcatBotValueError) as exc_info:
                 raise NcatBotValueError("variable", "None", must_be=False)
-            
+
             assert "variable" in str(exc_info.value)
             assert "不能为" in str(exc_info.value)
             assert "None" in str(exc_info.value)
@@ -114,7 +113,7 @@ class TestNcatBotValueError:
         with patch.object(NcatBotError, "logger"):
             with pytest.raises(NcatBotValueError) as exc_info:
                 raise NcatBotValueError("config", "valid", must_be=True)
-            
+
             assert "config" in str(exc_info.value)
             assert "必须" in str(exc_info.value)
             assert "valid" in str(exc_info.value)
@@ -129,7 +128,7 @@ class TestNcatBotConnectionError:
 
         with pytest.raises(NcatBotConnectionError) as exc_info:
             raise NcatBotConnectionError("Connection refused")
-        
+
         assert "网络连接错误" in str(exc_info.value)
         assert "Connection refused" in str(exc_info.value)
 

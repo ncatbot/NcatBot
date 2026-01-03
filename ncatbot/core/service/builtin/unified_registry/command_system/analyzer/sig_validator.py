@@ -51,7 +51,7 @@ class SigValidator:
         # 返回实际参数的起始索引与切片
         return (
             self.event_param_index + 1,
-            self.descriptor.param_list[self.event_param_index + 1:],
+            self.descriptor.param_list[self.event_param_index + 1 :],
         )
 
     def _validate_event_param(self, event_param: inspect.Parameter, expected_type):
@@ -62,7 +62,7 @@ class SigValidator:
         if event_param.annotation == inspect.Parameter.empty:
             self._raise_error(
                 "event 参数缺少类型注解",
-                f"参数 '{param_name}' 需要 MessageEvent 或其子类注解"
+                f"参数 '{param_name}' 需要 MessageEvent 或其子类注解",
             )
 
         # 检查注解是否正确
@@ -70,7 +70,7 @@ class SigValidator:
         if not (isinstance(annotation, type) and issubclass(annotation, expected_type)):
             self._raise_error(
                 "event 参数类型注解错误",
-                f"参数 '{param_name}' 注解为 {annotation}，需要 MessageEvent 或其子类"
+                f"参数 '{param_name}' 注解为 {annotation}，需要 MessageEvent 或其子类",
             )
 
     def _raise_error(self, error_type: str, detail: str):

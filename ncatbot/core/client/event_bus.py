@@ -23,7 +23,7 @@ LOG = get_log("EventBus")
 
 class HandlerTimeoutError(Exception):
     """处理器超时异常"""
-    
+
     def __init__(self, meta_data: dict, handler: str, time: float):
         super().__init__()
         self.meta_data = meta_data
@@ -37,14 +37,14 @@ class HandlerTimeoutError(Exception):
 class EventBus:
     """
     事件总线
-    
+
     统一的事件分发中心，支持：
     - 精确匹配：event_type 完全匹配
     - 前缀匹配：如 ncatbot.notice.group_increase 也触发 ncatbot.notice
     - 正则匹配：使用 "re:" 前缀
     - 优先级控制：数值越大优先级越高
     """
-    
+
     def __init__(self, default_timeout: float = 120) -> None:
         """
         初始化事件总线

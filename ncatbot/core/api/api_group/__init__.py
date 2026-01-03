@@ -22,12 +22,12 @@ from .admin import GroupAdminMixin
 
 # 数据模型
 from .models import (
-    EssenceMessage,
-    GroupChatActivity,
-    GroupInfo,
-    GroupMemberInfo,
-    GroupMemberList,
-    UserInfo,
+    EssenceMessage as EssenceMessage,
+    GroupChatActivity as GroupChatActivity,
+    GroupInfo as GroupInfo,
+    GroupMemberInfo as GroupMemberInfo,
+    GroupMemberList as GroupMemberList,
+    UserInfo as UserInfo,
 )
 
 if TYPE_CHECKING:

@@ -1,7 +1,6 @@
 """
 MessageArray 构造和构建器测试 - 测试初始化和链式构建方法
 """
-import pytest
 
 from ncatbot.core import MessageArray
 from ncatbot.core import PlainText, At, Face, Reply
@@ -115,12 +114,7 @@ class TestMessageArrayBuilder:
 
     def test_chained_add(self):
         """测试链式添加"""
-        arr = (
-            MessageArray()
-            .add_text("hello ")
-            .add_at(123)
-            .add_text(" world")
-        )
+        arr = MessageArray().add_text("hello ").add_at(123).add_text(" world")
         assert len(arr) == 3
 
     def test_add_returns_self(self):

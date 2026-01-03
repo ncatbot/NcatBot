@@ -4,7 +4,7 @@
 用于构建自定义测试场景。
 """
 
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from .creators import (
     create_bot_data,
@@ -19,9 +19,9 @@ from .creators import (
 class ScenarioBuilder:
     """
     场景构建器
-    
+
     用于构建自定义测试场景。
-    
+
     示例:
         ```python
         data = (
@@ -34,11 +34,11 @@ class ScenarioBuilder:
         )
         ```
     """
-    
+
     def __init__(self, bot_id: str = "123456789", bot_name: str = "TestBot"):
         """
         初始化场景构建器
-        
+
         Args:
             bot_id: Bot QQ 号
             bot_name: Bot 昵称
@@ -53,7 +53,7 @@ class ScenarioBuilder:
         }
         self._bot_id = bot_id
         self._bot_name = bot_name
-    
+
     def add_friend(
         self,
         user_id: str,
@@ -63,7 +63,7 @@ class ScenarioBuilder:
         """添加好友"""
         self._data["friends"].append(create_user_data(user_id, nickname, remark))
         return self
-    
+
     def add_group(
         self,
         group_id: str,
@@ -73,7 +73,7 @@ class ScenarioBuilder:
     ) -> "ScenarioBuilder":
         """
         添加群
-        
+
         Args:
             group_id: 群号
             group_name: 群名
@@ -86,15 +86,14 @@ class ScenarioBuilder:
         ]
         if owner_id != self._bot_id:
             members.insert(
-                0,
-                create_group_member_data(owner_id, f"群主{owner_id}", role="owner")
+                0, create_group_member_data(owner_id, f"群主{owner_id}", role="owner")
             )
-        
+
         self._data["groups"].append(
             create_group_data(group_id, group_name, owner_id, members)
         )
         return self
-    
+
     def add_group_member(
         self,
         group_id: str,
@@ -110,7 +109,7 @@ class ScenarioBuilder:
                 )
                 break
         return self
-    
+
     def add_group_message(
         self,
         group_id: str,
@@ -120,26 +119,28 @@ class ScenarioBuilder:
     ) -> "ScenarioBuilder":
         """添加群消息"""
         import time
-        
+
         if group_id not in self._data["group_messages"]:
             self._data["group_messages"][group_id] = []
-        
+
         messages = self._data["group_messages"][group_id]
         msg_id = message_id or f"msg_{len(messages) + 1}"
-        
-        messages.append({
-            "message_id": msg_id,
-            "message_type": "group",
-            "group_id": group_id,
-            "user_id": user_id,
-            "message": [{"type": "text", "data": {"text": text}}],
-            "raw_message": text,
-            "time": int(time.time()),
-            "sender": {"user_id": user_id, "nickname": f"User{user_id}"},
-            "message_seq": len(messages) + 1,
-        })
+
+        messages.append(
+            {
+                "message_id": msg_id,
+                "message_type": "group",
+                "group_id": group_id,
+                "user_id": user_id,
+                "message": [{"type": "text", "data": {"text": text}}],
+                "raw_message": text,
+                "time": int(time.time()),
+                "sender": {"user_id": user_id, "nickname": f"User{user_id}"},
+                "message_seq": len(messages) + 1,
+            }
+        )
         return self
-    
+
     def add_group_file(
         self,
         group_id: str,
@@ -155,9 +156,9 @@ class ScenarioBuilder:
                 "files": [],
                 "folders": [],
             }
-        
+
         root = self._data["group_files"][group_id]
-        
+
         file_data = create_file_data(
             file_id or f"file_{len(root['files']) + 1}",
             file_name,
@@ -165,10 +166,11 @@ class ScenarioBuilder:
             self._bot_id,
             self._bot_name,
         )
-        
+
         if folder_id == "/" or not folder_id:
             root["files"].append(file_data)
         else:
+
             def find_and_add(folder: dict, target_id: str) -> bool:
                 if folder.get("folder_id") == target_id:
                     folder.setdefault("files", []).append(file_data)
@@ -177,11 +179,11 @@ class ScenarioBuilder:
                     if find_and_add(sf, target_id):
                         return True
                 return False
-            
+
             find_and_add(root, folder_id)
-        
+
         return self
-    
+
     def add_group_folder(
         self,
         group_id: str,
@@ -197,19 +199,20 @@ class ScenarioBuilder:
                 "files": [],
                 "folders": [],
             }
-        
+
         root = self._data["group_files"][group_id]
-        
+
         folder_data = create_folder_data(
             folder_id or f"folder_{len(root['folders']) + 1}",
             folder_name,
             self._bot_id,
             self._bot_name,
         )
-        
+
         if parent_id == "/" or not parent_id:
             root["folders"].append(folder_data)
         else:
+
             def find_and_add(folder: dict, target_id: str) -> bool:
                 if folder.get("folder_id") == target_id:
                     folder.setdefault("folders", []).append(folder_data)
@@ -218,12 +221,11 @@ class ScenarioBuilder:
                     if find_and_add(sf, target_id):
                         return True
                 return False
-            
+
             find_and_add(root, parent_id)
-        
+
         return self
-    
+
     def build(self) -> dict:
         """构建并返回数据"""
         return self._data
-

@@ -2,4 +2,3 @@ name = "handler_test_plugin"
 version = "1.0.0"
 main = "main"
 description = "事件处理器测试插件 - 测试与 register_handler 的协作"
-

@@ -40,7 +40,9 @@ class _DecoratorValidatorImpl:
         # 获取装饰器信息
         self.options: List[OptionSpec] = getattr(func, "__command_options__", [])
         self.params: List[ParameterSpec] = getattr(func, "__command_params__", [])
-        self.groups: List[OptionGroupSpec] = getattr(func, "__command_option_groups__", [])
+        self.groups: List[OptionGroupSpec] = getattr(
+            func, "__command_option_groups__", []
+        )
 
         # 索引映射
         self.short_options: Dict[str, dict] = {}
@@ -73,17 +75,21 @@ class _DecoratorValidatorImpl:
 
             # 检查选项是否为空
             if not option.short_name and not option.long_name:
-                self.errors.append(f"{option_info}: 选项必须至少指定一个短选项名或长选项名")
+                self.errors.append(
+                    f"{option_info}: 选项必须至少指定一个短选项名或长选项名"
+                )
 
     def _validate_short_option(self, short_name: str, index: int, option_info: str):
         """验证短选项"""
         # 格式验证
         if not short_name.isalnum() or len(short_name) != 1:
-            self.errors.append(f"{option_info}: 短选项名 '{short_name}' 必须是单个字母或数字")
+            self.errors.append(
+                f"{option_info}: 短选项名 '{short_name}' 必须是单个字母或数字"
+            )
 
         # 冲突检查
         if short_name in self.short_options:
-            existing_idx = self.short_options[short_name]['index']
+            existing_idx = self.short_options[short_name]["index"]
             self.errors.append(
                 f"{option_info}: 短选项名 '{short_name}' 与选项 #{existing_idx + 1} 冲突"
             )
@@ -100,15 +106,21 @@ class _DecoratorValidatorImpl:
             )
 
         if long_name.startswith("--"):
-            self.errors.append(f"{option_info}: 长选项名 '{long_name}' 不应包含 '--' 前缀")
-            self.warnings.append(f"{option_info}: 建议将 '{long_name}' 改为 '{long_name.lstrip('-')}'")
+            self.errors.append(
+                f"{option_info}: 长选项名 '{long_name}' 不应包含 '--' 前缀"
+            )
+            self.warnings.append(
+                f"{option_info}: 建议将 '{long_name}' 改为 '{long_name.lstrip('-')}'"
+            )
 
         if len(long_name) < 2:
-            self.errors.append(f"{option_info}: 长选项名 '{long_name}' 至少需要两个字符")
+            self.errors.append(
+                f"{option_info}: 长选项名 '{long_name}' 至少需要两个字符"
+            )
 
         # 冲突检查
         if long_name in self.long_options:
-            existing_idx = self.long_options[long_name]['index']
+            existing_idx = self.long_options[long_name]["index"]
             self.errors.append(
                 f"{option_info}: 长选项名 '{long_name}' 与选项 #{existing_idx + 1} 冲突"
             )
@@ -130,8 +142,10 @@ class _DecoratorValidatorImpl:
 
             # 冲突检查
             if name in self.param_names:
-                existing_idx = self.param_names[name]['index']
-                self.errors.append(f"{param_info}: 参数名 '{name}' 与参数 #{existing_idx + 1} 冲突")
+                existing_idx = self.param_names[name]["index"]
+                self.errors.append(
+                    f"{param_info}: 参数名 '{name}' 与参数 #{existing_idx + 1} 冲突"
+                )
             else:
                 self.param_names[name] = {"index": i}
 
@@ -156,7 +170,7 @@ class _DecoratorValidatorImpl:
         """验证选项组名称"""
         # 组名冲突检查
         if name in self.group_names:
-            existing_idx = self.group_names[name]['index']
+            existing_idx = self.group_names[name]["index"]
             self.errors.append(
                 f"{group_info}: 选项组名 '{name}' 与选项组 #{existing_idx + 1} 冲突"
             )
@@ -205,7 +219,7 @@ class _DecoratorValidatorImpl:
 
         # 与短选项名冲突
         if choice in self.short_options:
-            existing_idx = self.short_options[choice]['index']
+            existing_idx = self.short_options[choice]["index"]
             self.errors.append(
                 f"{group_info}: 选项组 '{group_name}' 的值 '{choice}' "
                 f"与短选项 '{choice}' (选项 #{existing_idx + 1}) 冲突"
@@ -213,7 +227,7 @@ class _DecoratorValidatorImpl:
 
         # 与长选项名冲突
         if choice in self.long_options:
-            existing_idx = self.long_options[choice]['index']
+            existing_idx = self.long_options[choice]["index"]
             self.errors.append(
                 f"{group_info}: 选项组 '{group_name}' 的值 '{choice}' "
                 f"与长选项 '{choice}' (选项 #{existing_idx + 1}) 冲突"
@@ -221,7 +235,7 @@ class _DecoratorValidatorImpl:
 
         # 与参数名冲突
         if choice in self.param_names:
-            existing_idx = self.param_names[choice]['index']
+            existing_idx = self.param_names[choice]["index"]
             self.errors.append(
                 f"{group_info}: 选项组 '{group_name}' 的值 '{choice}' "
                 f"与参数 '{choice}' (参数 #{existing_idx + 1}) 冲突"
@@ -254,7 +268,9 @@ class _DecoratorValidatorImpl:
             suggestions.append("检查是否有重复的参数名，确保每个参数名都是唯一的")
 
         if "格式" in error_text:
-            suggestions.append("确保选项名和参数名符合命名规范：字母、数字、连字符和下划线")
+            suggestions.append(
+                "确保选项名和参数名符合命名规范：字母、数字、连字符和下划线"
+            )
 
         if "选项组" in error_text:
             suggestions.append("检查选项组配置，确保名称唯一且选项列表正确")

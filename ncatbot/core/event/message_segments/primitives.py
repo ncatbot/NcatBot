@@ -1,4 +1,4 @@
-from typing import Literal, Union, ClassVar
+from typing import ClassVar
 from pydantic import field_validator
 from .base import MessageSegment
 
@@ -7,10 +7,11 @@ class PlainText(MessageSegment):
     type: ClassVar[str] = "text"
     text: str
 
+
 class Face(MessageSegment):
     type: ClassVar[str] = "face"
     id: str
-    
+
     @field_validator("id", mode="before")
     @classmethod
     def validate_id(cls, v) -> str:
@@ -35,7 +36,7 @@ class At(MessageSegment):
 class Reply(MessageSegment):
     type: ClassVar[str] = "reply"
     id: str
-    
+
     @field_validator("id", mode="before")
     @classmethod
     def validate_id(cls, v) -> str:

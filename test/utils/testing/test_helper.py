@@ -19,7 +19,8 @@ PLUGIN_DIR = FIXTURES_DIR / "hello_plugin"
 def _cleanup_modules():
     """清理插件模块缓存"""
     modules_to_remove = [
-        name for name in list(sys.modules.keys())
+        name
+        for name in list(sys.modules.keys())
         if "ncatbot_plugin" in name or "hello_plugin" in name
     ]
     for name in modules_to_remove:
@@ -30,14 +31,14 @@ def _cleanup_modules():
 async def suite():
     """创建测试套件"""
     _cleanup_modules()
-    
+
     s = E2ETestSuite()
     await s.setup()
     s.index_plugin(str(PLUGIN_DIR))
     await s.register_plugin("hello_plugin")
-    
+
     yield s
-    
+
     await s.teardown()
     _cleanup_modules()
 
@@ -97,7 +98,7 @@ class TestCallHistory:
     async def test_get_api_calls(self, suite):
         """测试获取 API 调用记录"""
         await suite.inject_private_message("/hello")
-        
+
         calls = suite.get_api_calls("send_private_msg")
         assert len(calls) > 0
 
@@ -106,7 +107,6 @@ class TestCallHistory:
         """测试清空调用历史"""
         await suite.inject_private_message("/hello")
         suite.clear_call_history()
-        
+
         calls = suite.get_api_calls("send_private_msg")
         assert len(calls) == 0
-

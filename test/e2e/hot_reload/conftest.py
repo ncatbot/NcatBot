@@ -41,8 +41,8 @@ def _get_original_content() -> Optional[str]:
         content = RELOAD_PLUGIN_MAIN.read_text()
         # 检查是否是原始状态（MARKER_VALUE 和 COMMAND_RESPONSE 都是 original）
         is_original = (
-            'MARKER_VALUE: str = "original"' in content and
-            'COMMAND_RESPONSE: str = "original_response"' in content
+            'MARKER_VALUE: str = "original"' in content
+            and 'COMMAND_RESPONSE: str = "original_response"' in content
         )
         if is_original:
             _ORIGINAL_CONTENT = content
@@ -53,11 +53,18 @@ def _get_original_content() -> Optional[str]:
 
 def _restore_original_content(content: str) -> str:
     """将修改后的内容还原为原始状态"""
-    content = content.replace('MARKER_VALUE: str = "modified"', 'MARKER_VALUE: str = "original"')
+    content = content.replace(
+        'MARKER_VALUE: str = "modified"', 'MARKER_VALUE: str = "original"'
+    )
     content = content.replace('version = "1.0.1"', 'version = "1.0.0"')
-    content = re.sub(r'MARKER_VALUE: str = "modified_\d+"', 'MARKER_VALUE: str = "original"', content)
+    content = re.sub(
+        r'MARKER_VALUE: str = "modified_\d+"', 'MARKER_VALUE: str = "original"', content
+    )
     # 还原命令响应
-    content = content.replace('COMMAND_RESPONSE: str = "modified_response"', 'COMMAND_RESPONSE: str = "original_response"')
+    content = content.replace(
+        'COMMAND_RESPONSE: str = "modified_response"',
+        'COMMAND_RESPONSE: str = "original_response"',
+    )
     return content
 
 
@@ -65,7 +72,7 @@ def _reset_plugin_file():
     """重置插件文件到原始状态，并重置 mtime 到当前时间"""
     import os
     import time
-    
+
     original = _get_original_content()
     if original:
         RELOAD_PLUGIN_MAIN.write_text(original)
@@ -77,7 +84,7 @@ def _reset_plugin_file():
 def get_plugin_class(plugin_name: str):
     """从已加载的模块中获取插件类"""
     for module_name, module in sys.modules.items():
-        if f"ncatbot_plugin." in module_name and module_name.endswith(".main"):
+        if "ncatbot_plugin." in module_name and module_name.endswith(".main"):
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
                 if (
@@ -90,14 +97,13 @@ def get_plugin_class(plugin_name: str):
 
 
 def modify_plugin_file(file_path: Path, replacements: Dict[str, str]) -> str:
-    """修改插件文件内容
-    """
+    """修改插件文件内容"""
 
     content = file_path.read_text()
     for old, new in replacements.items():
         content = content.replace(old, new)
     file_path.write_text(content)
-    
+
     return content
 
 
@@ -108,7 +114,7 @@ _get_original_content()
 @pytest_asyncio.fixture
 async def test_suite():
     """创建测试套件（每个测试完全隔离）
-    
+
     策略：
     1. 保存原始 plugins_dir 配置
     2. 临时设置 plugins_dir 为空目录（避免自动加载测试插件）
@@ -118,71 +124,71 @@ async def test_suite():
     """
     # 重置插件文件到原始状态
     _reset_plugin_file()
-    
+
     # 保存原始配置
     original_plugins_dir = ncatbot_config.plugin.plugins_dir
-    
+
     # 设置为不存在的空目录，避免自动加载
     ncatbot_config.plugin.plugins_dir = str(FIXTURES_DIR / "empty_plugins")
-    
+
     suite = E2ETestSuite()
     await suite.setup()
-    
+
     # 暂停 watcher，防止检测到初始化阶段的文件操作
     file_watcher = suite.services.file_watcher
     file_watcher.pause()
-    
+
     # 确保监视测试插件目录
     file_watcher.add_watch_dir(str(PLUGINS_DIR))
-    
+
     # 索引测试插件（不会自动加载）
     suite.index_plugin(str(RELOAD_PLUGIN_DIR))
-    
+
     # 重置插件文件的 mtime（在 FileWatcher 恢复之前）
     # 确保 mtime 不是"未来"时间，并清除可能已经被缓存的值
     import os
     import time
     import asyncio
-    
+
     current_time = time.time()
     os.utime(str(RELOAD_PLUGIN_MAIN), (current_time, current_time))
-    
+
     # 清除 FileWatcher 的文件缓存，确保下次扫描会重新读取 mtime
     file_watcher._file_cache.clear()
     file_watcher._first_scan_done = False
-    
+
     # 等待初始扫描完成，清空 pending 队列，然后恢复
     with file_watcher._pending_lock:
         file_watcher._pending_dirs.clear()
     file_watcher.resume()
-    
+
     # 等待 FileWatcher 完成首次扫描
     # 这确保了后续的 modify_plugin_file 会被检测为变化
     for _ in range(10):  # 最多等待 0.05 秒
         await asyncio.sleep(0.005)
         if file_watcher._first_scan_done:
             break
-    
+
     yield suite
-    
+
     # teardown 前先暂停 FileWatcher，防止触发更多热重载
     file_watcher.pause()
-    
+
     # 等待可能正在执行的热重载回调完成
     # 因为 _trigger_reload 使用 asyncio.run 创建独立事件循环执行回调
     # 需要给它足够时间完成
     await asyncio.sleep(0.01)
-    
+
     # 清空 pending 队列，防止后续处理
     with file_watcher._pending_lock:
         file_watcher._pending_dirs.clear()
-    
+
     # 关键：在 teardown 之前恢复原始配置
     # 这样 PluginConfigService 保存时不会写入测试目录路径
     ncatbot_config.plugin.plugins_dir = original_plugins_dir
-    
+
     await suite.teardown()
-    
+
     _reset_plugin_file()
 
 
@@ -234,9 +240,9 @@ def reset_plugin_counters():
     plugin_class = get_plugin_class("reload_test_plugin")
     if plugin_class and hasattr(plugin_class, "reset_counters"):
         plugin_class.reset_counters()
-    
+
     yield
-    
+
     # 测试后重置
     _reset_plugin_file()
     plugin_class = get_plugin_class("reload_test_plugin")

@@ -1,11 +1,11 @@
 """
 MessageArray 过滤和解析测试 - 测试 filter、concatenate_text、is_user_at 等方法
 """
+
 import pytest
 
 from ncatbot.core import MessageArray, Text, AtAll
 from ncatbot.core import PlainText, At
-from ncatbot.core import MessageSegment
 
 
 class TestMessageArrayFilter:

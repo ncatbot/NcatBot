@@ -14,13 +14,14 @@ DEFAULT_FILE_RETENTION = 600 * 1000
 
 class StreamStatus(str, Enum):
     """流传输状态"""
+
     NORMAL_ACTION = "normal-action"
     STREAM_ACTION = "stream-action"
 
 
 class StreamResponseType(str, Enum):
     """流响应类型"""
-    STREAM = "stream"       # 传输中
-    RESPONSE = "response"   # 传输完成
-    ERROR = "error"         # 传输失败
 
+    STREAM = "stream"  # 传输中
+    RESPONSE = "response"  # 传输完成
+    ERROR = "error"  # 传输失败

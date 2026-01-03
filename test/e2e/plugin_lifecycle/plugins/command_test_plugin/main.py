@@ -31,9 +31,7 @@ class CommandTestPlugin(NcatBotPlugin):
         CommandTestPlugin.command_calls.append("cmd_test")
         await event.reply("cmd_test executed")
 
-    @command_registry.command(
-        "cmd_echo", description="回声命令", prefixes=["", "/"]
-    )
+    @command_registry.command("cmd_echo", description="回声命令", prefixes=["", "/"])
     async def cmd_echo(self, event: GroupMessageEvent, text: str = ""):
         CommandTestPlugin.command_calls.append(f"cmd_echo:{text}")
         await event.reply(f"Echo: {text}")
@@ -42,4 +40,3 @@ class CommandTestPlugin(NcatBotPlugin):
     def reset_counters(cls):
         cls.command_calls = []
         cls.alias_calls = []
-

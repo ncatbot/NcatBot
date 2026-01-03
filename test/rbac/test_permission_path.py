@@ -99,7 +99,7 @@ class TestPermissionPathOperators:
         path1 = PermissionPath("plugin.admin")
         path2 = PermissionPath("plugin.admin")
         assert hash(path1) == hash(path2)
-        
+
         # 可以作为字典键
         d = {path1: "value"}
         assert d[path2] == "value"
@@ -198,4 +198,3 @@ class TestPermissionPathMatching:
         pattern = PermissionPath("*.*.kick")
         assert pattern.matches("plugin.admin.kick")
         assert not pattern.matches("plugin.kick")
-

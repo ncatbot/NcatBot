@@ -47,7 +47,7 @@ class GroupMessageMixin(APIComponent):
         if not validate_msg(message):
             LOG.warning("消息格式验证失败，发送群聊消息取消")
             return ""
-        
+
         # 预上传处理
         processed_message = await self._preupload_message(message)
 
@@ -74,8 +74,7 @@ class GroupMessageMixin(APIComponent):
         return await self.send_group_msg(group_id, msg.to_list())
 
     async def post_all_group_array_msg(self, msg: "MessageArray"):
-        """TODO: 发送群消息到所有群
-        """
+        """TODO: 发送群消息到所有群"""
         pass
 
     async def post_group_msg(
@@ -129,9 +128,7 @@ class GroupMessageMixin(APIComponent):
         """
         return await self.post_group_msg(group_id, text=text)
 
-    async def send_group_plain_text(
-        self, group_id: Union[str, int], text: str
-    ) -> str:
+    async def send_group_plain_text(self, group_id: Union[str, int], text: str) -> str:
         """
         发送群纯文本消息（不转义）
 
@@ -142,7 +139,9 @@ class GroupMessageMixin(APIComponent):
         Returns:
             str: 消息 ID
         """
-        return await self.send_group_msg(group_id, [{"type": "text", "data": {"text": text}}])
+        return await self.send_group_msg(
+            group_id, [{"type": "text", "data": {"text": text}}]
+        )
 
     async def send_group_image(self, group_id: Union[str, int], image: str) -> str:
         """
@@ -169,22 +168,14 @@ class GroupMessageMixin(APIComponent):
             str: 消息 ID
         """
         # 统一走 send_group_msg 以确保预上传
-        return await self.send_group_msg(
-            group_id, [Record(file=file).to_dict()]
-        )
+        return await self.send_group_msg(group_id, [Record(file=file).to_dict()])
 
-    async def send_group_dice(
-        self, group_id: Union[str, int], value: int = 1
-    ):
-        """TODO: 发送群掷骰子消息
-        """
+    async def send_group_dice(self, group_id: Union[str, int], value: int = 1):
+        """TODO: 发送群掷骰子消息"""
         pass
 
-    async def send_group_rps(
-        self, group_id: Union[str, int], value: int = 1
-    ):
-        """TODO: 发送群猜拳消息
-        """
+    async def send_group_rps(self, group_id: Union[str, int], value: int = 1):
+        """TODO: 发送群猜拳消息"""
 
     async def send_group_file(
         self,

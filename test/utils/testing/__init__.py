@@ -2,4 +2,3 @@
 
 测试 ncatbot.utils.testing 模块的 API。
 """
-

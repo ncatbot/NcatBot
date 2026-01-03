@@ -20,7 +20,7 @@ from .creators import (
 def get_minimal_data() -> dict:
     """
     获取最小化测试数据
-    
+
     只包含一个 Bot 和一个好友、一个群。
     """
     return {
@@ -30,7 +30,9 @@ def get_minimal_data() -> dict:
         ],
         "groups": [
             create_group_data(
-                "200001", "测试群", "123456789",
+                "200001",
+                "测试群",
+                "123456789",
                 members=[
                     create_group_member_data("123456789", "TestBot", role="owner"),
                     create_group_member_data("100001", "好友1", role="member"),
@@ -46,7 +48,7 @@ def get_minimal_data() -> dict:
 def get_standard_data() -> dict:
     """
     获取标准测试数据
-    
+
     包含多个好友、多个群、预设的群文件结构。
     """
     return {
@@ -59,7 +61,9 @@ def get_standard_data() -> dict:
         "groups": [
             # 群1：Bot 是群主
             create_group_data(
-                "200001", "测试群1", "123456789",
+                "200001",
+                "测试群1",
+                "123456789",
                 members=[
                     create_group_member_data("123456789", "TestBot", role="owner"),
                     create_group_member_data("100001", "好友1", role="admin"),
@@ -69,7 +73,9 @@ def get_standard_data() -> dict:
             ),
             # 群2：Bot 是管理员
             create_group_data(
-                "200002", "测试群2", "100001",
+                "200002",
+                "测试群2",
+                "100001",
                 members=[
                     create_group_member_data("100001", "好友1", role="owner"),
                     create_group_member_data("123456789", "TestBot", role="admin"),
@@ -78,7 +84,9 @@ def get_standard_data() -> dict:
             ),
             # 群3：Bot 是普通成员
             create_group_data(
-                "200003", "测试群3", "100002",
+                "200003",
+                "测试群3",
+                "100002",
                 members=[
                     create_group_member_data("100002", "好友2", role="owner"),
                     create_group_member_data("123456789", "TestBot", role="member"),
@@ -131,22 +139,34 @@ def get_standard_data() -> dict:
                 "folder_id": "/",
                 "folder_name": "/",
                 "files": [
-                    create_file_data("file_001", "readme.txt", 256, "123456789", "TestBot"),
-                    create_file_data("file_002", "document.pdf", 10240, "100001", "好友1"),
+                    create_file_data(
+                        "file_001", "readme.txt", 256, "123456789", "TestBot"
+                    ),
+                    create_file_data(
+                        "file_002", "document.pdf", 10240, "100001", "好友1"
+                    ),
                 ],
                 "folders": [
                     create_folder_data(
-                        "folder_001", "资料",
-                        "123456789", "TestBot",
+                        "folder_001",
+                        "资料",
+                        "123456789",
+                        "TestBot",
                         files=[
-                            create_file_data("file_003", "notes.txt", 512, "123456789", "TestBot"),
+                            create_file_data(
+                                "file_003", "notes.txt", 512, "123456789", "TestBot"
+                            ),
                         ],
                         folders=[
                             create_folder_data(
-                                "folder_002", "图片",
-                                "100001", "好友1",
+                                "folder_002",
+                                "图片",
+                                "100001",
+                                "好友1",
                                 files=[
-                                    create_file_data("file_004", "photo.jpg", 2048, "100001", "好友1"),
+                                    create_file_data(
+                                        "file_004", "photo.jpg", 2048, "100001", "好友1"
+                                    ),
                                 ],
                             ),
                         ],
@@ -160,7 +180,7 @@ def get_standard_data() -> dict:
 def get_rich_data() -> dict:
     """
     获取丰富测试数据
-    
+
     包含大量测试数据，适用于压力测试和边界测试。
     """
     # 生成大量好友
@@ -168,13 +188,12 @@ def get_rich_data() -> dict:
         create_user_data(f"10{i:04d}", f"好友{i}", remark=f"测试好友{i}")
         for i in range(1, 101)
     ]
-    
+
     # 生成群成员
     def make_members(group_num: int, count: int) -> List[dict]:
         members = [
             create_group_member_data(
-                "123456789", "TestBot",
-                role="owner" if group_num == 1 else "member"
+                "123456789", "TestBot", role="owner" if group_num == 1 else "member"
             ),
         ]
         for i in range(1, min(count, 100)):
@@ -183,39 +202,42 @@ def get_rich_data() -> dict:
                 create_group_member_data(f"10{i:04d}", f"好友{i}", role=role)
             )
         return members
-    
+
     # 生成群组
     groups = [
         create_group_data(
-            f"20{i:04d}", f"测试群{i}",
+            f"20{i:04d}",
+            f"测试群{i}",
             "123456789" if i == 1 else f"10{i:04d}",
-            members=make_members(i, 20 + i * 5)
+            members=make_members(i, 20 + i * 5),
         )
         for i in range(1, 11)
     ]
-    
+
     # 生成群消息
     group_messages: Dict[str, List[dict]] = {}
     for i in range(1, 4):
         group_id = f"20{i:04d}"
         messages = []
         for j in range(1, 51):
-            messages.append({
-                "message_id": f"{i}00{j:03d}",
-                "message_type": "group",
-                "group_id": group_id,
-                "user_id": f"10{(j % 10) + 1:04d}",
-                "message": [{"type": "text", "data": {"text": f"消息 {j}"}}],
-                "raw_message": f"消息 {j}",
-                "time": int(time.time()) - (50 - j) * 60,
-                "sender": {
+            messages.append(
+                {
+                    "message_id": f"{i}00{j:03d}",
+                    "message_type": "group",
+                    "group_id": group_id,
                     "user_id": f"10{(j % 10) + 1:04d}",
-                    "nickname": f"好友{(j % 10) + 1}"
-                },
-                "message_seq": j,
-            })
+                    "message": [{"type": "text", "data": {"text": f"消息 {j}"}}],
+                    "raw_message": f"消息 {j}",
+                    "time": int(time.time()) - (50 - j) * 60,
+                    "sender": {
+                        "user_id": f"10{(j % 10) + 1:04d}",
+                        "nickname": f"好友{(j % 10) + 1}",
+                    },
+                    "message_seq": j,
+                }
+            )
         group_messages[group_id] = messages
-    
+
     return {
         "bot": create_bot_data("123456789", "TestBot"),
         "friends": friends,
@@ -228,19 +250,27 @@ def get_rich_data() -> dict:
                 "folder_name": "/",
                 "files": [
                     create_file_data(
-                        f"file_{i:03d}", f"file_{i}.txt",
-                        1024 * i, "123456789", "TestBot"
+                        f"file_{i:03d}",
+                        f"file_{i}.txt",
+                        1024 * i,
+                        "123456789",
+                        "TestBot",
                     )
                     for i in range(1, 21)
                 ],
                 "folders": [
                     create_folder_data(
-                        f"folder_{i:03d}", f"文件夹{i}",
-                        "123456789", "TestBot",
+                        f"folder_{i:03d}",
+                        f"文件夹{i}",
+                        "123456789",
+                        "TestBot",
                         files=[
                             create_file_data(
-                                f"sub_file_{i}_{j}", f"subfile_{j}.txt",
-                                512, "123456789", "TestBot"
+                                f"sub_file_{i}_{j}",
+                                f"subfile_{j}.txt",
+                                512,
+                                "123456789",
+                                "TestBot",
                             )
                             for j in range(1, 6)
                         ],
@@ -250,4 +280,3 @@ def get_rich_data() -> dict:
             },
         },
     }
-

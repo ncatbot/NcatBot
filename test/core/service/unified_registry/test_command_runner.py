@@ -8,12 +8,16 @@
 """
 
 import pytest
-from unittest.mock import Mock, AsyncMock, MagicMock, patch
+from unittest.mock import Mock, AsyncMock
 
 from ncatbot.core.service.builtin.unified_registry.command_runner import CommandRunner
 from ncatbot.core.service.builtin.unified_registry.executor import FunctionExecutor
-from ncatbot.core.service.builtin.unified_registry.trigger.preprocessor import MessagePreprocessor
-from ncatbot.core.service.builtin.unified_registry.trigger.resolver import CommandResolver
+from ncatbot.core.service.builtin.unified_registry.trigger.preprocessor import (
+    MessagePreprocessor,
+)
+from ncatbot.core.service.builtin.unified_registry.trigger.resolver import (
+    CommandResolver,
+)
 
 
 # =============================================================================
@@ -43,14 +47,14 @@ def runner(mock_executor):
 def mock_message_event():
     """创建模拟消息事件"""
     from ncatbot.core.event.message_segments.primitives import PlainText
-    
+
     event = Mock()
     event.message = Mock()
-    
+
     # 创建 PlainText 消息段
     plain_text = PlainText(text="/test arg1 arg2")
     event.message.message = [plain_text]
-    
+
     return event
 
 
@@ -68,7 +72,7 @@ class TestCommandRunnerInit:
             prefixes=["/"],
             executor=mock_executor,
         )
-        
+
         assert runner._executor is mock_executor
         assert runner._event_bus is None
         assert runner._binder is not None
@@ -78,13 +82,13 @@ class TestCommandRunnerInit:
     def test_init_with_event_bus(self, mock_executor):
         """测试带事件总线初始化"""
         mock_bus = Mock()
-        
+
         runner = CommandRunner(
             prefixes=["/"],
             executor=mock_executor,
             event_bus=mock_bus,
         )
-        
+
         assert runner._event_bus is mock_bus
 
     def test_init_with_multiple_prefixes(self, mock_executor):
@@ -93,7 +97,7 @@ class TestCommandRunnerInit:
             prefixes=["/", "!", "#"],
             executor=mock_executor,
         )
-        
+
         assert runner._preprocessor.prefixes == ["/", "!", "#"]
 
 
@@ -116,9 +120,9 @@ class TestProperties:
     def test_set_event_bus(self, runner):
         """测试设置事件总线"""
         mock_bus = Mock()
-        
+
         runner.set_event_bus(mock_bus)
-        
+
         assert runner._event_bus is mock_bus
 
 
@@ -136,9 +140,9 @@ class TestCommandExecution:
         event = Mock()
         event.message = Mock()
         event.message.message = []  # 空消息
-        
+
         result = await runner.run(event)
-        
+
         assert result is False
 
     @pytest.mark.asyncio
@@ -146,7 +150,7 @@ class TestCommandExecution:
         """测试无命令匹配返回 False"""
         # 没有注册任何命令，所以不会匹配
         result = await runner.run(mock_message_event)
-        
+
         assert result is False
 
 
@@ -162,9 +166,9 @@ class TestClear:
         """测试清理解析器"""
         # 先构建一些索引
         runner._resolver._index = {("test",): Mock()}
-        
+
         runner.clear()
-        
+
         assert runner._resolver._index == {}
 
 
@@ -182,7 +186,7 @@ class TestEdgeCases:
             prefixes=[],
             executor=mock_executor,
         )
-        
+
         assert runner._preprocessor.prefixes == []
 
     @pytest.mark.asyncio
@@ -190,13 +194,12 @@ class TestEdgeCases:
         """测试首段非文本消息"""
         event = Mock()
         event.message = Mock()
-        
+
         # 首段是图片而非文本
         image_segment = Mock()
         image_segment.__class__.__name__ = "Image"
         event.message.message = [image_segment]
-        
-        result = await runner.run(event)
-        
-        assert result is False
 
+        result = await runner.run(event)
+
+        assert result is False

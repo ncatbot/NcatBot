@@ -7,4 +7,3 @@
 from .service import FileWatcherService
 
 __all__ = ["FileWatcherService"]
-

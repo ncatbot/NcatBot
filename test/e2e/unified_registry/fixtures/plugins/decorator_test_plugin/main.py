@@ -108,7 +108,10 @@ class DecoratorTestPlugin(NcatBotPlugin):
     @param(name="input", help="输入路径")
     @param(name="output", default="out.txt", help="输出路径")
     @option_group(
-        name="mode", choices=["fast", "normal", "safe"], default="normal", help="处理模式"
+        name="mode",
+        choices=["fast", "normal", "safe"],
+        default="normal",
+        help="处理模式",
     )
     async def complex_cmd(
         self,
@@ -142,4 +145,3 @@ class DecoratorTestPlugin(NcatBotPlugin):
     ):
         """选项名格式验证"""
         await event.reply("ok")
-

@@ -66,7 +66,10 @@ class _ModuleImporter:
         if main_path.exists():
             return True
         # 如果未带 .py 后缀，再尝试添加 .py
-        if not main_field.endswith(".py") and (plugin_dir / (main_field + ".py")).exists():
+        if (
+            not main_field.endswith(".py")
+            and (plugin_dir / (main_field + ".py")).exists()
+        ):
             return True
         LOG.warning(
             "文件夹 %s 的 manifest 'main' 指向的入口文件未找到: %s，跳过",
@@ -298,7 +301,9 @@ class _ModuleImporter:
         return filename
 
     def _get_plugin_entry_file(self, name: str) -> str:
-        return str(self._get_plugin_dir(name) / (self._get_plugin_entry_stem(name) + ".py"))
+        return str(
+            self._get_plugin_dir(name) / (self._get_plugin_entry_stem(name) + ".py")
+        )
 
     def _get_plugin_main_module_name(self, name: str) -> str:
         return f"{self._get_plugin_pkg_name(name)}.{self._get_plugin_entry_stem(name)}"

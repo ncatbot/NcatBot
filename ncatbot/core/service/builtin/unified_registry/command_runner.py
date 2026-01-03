@@ -3,8 +3,7 @@
 负责命令预处理、解析、参数绑定、执行。
 """
 
-import traceback
-from typing import List, Optional, TYPE_CHECKING, Any
+from typing import List, Optional, TYPE_CHECKING
 
 from ncatbot.utils import get_log
 from .trigger.binder import ArgumentBinder, BindResult
@@ -131,4 +130,3 @@ class CommandRunner:
     def clear(self) -> None:
         """清理资源"""
         self._resolver.clear()
-

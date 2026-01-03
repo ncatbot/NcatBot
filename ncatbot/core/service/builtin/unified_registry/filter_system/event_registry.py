@@ -15,6 +15,7 @@ class EventRegistry:
 
     存储 notice 和 request 事件的处理器函数。
     """
+
     _current_plugin_name: str = ""
 
     def __init__(self):
@@ -25,7 +26,7 @@ class EventRegistry:
     @classmethod
     def set_current_plugin_name(cls, plugin_name: str):
         cls._current_plugin_name = plugin_name
-    
+
     def notice_handler(self, func: Callable) -> Callable:
         """注册 notice 事件处理器"""
         self._notice_handlers[func] = self._current_plugin_name
@@ -49,12 +50,10 @@ class EventRegistry:
     def revoke_plugin(self, plugin_name: str) -> None:
         """撤销指定插件的所有处理器"""
         notice_to_remove = [
-            func for func, name in self._notice_handlers.items()
-            if name == plugin_name
+            func for func, name in self._notice_handlers.items() if name == plugin_name
         ]
         request_to_remove = [
-            func for func, name in self._request_handlers.items()
-            if name == plugin_name
+            func for func, name in self._request_handlers.items() if name == plugin_name
         ]
 
         for func in notice_to_remove:
@@ -76,4 +75,3 @@ class EventRegistry:
 
 # 全局单例
 event_registry = EventRegistry()
-

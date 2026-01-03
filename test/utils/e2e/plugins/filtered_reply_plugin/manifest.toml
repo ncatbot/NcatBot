@@ -4,4 +4,3 @@ main = "plugin.py"
 entry_class = "FilteredReplyPlugin"
 author = "test"
 description = "过滤器回复插件 - 测试过滤器与 reply 功能"
-

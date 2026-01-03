@@ -11,7 +11,7 @@ from copy import copy
 class NcatBotEvent:
     """
     事件类
-    
+
     用于封装事件信息，包含事件类型、数据及处理结果。
 
     Attributes:
@@ -119,11 +119,12 @@ class NcatBotEventFactory:
         Args:
             event_name: 事件类型标识符
             **kwargs: 事件携带的数据
-            
+
         Returns:
             NcatBotEvent: 创建的事件实例
         """
         return NcatBotEvent(f"ncatbot.{event_name}", data=kwargs)
+
 
 __all__ = [
     "NcatBotEvent",

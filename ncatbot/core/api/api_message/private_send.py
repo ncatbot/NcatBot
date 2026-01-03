@@ -48,7 +48,7 @@ class PrivateMessageMixin(APIComponent):
         if not validate_msg(message):
             LOG.warning("消息格式验证失败，发送私聊消息取消")
             return ""
-        
+
         # 预上传处理
         processed_message = await self._preupload_message(message)
 
@@ -64,7 +64,7 @@ class PrivateMessageMixin(APIComponent):
     ) -> str:
         """
         发送私聊消息（MessageArray）
-        
+
         Args:
             user_id: 用户 QQ 号
             msg: MessageArray 消息对象
@@ -120,9 +120,7 @@ class PrivateMessageMixin(APIComponent):
         msg_array = MessageArray(text)
         return await self.post_private_array_msg(user_id, msg_array)
 
-    async def send_private_plain_text(
-        self, user_id: Union[str, int], text: str
-    ) -> str:
+    async def send_private_plain_text(self, user_id: Union[str, int], text: str) -> str:
         """
         发送私聊纯文本消息（不转义）
 
@@ -148,9 +146,7 @@ class PrivateMessageMixin(APIComponent):
             str: 消息 ID
         """
         # 统一走 send_private_msg 以确保预上传
-        return await self.send_private_msg(
-            user_id, [Image(file=image).to_dict()]
-        )
+        return await self.send_private_msg(user_id, [Image(file=image).to_dict()])
 
     async def send_private_record(self, user_id: Union[str, int], file: str) -> str:
         """
@@ -164,13 +160,9 @@ class PrivateMessageMixin(APIComponent):
             str: 消息 ID
         """
         # 统一走 send_private_msg 以确保预上传
-        return await self.send_private_msg(
-            user_id, [Record(file=file).to_dict()]
-        )
+        return await self.send_private_msg(user_id, [Record(file=file).to_dict()])
 
-    async def send_private_dice(
-        self, user_id: Union[str, int], value: int = 1
-    ) -> str:
+    async def send_private_dice(self, user_id: Union[str, int], value: int = 1) -> str:
         """
         发送私聊骰子消息
 
@@ -186,9 +178,7 @@ class PrivateMessageMixin(APIComponent):
             user_id, [{"type": "dice", "data": {"value": value}}]
         )
 
-    async def send_private_rps(
-        self, user_id: Union[str, int], value: int = 1
-    ) -> str:
+    async def send_private_rps(self, user_id: Union[str, int], value: int = 1) -> str:
         """
         发送私聊猜拳消息
 

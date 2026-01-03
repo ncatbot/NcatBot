@@ -7,7 +7,6 @@ from ncatbot.core.service.builtin.unified_registry.filter_system.decorators impo
     private_filter,
     admin_filter,
     root_filter,
-    on_message,
     filter,
 )
 from ncatbot.core.service.builtin.unified_registry.filter_system.builtin import (
@@ -16,7 +15,6 @@ from ncatbot.core.service.builtin.unified_registry.filter_system.builtin import 
     AdminFilter,
     CustomFilter,
     TrueFilter,
-    NonSelfFilter,
 )
 from ncatbot.core import MessageEvent
 

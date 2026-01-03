@@ -3,7 +3,7 @@
 负责命令和过滤器的统一管理功能。
 """
 
-from typing import Dict, Callable, TYPE_CHECKING, List, Tuple, Optional
+from typing import Dict, Callable, TYPE_CHECKING, List, Tuple
 
 from ncatbot.utils import get_log
 from ...base import BaseService
@@ -48,7 +48,7 @@ class UnifiedRegistryService(BaseService):
     # ==========================================================================
 
     async def on_load(self) -> None:
-        """服务加载时的初始化"""      
+        """服务加载时的初始化"""
         self._executor = FunctionExecutor()
         self._executor.set_plugin_loader(self.plugin_loader)
         LOG.info("统一注册服务已加载")
@@ -205,12 +205,14 @@ class UnifiedRegistryService(BaseService):
 
         # 过滤出标记为命令的函数
         filtered_commands: Dict[Tuple[str, ...], CommandSpec] = {
-            path: cmd for path, cmd in command_map.items()
+            path: cmd
+            for path, cmd in command_map.items()
             if getattr(cmd.func, "__is_command__", False)
         }
 
         filtered_aliases: Dict[Tuple[str, ...], CommandSpec] = {
-            path: cmd for path, cmd in alias_map.items()
+            path: cmd
+            for path, cmd in alias_map.items()
             if getattr(cmd.func, "__is_command__", False)
         }
 

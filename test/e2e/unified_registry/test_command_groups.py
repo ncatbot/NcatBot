@@ -15,7 +15,7 @@ class TestIndependentCommands:
     @pytest.mark.asyncio
     async def test_independent_commands_complete(self, groups_suite):
         """测试独立命令功能（综合测试）
-        
+
         测试内容：
         - 帮助命令
         - 带参数的帮助命令
@@ -23,7 +23,7 @@ class TestIndependentCommands:
         # 1. 测试帮助命令
         await groups_suite.inject_private_message("/help")
         groups_suite.assert_reply_sent("可用命令组: user, config")
-        
+
         # 2. 测试带参数的帮助命令
         groups_suite.clear_call_history()
         await groups_suite.inject_private_message("/help deploy")
@@ -36,7 +36,7 @@ class TestUserGroupCommands:
     @pytest.mark.asyncio
     async def test_user_group_commands_complete(self, groups_suite):
         """测试用户组命令功能（综合测试）
-        
+
         测试内容：
         - 用户信息命令
         - 用户列表命令
@@ -46,17 +46,17 @@ class TestUserGroupCommands:
         # 1. 测试用户信息命令
         await groups_suite.inject_private_message("/user info 12345")
         groups_suite.assert_reply_sent("用户 12345 的信息")
-        
+
         # 2. 测试用户列表命令
         groups_suite.clear_call_history()
         await groups_suite.inject_private_message("/user list")
         groups_suite.assert_reply_sent("用户列表 (第 1 页)")
-        
+
         # 3. 测试用户列表带页码
         groups_suite.clear_call_history()
         await groups_suite.inject_private_message("/user list 3")
         groups_suite.assert_reply_sent("用户列表 (第 3 页)")
-        
+
         # 4. 测试用户搜索命令
         groups_suite.clear_call_history()
         await groups_suite.inject_private_message("/user search admin")
@@ -69,7 +69,7 @@ class TestConfigGroupCommands:
     @pytest.mark.asyncio
     async def test_config_group_commands_complete(self, groups_suite):
         """测试配置组命令功能（综合测试）
-        
+
         测试内容：
         - 获取配置命令
         - 设置配置命令
@@ -78,12 +78,12 @@ class TestConfigGroupCommands:
         # 1. 测试获取配置命令
         await groups_suite.inject_private_message("/config get debug_mode")
         groups_suite.assert_reply_sent("配置项 debug_mode 的值: (mock)")
-        
+
         # 2. 测试设置配置命令
         groups_suite.clear_call_history()
         await groups_suite.inject_private_message("/config set debug_mode true")
         groups_suite.assert_reply_sent("已设置 debug_mode = true")
-        
+
         # 3. 测试列出配置命令
         groups_suite.clear_call_history()
         await groups_suite.inject_private_message("/config list")

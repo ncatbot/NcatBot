@@ -50,8 +50,7 @@ class TestGroupInfo:
         if members:
             first_member = members[0]
             member_info = await api.get_group_member_info(
-                group_id=int(standard_group_id),
-                user_id=int(first_member.user_id)
+                group_id=int(standard_group_id), user_id=int(first_member.user_id)
             )
             assert member_info is not None, "成员信息不能为空"
             api_suite.assert_api_called("get_group_member_info")
@@ -71,7 +70,9 @@ class TestGroupAdminOperations:
     """群管理操作综合测试"""
 
     @pytest.mark.asyncio
-    async def test_group_member_management(self, api_suite, standard_group_id, standard_user_id):
+    async def test_group_member_management(
+        self, api_suite, standard_group_id, standard_user_id
+    ):
         """
         群成员管理综合测试
 
@@ -86,13 +87,13 @@ class TestGroupAdminOperations:
         await api.set_group_card(
             group_id=int(standard_group_id),
             user_id=int(standard_user_id),
-            card="测试名片"
+            card="测试名片",
         )
         api_suite.assert_api_called_with(
             "set_group_card",
             group_id=int(standard_group_id),
             user_id=int(standard_user_id),
-            card="测试名片"
+            card="测试名片",
         )
 
         # 2. 设置群头衔
@@ -100,38 +101,33 @@ class TestGroupAdminOperations:
         await api.set_group_special_title(
             group_id=int(standard_group_id),
             user_id=int(standard_user_id),
-            special_title="测试头衔"
+            special_title="测试头衔",
         )
         api_suite.assert_api_called("set_group_special_title")
 
         # 3. 设置禁言
         api_suite.clear_call_history()
         await api.set_group_ban(
-            group_id=int(standard_group_id),
-            user_id=int(standard_user_id),
-            duration=60
+            group_id=int(standard_group_id), user_id=int(standard_user_id), duration=60
         )
         api_suite.assert_api_called_with(
             "set_group_ban",
             group_id=int(standard_group_id),
             user_id=int(standard_user_id),
-            duration=60
+            duration=60,
         )
 
         # 4. 解除禁言（duration=0）
         api_suite.clear_call_history()
         await api.set_group_ban(
-            group_id=int(standard_group_id),
-            user_id=int(standard_user_id),
-            duration=0
+            group_id=int(standard_group_id), user_id=int(standard_user_id), duration=0
         )
-        api_suite.assert_api_called_with(
-            "set_group_ban",
-            duration=0
-        )
+        api_suite.assert_api_called_with("set_group_ban", duration=0)
 
     @pytest.mark.asyncio
-    async def test_group_poke_operation(self, api_suite, standard_group_id, standard_user_id):
+    async def test_group_poke_operation(
+        self, api_suite, standard_group_id, standard_user_id
+    ):
         """
         群戳一戳操作测试
 
@@ -143,15 +139,12 @@ class TestGroupAdminOperations:
 
         # 执行戳一戳操作
         await api.group_poke(
-            group_id=int(standard_group_id),
-            user_id=int(standard_user_id)
+            group_id=int(standard_group_id), user_id=int(standard_user_id)
         )
 
         # 验证 API 调用
         api_suite.assert_api_called_with(
-            "group_poke",
-            group_id=int(standard_group_id),
-            user_id=int(standard_user_id)
+            "group_poke", group_id=int(standard_group_id), user_id=int(standard_user_id)
         )
 
     @pytest.mark.asyncio
@@ -167,11 +160,9 @@ class TestGroupAdminOperations:
 
         # 获取群荣誉信息
         honor_info = await api.get_group_honor_info(
-            group_id=int(standard_group_id),
-            type="all"
+            group_id=int(standard_group_id), type="all"
         )
         assert honor_info is not None, "群荣誉信息不能为空"
 
         # 验证 API 调用
         api_suite.assert_api_called("get_group_honor_info")
-

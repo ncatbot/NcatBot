@@ -1,15 +1,12 @@
 """Tests for ncatbot.utils.config.utils module."""
 
-import pytest
-import string
-
 
 class TestStrongPasswordCheck:
     """Tests for strong_password_check function."""
 
     def test_valid_strong_password(self):
         """Test valid strong password passes check.
-        
+
         Note: Due to regex bug in source, use password with 'digit{}'.
         """
         from ncatbot.utils.config.utils import strong_password_check
@@ -49,15 +46,15 @@ class TestStrongPasswordCheck:
 
     def test_password_exactly_12_chars(self):
         """Test password with exactly 12 characters passes.
-        
-        Note: The source regex has a bug where the pattern 
-        [!@#$%^&*()_+-=[]{}|;:,.<>?] actually matches 'digit{}' 
-        instead of individual special chars. This test uses a 
+
+        Note: The source regex has a bug where the pattern
+        [!@#$%^&*()_+-=[]{}|;:,.<>?] actually matches 'digit{}'
+        instead of individual special chars. This test uses a
         password that works with the current (buggy) implementation.
         """
         from ncatbot.utils.config.utils import strong_password_check
 
-        # Password that works: contains digit followed by {} 
+        # Password that works: contains digit followed by {}
         # which the buggy regex interprets as special char match
         assert strong_password_check("Abc1{}defGHI") is True
 
@@ -88,8 +85,8 @@ class TestGenerateStrongPassword:
     def test_generated_password_is_strong(self):
         """Test generated password passes strong check."""
         from ncatbot.utils.config.utils import (
-            generate_strong_password, 
-            strong_password_check
+            generate_strong_password,
+            strong_password_check,
         )
 
         for _ in range(10):  # Test multiple times due to randomness
@@ -108,12 +105,12 @@ class TestGenerateStrongPassword:
         from ncatbot.utils.config.utils import generate_strong_password
 
         password = generate_strong_password()
-        
+
         has_digit = any(c.isdigit() for c in password)
         has_lower = any(c.islower() for c in password)
         has_upper = any(c.isupper() for c in password)
         has_special = any(c in "!@#$%^&*()_+-=[]{}|;:,.<>?" for c in password)
-        
+
         assert has_digit
         assert has_lower
         assert has_upper
@@ -137,12 +134,7 @@ class TestRedactSensitive:
         """Test redact with nested dictionary."""
         from ncatbot.utils.config.utils import redact_sensitive
 
-        data = {
-            "config": {
-                "password": "secret",
-                "host": "localhost"
-            }
-        }
+        data = {"config": {"password": "secret", "host": "localhost"}}
         result = redact_sensitive(data)
         # Current implementation returns unchanged
         assert result == data

@@ -214,16 +214,16 @@ uv run pytest test/core/event/events/test_mixins.py -v
 ```python
 class MockBotAPI:
     """用于测试的 Mock Bot API"""
-    
+
     # 记录所有 API 调用
     calls: List[tuple]
-    
+
     # 获取最后一次调用
     def get_last_call() -> tuple
-    
+
     # 清空调用记录
     def clear_calls() -> None
-    
+
     # 实现的 API 方法
     async def post_group_msg(group_id, text, **kwargs)
     async def post_private_msg(user_id, text, **kwargs)

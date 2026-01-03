@@ -129,7 +129,9 @@ class AuthHandler:
         LOG.info(traceback.format_exc())
         raise WebUIConnectionError(f"连接 WebUI 失败: {error}")
 
-    def _api_call(self, endpoint: str, payload: Optional[dict] = None, timeout: int = 5) -> dict:
+    def _api_call(
+        self, endpoint: str, payload: Optional[dict] = None, timeout: int = 5
+    ) -> dict:
         """统一的 API 调用"""
         return post_json(
             f"{self._base_uri}{endpoint}",

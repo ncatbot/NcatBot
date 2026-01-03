@@ -8,13 +8,14 @@ from __future__ import annotations
 
 import asyncio
 import json
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Dict, Optional
 
 HAS_WEBSOCKETS = False
 websockets = None  # type: ignore
 try:
     import websockets as _websockets  # type: ignore
     import websockets.exceptions  # type: ignore
+
     websockets = _websockets
     HAS_WEBSOCKETS = True
 except ImportError:
@@ -26,11 +27,11 @@ class MockServerClient:
     改进后的 MockServerClient
     保持接口完全不变，但支持高并发调用并提升了性能。
     """
-    
+
     def __init__(self, uri: str):
         if not HAS_WEBSOCKETS:
             raise ImportError("需要安装 websockets 库: pip install websockets")
-        
+
         self.uri = uri
         self._ws: Any = None
         # 核心改进：使用 Future 字典代替 Queue
@@ -38,14 +39,14 @@ class MockServerClient:
         self._event_callback: Optional[Callable[..., Any]] = None
         self._listen_task: Optional[asyncio.Task[None]] = None
         self._echo_counter = 0
-    
+
     async def connect(self) -> None:
         """连接到服务器"""
         if websockets is None:
             raise ImportError("需要安装 websockets 库: pip install websockets")
         self._ws = await websockets.connect(self.uri)
         self._listen_task = asyncio.create_task(self._listen())
-    
+
     async def disconnect(self) -> None:
         """断开连接"""
         if self._listen_task:
@@ -54,11 +55,11 @@ class MockServerClient:
                 await self._listen_task
             except asyncio.CancelledError:
                 pass
-        
+
         if self._ws:
             await self._ws.close()
             self._ws = None
-        
+
         # 清理未完成的请求，防止调用方永久挂起
         for fut in self._pending_futures.values():
             if not fut.done():
@@ -69,12 +70,12 @@ class MockServerClient:
         """监听消息并精确分发"""
         if not self._ws:
             return
-        
+
         try:
             async for message in self._ws:
                 data = json.loads(message)
                 echo = data.get("echo")
-                
+
                 # 优先处理 API 响应
                 if echo is not None and echo in self._pending_futures:
                     fut = self._pending_futures.pop(echo)
@@ -94,7 +95,7 @@ class MockServerClient:
     def set_event_callback(self, callback: Callable[..., Any]) -> None:
         """设置事件回调"""
         self._event_callback = callback
-    
+
     async def call_api(
         self,
         action: str,
@@ -104,21 +105,21 @@ class MockServerClient:
         """调用 API (并发安全版)"""
         if not self._ws:
             raise ConnectionError("未连接到服务器")
-        
+
         self._echo_counter += 1
         echo = str(self._echo_counter)
-        
+
         # 为当前请求创建一个 Future 对象
         loop = asyncio.get_running_loop()
         fut = loop.create_future()
         self._pending_futures[echo] = fut
-        
+
         request = {
             "action": action,
             "params": params or {},
             "echo": echo,
         }
-        
+
         try:
             await self._ws.send(json.dumps(request))
             # 等待特定的 Future 完成，不再涉及 Queue 的抢占
@@ -132,6 +133,6 @@ class MockServerClient:
     async def __aenter__(self) -> "MockServerClient":
         await self.connect()
         return self
-    
+
     async def __aexit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
         await self.disconnect()

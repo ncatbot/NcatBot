@@ -29,8 +29,7 @@ class TestMessageSending:
 
         # 1. 发送纯文本群消息
         message_id = await api.post_group_msg(
-            group_id=int(standard_group_id),
-            text="测试群消息"
+            group_id=int(standard_group_id), text="测试群消息"
         )
         assert message_id is not None, "发送消息应返回 message_id"
         assert message_id, "message_id 不能为空"
@@ -41,16 +40,14 @@ class TestMessageSending:
         # 2. 发送第二条消息
         api_suite.clear_call_history()
         message_id_2 = await api.post_group_msg(
-            group_id=int(standard_group_id),
-            text="第二条测试消息"
+            group_id=int(standard_group_id), text="第二条测试消息"
         )
         assert message_id_2 is not None
         assert message_id != message_id_2, "两条消息应有不同的 ID"
 
         # 验证调用参数
         api_suite.assert_api_called_with(
-            "send_group_msg",
-            group_id=int(standard_group_id)
+            "send_group_msg", group_id=int(standard_group_id)
         )
 
     @pytest.mark.asyncio
@@ -67,8 +64,7 @@ class TestMessageSending:
 
         # 1. 发送私聊消息
         message_id = await api.post_private_msg(
-            user_id=int(standard_user_id),
-            text="测试私聊消息"
+            user_id=int(standard_user_id), text="测试私聊消息"
         )
         assert message_id is not None, "发送消息应返回 message_id"
         assert message_id, "message_id 不能为空"
@@ -78,8 +74,7 @@ class TestMessageSending:
 
         # 验证调用参数
         api_suite.assert_api_called_with(
-            "send_private_msg",
-            user_id=int(standard_user_id)
+            "send_private_msg", user_id=int(standard_user_id)
         )
 
 
@@ -100,8 +95,7 @@ class TestMessageOperations:
 
         # 1. 发送消息
         message_id = await api.post_group_msg(
-            group_id=int(standard_group_id),
-            text="待删除的测试消息"
+            group_id=int(standard_group_id), text="待删除的测试消息"
         )
         assert message_id, "发送消息应返回 message_id"
 
@@ -109,10 +103,7 @@ class TestMessageOperations:
         api_suite.clear_call_history()
         await api.delete_msg(message_id=int(message_id))
         api_suite.assert_api_called("delete_msg")
-        api_suite.assert_api_called_with(
-            "delete_msg",
-            message_id=int(message_id)
-        )
+        api_suite.assert_api_called_with("delete_msg", message_id=int(message_id))
 
     @pytest.mark.asyncio
     async def test_emoji_reaction(self, api_suite, standard_group_id):
@@ -128,8 +119,7 @@ class TestMessageOperations:
 
         # 1. 发送一条消息以获取有效的消息 ID
         message_id = await api.post_group_msg(
-            group_id=int(standard_group_id),
-            text="表情测试消息"
+            group_id=int(standard_group_id), text="表情测试消息"
         )
         assert message_id, "需要有效的消息 ID"
 
@@ -137,7 +127,7 @@ class TestMessageOperations:
         api_suite.clear_call_history()
         await api.set_msg_emoji_like(
             message_id=int(message_id),
-            emoji_id=128077  # 👍
+            emoji_id=128077,  # 👍
         )
         api_suite.assert_api_called("set_msg_emoji_like")
 
@@ -168,4 +158,3 @@ class TestMediaRetrieval:
         record_info = await api.get_record(file=mock_record_id)
         assert record_info is not None, "语音信息不能为空"
         api_suite.assert_api_called("get_record")
-

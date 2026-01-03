@@ -15,12 +15,12 @@ PLUGINS_DIR = Path(__file__).parent / "plugins"
 
 def get_plugin_class(plugin_name: str):
     """从已加载的模块中获取插件类（用于访问类变量）
-    
+
     注意：必须在插件加载后调用此函数
     """
     # 插件模块名格式: ncatbot_plugin.<sanitized_name>.main
     for module_name, module in sys.modules.items():
-        if f"ncatbot_plugin." in module_name and module_name.endswith(".main"):
+        if "ncatbot_plugin." in module_name and module_name.endswith(".main"):
             for attr_name in dir(module):
                 attr = getattr(module, attr_name)
                 if (
@@ -44,12 +44,12 @@ async def test_suite():
     """创建测试套件并索引所有测试插件"""
     suite = E2ETestSuite()
     await suite.setup()
-    
+
     # 索引所有测试插件
     for plugin_dir in PLUGINS_DIR.iterdir():
         if plugin_dir.is_dir() and (plugin_dir / "manifest.toml").exists():
             suite.index_plugin(str(plugin_dir))
-    
+
     yield suite
     await suite.teardown()
 
@@ -59,15 +59,14 @@ async def test_suite_skip_builtin():
     """创建跳过内置插件的测试套件"""
     suite = E2ETestSuite()
     await suite.setup()
-    
+
     # 索引所有测试插件
     for plugin_dir in PLUGINS_DIR.iterdir():
         if plugin_dir.is_dir() and (plugin_dir / "manifest.toml").exists():
             suite.index_plugin(str(plugin_dir))
-    
+
     yield suite
     await suite.teardown()
-
 
 
 # ==================== 插件名 fixtures ====================

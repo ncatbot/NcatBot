@@ -6,4 +6,3 @@
 - unified_registry
 - PluginConfigService
 """
-

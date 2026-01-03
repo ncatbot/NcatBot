@@ -11,11 +11,7 @@
 注意：部分测试需要管理员权限
 """
 
-import sys
-from pathlib import Path
-
 from .framework import test_case, APITestSuite
-from .utils import model_to_dict
 
 
 # ============================================================================
@@ -68,9 +64,15 @@ class GroupAdminScenarioTests(APITestSuite):
         # 2. 设为精华消息
         try:
             await api.set_essence_msg(message_id=int(message_id))
-            result["step2_set_essence"] = {"status": "success", "message_id": message_id}
+            result["step2_set_essence"] = {
+                "status": "success",
+                "message_id": message_id,
+            }
         except Exception as e:
-            result["step2_set_essence"] = {"error": str(e), "note": "可能需要管理员权限"}
+            result["step2_set_essence"] = {
+                "error": str(e),
+                "note": "可能需要管理员权限",
+            }
 
         # 3. 获取精华消息列表
         try:
@@ -84,14 +86,23 @@ class GroupAdminScenarioTests(APITestSuite):
             result["step3_get_list"] = {"error": str(e)}
 
         # 4. 取消精华消息
-        if result["step2_set_essence"] and result["step2_set_essence"].get("status") == "success":
+        if (
+            result["step2_set_essence"]
+            and result["step2_set_essence"].get("status") == "success"
+        ):
             try:
                 await api.delete_essence_msg(message_id=int(message_id))
-                result["step4_delete_essence"] = {"status": "success", "message_id": message_id}
+                result["step4_delete_essence"] = {
+                    "status": "success",
+                    "message_id": message_id,
+                }
             except Exception as e:
                 result["step4_delete_essence"] = {"error": str(e)}
         else:
-            result["step4_delete_essence"] = {"skipped": True, "reason": "设为精华失败，跳过取消"}
+            result["step4_delete_essence"] = {
+                "skipped": True,
+                "reason": "设为精华失败，跳过取消",
+            }
 
         return result
 
@@ -204,7 +215,9 @@ class GroupAdminActionTests(APITestSuite):
             raise ValueError("需要配置 target_group 和 target_user")
 
         groups_data = data.get("groups", {})
-        title = groups_data.get("member_operations", {}).get("special_title", "E2E测试头衔")
+        title = groups_data.get("member_operations", {}).get(
+            "special_title", "E2E测试头衔"
+        )
 
         await api.set_group_special_title(
             group_id=int(target_group),

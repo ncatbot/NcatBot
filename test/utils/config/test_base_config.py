@@ -5,7 +5,7 @@ import tempfile
 import os
 from dataclasses import dataclass, field
 from typing import List
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 
 class TestBaseConfigFromDict:
@@ -251,4 +251,3 @@ class TestBaseConfigUpdateValue:
         with patch("ncatbot.utils.config.config.ATTRIBUTE_RECURSIVE", {}):
             result = config.update_value("nonexistent", "value")
             assert result is False
-

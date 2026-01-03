@@ -6,7 +6,7 @@ NapCat 适配器模块单元测试
 
 import pytest
 from pathlib import Path
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from ncatbot.core.adapter.nc.platform import (
     PlatformOps,
@@ -124,13 +124,21 @@ class TestPlatformOpsCommon:
         """测试 NapCat 已安装"""
         with patch.object(Path, "exists", return_value=True):
             # 需要 mock napcat_dir 属性
-            with patch.object(type(ops), "napcat_dir", new_callable=lambda: property(lambda self: Path("/fake/path"))):
+            with patch.object(
+                type(ops),
+                "napcat_dir",
+                new_callable=lambda: property(lambda self: Path("/fake/path")),
+            ):
                 with patch.object(Path, "exists", return_value=True):
                     assert ops.is_napcat_installed() is True
 
     def test_is_napcat_installed_false(self, ops):
         """测试 NapCat 未安装"""
-        with patch.object(type(ops), "napcat_dir", new_callable=lambda: property(lambda self: Path("/nonexistent"))):
+        with patch.object(
+            type(ops),
+            "napcat_dir",
+            new_callable=lambda: property(lambda self: Path("/nonexistent")),
+        ):
             with patch.object(Path, "exists", return_value=False):
                 assert ops.is_napcat_installed() is False
 

@@ -54,11 +54,11 @@ class TestCase:
 
     def __repr__(self) -> str:
         return f"TestCase({self.name})"
-    
+
     def validate(self, result: Any) -> tuple:
         """
         验证测试结果
-        
+
         Returns:
             (passed: bool, message: str)
         """
