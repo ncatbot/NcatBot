@@ -11,15 +11,20 @@ from .utils import strong_password_check, generate_strong_password
 logger = get_log("Config")
 
 
+# config.yaml 中的默认 token 值，用于判断是否需要自动生成强密码
+DEFAULT_WS_TOKEN = "napcat_ws"
+DEFAULT_WEBUI_TOKEN = "napcat_webui"
+
+
 @dataclass(frozen=False)
 class NapCatConfig(BaseConfig):
     """NapCat 客户端配置。"""
 
     ws_uri: str = "ws://localhost:3001"
-    ws_token: str = "NcatBot"
+    ws_token: str = DEFAULT_WS_TOKEN
     ws_listen_ip: str = "localhost"
     webui_uri: str = "http://localhost:6099"
-    webui_token: str = "NcatBot"
+    webui_token: str = DEFAULT_WEBUI_TOKEN
     enable_webui: bool = True
     check_napcat_update: bool = False
     stop_napcat: bool = False
@@ -57,25 +62,38 @@ class NapCatConfig(BaseConfig):
 
         if self.ws_listen_ip == "0.0.0.0":
             if not strong_password_check(self.ws_token):
-                logger.error(
-                    "WS 令牌强度不足，请修改为强密码，或者修改 ws_listen_ip 本地监听 `localhost`"
-                )
-                if input("WS 令牌强度不足，是否修改为强密码？(y/n): ").lower() == "y":
+                # 如果是默认值，直接生成强密码，无需用户确认
+                if self.ws_token == DEFAULT_WS_TOKEN:
+                    logger.info("WS 令牌为默认值，自动生成强密码")
                     self.ws_token = generate_password()
                 else:
-                    raise ValueError(
-                        "WS 令牌强度不足, 请修改为强密码, 或者修改 ws_listen_ip 本地监听 `localhost`"
+                    logger.error(
+                        "WS 令牌强度不足，请修改为强密码，或者修改 ws_listen_ip 本地监听 `localhost`"
                     )
+                    if (
+                        input("WS 令牌强度不足，是否修改为强密码？(y/n): ").lower()
+                        == "y"
+                    ):
+                        self.ws_token = generate_password()
+                    else:
+                        raise ValueError(
+                            "WS 令牌强度不足, 请修改为强密码, 或者修改 ws_listen_ip 本地监听 `localhost`"
+                        )
 
         if self.enable_webui:
             if not strong_password_check(self.webui_token):
-                if (
-                    input("WebUI 令牌强度不足，是否修改为强密码？(y/n): ").lower()
-                    == "y"
-                ):
+                # 如果是默认值，直接生成强密码，无需用户确认
+                if self.webui_token == DEFAULT_WEBUI_TOKEN:
+                    logger.info("WebUI 令牌为默认值，自动生成强密码")
                     self.webui_token = generate_password()
                 else:
-                    raise ValueError("WebUI 令牌强度不足, 请修改为强密码")
+                    if (
+                        input("WebUI 令牌强度不足，是否修改为强密码？(y/n): ").lower()
+                        == "y"
+                    ):
+                        self.webui_token = generate_password()
+                    else:
+                        raise ValueError("WebUI 令牌强度不足, 请修改为强密码")
 
     def validate(self) -> None:
         self._standardize_ws_uri()

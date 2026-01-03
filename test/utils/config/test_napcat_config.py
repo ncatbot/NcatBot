@@ -9,14 +9,18 @@ class TestNapCatConfigCreation:
 
     def test_napcat_config_default_values(self):
         """Test NapCatConfig has correct default values."""
-        from ncatbot.utils.config.napcat import NapCatConfig
+        from ncatbot.utils.config.napcat import (
+            NapCatConfig,
+            DEFAULT_WS_TOKEN,
+            DEFAULT_WEBUI_TOKEN,
+        )
 
         config = NapCatConfig()
         assert config.ws_uri == "ws://localhost:3001"
-        assert config.ws_token == "NcatBot"
+        assert config.ws_token == DEFAULT_WS_TOKEN
         assert config.ws_listen_ip == "localhost"
         assert config.webui_uri == "http://localhost:6099"
-        assert config.webui_token == "NcatBot"
+        assert config.webui_token == DEFAULT_WEBUI_TOKEN
         assert config.enable_webui is True
         assert config.check_napcat_update is False
         assert config.stop_napcat is False
@@ -210,6 +214,80 @@ class TestNapCatConfigSecurityCheck:
             config._security_check()
             assert strong_password_check(config.webui_token)
 
+    def test_security_check_default_ws_token_auto_generates_without_prompt(self):
+        """Test that default ws_token auto-generates strong password without user prompt."""
+        from ncatbot.utils.config.napcat import NapCatConfig, DEFAULT_WS_TOKEN
+        from ncatbot.utils.config.utils import strong_password_check
+
+        config = NapCatConfig(
+            ws_listen_ip="0.0.0.0",
+            ws_token=DEFAULT_WS_TOKEN,  # 使用默认值
+            enable_webui=False,
+        )
+
+        # 不应该调用 input，直接生成强密码
+        with patch("builtins.input") as mock_input:
+            config._security_check()
+            mock_input.assert_not_called()
+            assert strong_password_check(config.ws_token)
+            assert config.ws_token != DEFAULT_WS_TOKEN
+
+    def test_security_check_default_webui_token_auto_generates_without_prompt(self):
+        """Test that default webui_token auto-generates strong password without user prompt."""
+        from ncatbot.utils.config.napcat import NapCatConfig, DEFAULT_WEBUI_TOKEN
+        from ncatbot.utils.config.utils import (
+            strong_password_check,
+            generate_strong_password,
+        )
+
+        config = NapCatConfig(
+            ws_listen_ip="localhost",
+            ws_token=generate_strong_password(),
+            webui_token=DEFAULT_WEBUI_TOKEN,  # 使用默认值
+            enable_webui=True,
+        )
+
+        # 不应该调用 input，直接生成强密码
+        with patch("builtins.input") as mock_input:
+            config._security_check()
+            mock_input.assert_not_called()
+            assert strong_password_check(config.webui_token)
+            assert config.webui_token != DEFAULT_WEBUI_TOKEN
+
+    def test_security_check_custom_weak_ws_token_prompts_user(self):
+        """Test that custom weak ws_token prompts user for confirmation."""
+        from ncatbot.utils.config.napcat import NapCatConfig
+
+        config = NapCatConfig(
+            ws_listen_ip="0.0.0.0",
+            ws_token="my_custom_weak_token",  # 非默认的弱密码
+            enable_webui=False,
+        )
+
+        # 应该调用 input 询问用户
+        with patch("builtins.input", return_value="n") as mock_input:
+            with pytest.raises(ValueError, match="WS 令牌强度不足"):
+                config._security_check()
+            mock_input.assert_called_once()
+
+    def test_security_check_custom_weak_webui_token_prompts_user(self):
+        """Test that custom weak webui_token prompts user for confirmation."""
+        from ncatbot.utils.config.napcat import NapCatConfig
+        from ncatbot.utils.config.utils import generate_strong_password
+
+        config = NapCatConfig(
+            ws_listen_ip="localhost",
+            ws_token=generate_strong_password(),
+            webui_token="my_custom_weak_token",  # 非默认的弱密码
+            enable_webui=True,
+        )
+
+        # 应该调用 input 询问用户
+        with patch("builtins.input", return_value="n") as mock_input:
+            with pytest.raises(ValueError, match="WebUI 令牌强度不足"):
+                config._security_check()
+            mock_input.assert_called_once()
+
 
 class TestNapCatConfigValidate:
     """Tests for NapCatConfig.validate method."""
@@ -289,12 +367,12 @@ class TestNapCatConfigFromDict:
 
     def test_from_dict_preserves_defaults(self):
         """Test from_dict preserves unspecified defaults."""
-        from ncatbot.utils.config.napcat import NapCatConfig
+        from ncatbot.utils.config.napcat import NapCatConfig, DEFAULT_WS_TOKEN
 
         data = {"ws_uri": "ws://custom:3001"}
         config = NapCatConfig.from_dict(data)
         assert config.ws_uri == "ws://custom:3001"
-        assert config.ws_token == "NcatBot"  # default
+        assert config.ws_token == DEFAULT_WS_TOKEN  # default
         assert config.enable_webui is True  # default
 
 
