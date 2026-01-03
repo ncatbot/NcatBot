@@ -73,12 +73,12 @@ class ServiceManager:
         self._bot_client = bot_client
 
     @property
-    def bot_client(self) -> Optional["BotClient"]:
+    def bot_client(self) -> "BotClient":
         """获取 BotClient"""
-        return self._bot_client
+        return self._bot_client  # type: ignore
 
     # -------------------------------------------------------------------------
-    # 内置服务属性（支持 IDE 类型提示）
+    # region 内置服务属性（支持 IDE 类型提示）
     # -------------------------------------------------------------------------
 
     @property
@@ -117,7 +117,7 @@ class ServiceManager:
         return self._services.get("plugin_data")  # type: ignore
 
     # -------------------------------------------------------------------------
-    # 服务管理方法
+    # region 服务管理方法
     # -------------------------------------------------------------------------
 
     def register(self, service_class: Type[BaseService], **config: Any) -> None:

@@ -10,7 +10,6 @@ from ncatbot.utils import get_log
 
 if TYPE_CHECKING:
     from .manager import ServiceManager
-    from ncatbot.core.client import BotClient
 
 LOG = get_log("Service")
 
@@ -92,17 +91,10 @@ class BaseService(ABC):
         return self._loaded
 
     @property
-    def bot_client(self) -> Optional["BotClient"]:
-        """获取 BotClient 实例"""
-        if self.service_manager:
-            return self.service_manager.bot_client
-        return None
-
-    @property
     def event_bus(self):
         """获取事件总线"""
-        if self.bot_client:
-            return self.bot_client.event_bus
+        if self.service_manager and self.service_manager.bot_client:
+            return self.service_manager.bot_client.event_bus
         return None
 
     def __repr__(self) -> str:
