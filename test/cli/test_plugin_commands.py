@@ -31,7 +31,9 @@ class TestCreatePluginTemplate:
 
             create_plugin_template("my_plugin", author="John", non_interactive=True)
 
-            manifest = (temp_plugins_dir / "my_plugin" / "manifest.toml").read_text()
+            manifest = (temp_plugins_dir / "my_plugin" / "manifest.toml").read_text(
+                encoding="utf-8"
+            )
             assert 'name = "my_plugin"' in manifest
             assert 'author = "John"' in manifest
 

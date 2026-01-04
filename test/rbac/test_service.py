@@ -4,6 +4,7 @@ RBACService 单元测试
 
 import pytest
 from ncatbot.core.service.builtin.rbac import RBACService
+from pathlib import Path
 
 
 class TestRBACServiceInit:
@@ -13,7 +14,7 @@ class TestRBACServiceInit:
         """测试默认存储路径"""
         service = RBACService()
         assert service._storage_path is not None
-        assert str(service._storage_path) == "data/rbac.json"
+        assert str(service._storage_path) == str(Path("data/rbac.json"))
 
     def test_custom_storage_path(self, temp_storage_path):
         """测试自定义存储路径"""
