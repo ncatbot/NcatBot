@@ -4,11 +4,11 @@
 
 ---
 
-![logo.png](https://socialify.git.ci/liyihao1110/NcatBot/image?custom_description=ncatbot+%EF%BC%8C%E5%9F%BA%E4%BA%8E+OneBot11%E5%8D%8F%E8%AE%AE+%E7%9A%84+QQ+%E6%9C%BA%E5%99%A8%E4%BA%BA+Python+SDK%EF%BC%8C%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%EF%BC%8C%E8%BD%BB%E6%9D%BE%E9%83%A8%E7%BD%B2%E3%80%82&description=1&font=Jost&forks=1&issues=1&logo=https%3A%2F%2Fimg.remit.ee%2Fapi%2Ffile%2FAgACAgUAAyEGAASHRsPbAAO9Z_FYKczZ5dly9IKmC93J_sF7qRUAAmXEMRtA2ohX1eSKajqfARABAAMCAAN5AAM2BA.jpg&pattern=Signal&pulls=1&stargazers=1&theme=Auto)
+![logo.png](https://socialify.git.ci/ncatbot/NcatBot/image?custom_description=ncatbot+%EF%BC%8C%E5%9F%BA%E4%BA%8E+OneBot11%E5%8D%8F%E8%AE%AE+%E7%9A%84+QQ+%E6%9C%BA%E5%99%A8%E4%BA%BA+Python+SDK%EF%BC%8C%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%EF%BC%8C%E8%BD%BB%E6%9D%BE%E9%83%A8%E7%BD%B2%E3%80%82&description=1&font=Jost&forks=1&issues=1&logo=https%3A%2F%2Fimg.remit.ee%2Fapi%2Ffile%2FAgACAgUAAyEGAASHRsPbAAO9Z_FYKczZ5dly9IKmC93J_sF7qRUAAmXEMRtA2ohX1eSKajqfARABAAMCAAN5AAM2BA.jpg&pattern=Signal&pulls=1&stargazers=1&theme=Auto)
 
- <a href="https://pypi.org/project/ncatbot/"><img src="https://img.shields.io/pypi/v/ncatbot"></a>
+ <a href="https://pypi.org/project/ncatbot5/"><img src="https://img.shields.io/pypi/v/ncatbot5"></a>
  [![OneBot v11](https://img.shields.io/badge/OneBot-v11-black.svg)](https://github.com/botuniverse/onebot)
- [![访问量统计](https://visitor-badge.laobi.icu/badge?page_id=li-yihao0328.ncatbot_sync)](https://github.com/liyihao1110/ncatbot)
+ [![访问量统计](https://visitor-badge.laobi.icu/badge?page_id=li-yihao0328.ncatbot_sync)](https://github.com/ncatbot/ncatbot)
   <a><img src="https://img.shields.io/badge/License-NcatBot License-green.svg"></a>
     <a href="https://qm.qq.com/q/CHbzJ2LH4k"><img src="https://img.shields.io/badge/官方群聊-201487478-brightgreen.svg"></a>
     <a href="https://qm.qq.com/q/CHbzJ2LH4k"><img src="https://img.shields.io/badge/官方频道-pd63222487-brightgreen.svg"></a>
@@ -38,17 +38,10 @@ NcatBot 是基于 OneBot11 协议的 Python SDK，它提供了一套方便易用
 
   1. **仔细阅读**[文档](https://docs.ncatbot.xyz).
   2. 询问 [Gemini](https://gemini.google.com/), [Kimi](https://kimi.ai) 等人工智能.
-  3. 搜索本项目的 [Issue 列表](https://github.com/liyihao1110/ncatbot/issues).
+  3. 搜索本项目的 [Issue 列表](https://github.com/ncatbot/ncatbot/issues).
 -- 如果以上方法都无法解决你的问题，那么：
-  1. 在 [Issue 列表](https://github.com/liyihao1110/ncatbot/issues) 发 Issue 求助。
+  1. 在 [Issue 列表](https://github.com/ncatbot/ncatbot/issues) 发 Issue 求助。
   2. [进群](https://qm.qq.com/q/L6XGXYqL86)提问。
-
-## 联系我们
-
-作者： [最可爱的木子喵~](https://gitee.com/li-yihao0328)
-
-邮箱： <lyh_02@foxmail.com>
-
 
 ## 使用限制
 
@@ -63,7 +56,7 @@ NcatBot 是基于 OneBot11 协议的 Python SDK，它提供了一套方便易用
 
 ## 参与贡献
 
-如果在你使用过程中遇到问题，或有任何建议，欢迎在 [GitHub Issues](https://github.com/liyihao1110/ncatbot/issues) 中反馈。
+如果在你使用过程中遇到问题，或有任何建议，欢迎在 [GitHub Issues](https://github.com/ncatbot/ncatbot/issues) 中反馈。
 
 欢迎给本 Repo 贡献代码！请先阅读 [贡献指南](CONTRIBUTING.md)。
 
@@ -74,12 +67,12 @@ NcatBot 是基于 OneBot11 协议的 Python SDK，它提供了一套方便易用
 
 ## Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=liyihao1110/ncatbot&type=Date)](https://www.star-history.com/#liyihao1110/ncatbot&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=ncatbot/ncatbot&type=Date)](https://www.star-history.com/#ncatbot/ncatbot&Date)
 
 ## 贡献者们
 
-<a href="https://github.com/liyihao1110/ncatbot/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=liyihao1110/ncatbot" />
+<a href="https://github.com/ncatbot/ncatbot/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=ncatbot/ncatbot" />
 </a>
 
 </div>

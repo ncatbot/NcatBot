@@ -3,13 +3,13 @@ requires = ["setuptools>=61.0", "setuptools_scm[toml]>=7.1", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "ncatbot"
-version = "4.5.0-rc7"
+name = "ncatbot5"
+version = "5.0.0-rc7"
 description = "NcatBot, NapCat Python SDK"
 readme = "README.md"
 license = { text = "MIT" }
 authors = [ { name = "木子", email = "lyh_02@qq.com" }, { name = "huan-yp", email = "huan_yp@qq.com"} ]
-urls = { "Source" = "https://github.com/liyihao1110/ncatbot", "Bug Reports" = "https://github.com/liyihao1110/ncatbot/issues", "Documentation" = "https://github.com/liyihao1110/ncatbot/wiki" }
+urls = { "Source" = "https://github.com/ncatbot/ncatbot", "Bug Reports" = "https://github.com/ncatbot/ncatbot/issues", "Documentation" = "https://github.com/ncatbot/ncatbot/wiki" }
 requires-python = ">=3.9"
 dependencies = [
   # 数据模型

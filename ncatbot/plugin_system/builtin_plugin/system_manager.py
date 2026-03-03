@@ -146,7 +146,7 @@ class SystemManager(NcatBotPlugin):
         text += f"CPU 使用率: {psutil.cpu_percent()}%\n"
         text += f"内存使用率: {psutil.virtual_memory().percent}%\n"
         text += f"NcatBot 版本: {ncatbot.__version__}\n"
-        text += "Star NcatBot Meow~: https://github.com/liyihao1110/ncatbot\n"
+        text += "Star NcatBot Meow~: https://github.com/ncatbot/ncatbot\n"
         await event.reply(text)
 
     @command_registry.command("ncatbot_help", aliases=["nch"])
