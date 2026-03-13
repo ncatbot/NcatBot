@@ -1,25 +1,17 @@
-from typing import Protocol, Any, Optional
+from __future__ import annotations
+
+from typing import Optional, TYPE_CHECKING
 from pydantic import BaseModel, PrivateAttr
 
+if TYPE_CHECKING:
+    from ncatbot.core.api.interface import IBotAPI
 
-class IBotAPI(Protocol):
-    """定义 Bot API 的必要接口"""
 
-    async def post_group_msg(self, group_id: str, text: str, **kwargs) -> Any: ...
-    async def post_private_msg(self, user_id: str, text: str, **kwargs) -> Any: ...
-    async def delete_msg(self, message_id: str) -> Any: ...
-    async def set_group_kick(
-        self, group_id: str, user_id: str, reject_add_request: bool = False
-    ) -> Any: ...
-    async def set_group_ban(
-        self, group_id: str, user_id: str, duration: int = 30 * 60
-    ) -> Any: ...
-    async def set_friend_add_request(
-        self, flag: str, approve: bool = True, remark: str = ""
-    ) -> Any: ...
-    async def set_group_add_request(
-        self, flag: str, sub_type: str, approve: bool = True, reason: str = ""
-    ) -> Any: ...
+def _get_ibotapi():
+    """延迟导入 IBotAPI 以避免循环引用"""
+    from ncatbot.core.api.interface import IBotAPI
+
+    return IBotAPI
 
 
 class ContextMixin(BaseModel):
@@ -35,3 +27,10 @@ class ContextMixin(BaseModel):
         if self._api is None:
             raise RuntimeError("API context not initialized.")
         return self._api
+
+
+# 向后兼容：允许 from context import IBotAPI
+def __getattr__(name):
+    if name == "IBotAPI":
+        return _get_ibotapi()
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

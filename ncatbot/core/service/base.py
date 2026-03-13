@@ -34,6 +34,7 @@ class BaseService(ABC):
     # 服务元数据（子类必须定义 name）
     name: str = None
     description: str = "未提供描述"
+    dependencies: list = []
 
     def __init__(self, **config: Any):
         """
@@ -92,9 +93,20 @@ class BaseService(ABC):
 
     @property
     def event_bus(self):
-        """获取事件总线"""
-        if self.service_manager and self.service_manager.bot_client:
-            return self.service_manager.bot_client.event_bus
+        """获取事件总线（优先通过 ServiceManager.event_bus）"""
+        if self.service_manager:
+            # 新方式：直接从 ServiceManager 获取
+            if (
+                hasattr(self.service_manager, "_event_bus")
+                and self.service_manager._event_bus
+            ):
+                return self.service_manager._event_bus
+            # 兼容旧方式：通过 bot_client 获取
+            if (
+                hasattr(self.service_manager, "_bot_client")
+                and self.service_manager._bot_client
+            ):
+                return self.service_manager._bot_client.event_bus
         return None
 
     def __repr__(self) -> str:

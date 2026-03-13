@@ -1,7 +1,11 @@
-from typing import Dict, Type, Tuple, Any, Optional
+from __future__ import annotations
+
+from typing import Dict, Type, Tuple, Any, Optional, TYPE_CHECKING
 from .events import *  # noqa: F403
 from .enums import *  # noqa: F403
-from .context import IBotAPI
+
+if TYPE_CHECKING:
+    from ncatbot.core.api.interface import IBotAPI
 
 
 class EventParser:

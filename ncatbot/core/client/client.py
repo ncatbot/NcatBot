@@ -4,23 +4,21 @@ Bot 客户端
 组合各模块，提供统一的 Bot 客户端接口。
 """
 
-from typing import List, Type, TypeVar, TYPE_CHECKING
+from typing import List, Optional, Type, TypeVar, TYPE_CHECKING
 
 from ncatbot.utils import get_log
 from ncatbot.utils.error import NcatBotError
-from ncatbot.core.api import BotAPI
-from ncatbot.core.service import (
-    ServiceManager,
-    MessageRouter,
-    PreUploadService,
-    UnifiedRegistryService,
-)
+from ncatbot.core.api.interface import IBotAPI
+from ncatbot.core.service import ServiceManager
 from ncatbot.core.service.builtin import (
     PluginConfigService,
     FileWatcherService,
     PluginDataService,
     TimeTaskService,
 )
+from ncatbot.core.registry import RegistryEngine
+from ncatbot.adapter import BaseAdapter
+from ncatbot.adapter.napcat import NapCatAdapter
 
 from .event_bus import EventBus
 from .dispatcher import EventDispatcher
@@ -65,38 +63,56 @@ class BotClient(EventRegistry, LifecycleManager):
 
     _initialized = False
 
-    def __init__(self):
+    def __init__(self, adapter: Optional[BaseAdapter] = None):
         """
         初始化 Bot 客户端
+
+        Args:
+            adapter: 平台适配器实例。默认使用 NapCatAdapter。
         """
         if BotClient._initialized:
             raise NcatBotError("BotClient 实例只能创建一次")
         BotClient._initialized = True
 
-        # 核心组件
+        # 1. 核心组件
         self.event_bus = EventBus()
 
         # 初始化父类 EventRegistry
         EventRegistry.__init__(self, self.event_bus)
 
-        # 服务管理器
-        self.services = ServiceManager()
-        self.services.set_bot_client(self)
+        # 2. 注册引擎（直接订阅 EventBus）
+        self.registry_engine = RegistryEngine()
 
-        # 注册内置服务
-        self.services.register(MessageRouter)
-        self.services.register(PreUploadService)
+        self.event_bus.subscribe(
+            "re:ncatbot\\.group_message_event|ncatbot\\.private_message_event"
+            "|ncatbot\\.message_sent_event",
+            self._on_message_for_registry,
+            priority=0,
+        )
+        self.event_bus.subscribe(
+            "re:ncatbot\\.notice_event|ncatbot\\.request_event|ncatbot\\.meta_event",
+            self._on_legacy_for_registry,
+            priority=0,
+        )
+
+        # 3. 服务管理器（注入 EventBus）
+        self.services = ServiceManager(event_bus=self.event_bus)
+        self.services.set_bot_client(self)  # 过渡期兼容
+
+        # 4. 注册内置服务（仅 5 个纯内部服务）
         self.services.register(PluginConfigService)
-        self.services.register(UnifiedRegistryService)
         self.services.register(FileWatcherService)
         self.services.register(PluginDataService)
         self.services.register(TimeTaskService)
 
-        # API（延迟绑定 send 回调，在服务加载后绑定）
-        self.api: BotAPI = None  # 将在 _setup_api 中初始化
+        # 5. 适配器
+        self.adapter: BaseAdapter = adapter or NapCatAdapter()
+
+        # 6. API（延迟绑定，在 adapter.connect() 后获取）
+        self.api: Optional[IBotAPI] = None
 
         # 事件分发器（延迟初始化）
-        self.dispatcher: EventDispatcher = None
+        self.dispatcher: Optional[EventDispatcher] = None
 
         # 生命周期管理器
         LifecycleManager.__init__(self, self.services, self.event_bus, self)
@@ -114,15 +130,28 @@ class BotClient(EventRegistry, LifecycleManager):
         cls._initialized = False
 
     async def _setup_api(self) -> None:
-        """设置 API（在服务加载后调用）"""
-        router: MessageRouter = self.services.message_router
-        if router:
-            # 传入 service_manager 以支持预上传等服务
-            self.api = BotAPI(router.send, service_manager=self.services)
+        """设置 API（在 adapter.connect() 后调用）"""
+        from .dispatcher import EventDispatcher
 
-            # 事件分发器
-            self.dispatcher = EventDispatcher(self.event_bus, self.api)
-            router.set_event_dispatcher(self.dispatcher)
+        # 从适配器获取 IBotAPI
+        self.api = self.adapter.get_api()
+
+        # 创建事件分发器
+        self.dispatcher = EventDispatcher(self.event_bus, self.api)
+
+        # 将适配器的事件输出连接到分发器
+        self.adapter.set_event_callback(self.dispatcher.dispatch)
+
+        # 注入 BotClient 引用到 RegistryEngine（过渡期）
+        self.registry_engine.set_bot_client(self)
+
+    async def _on_message_for_registry(self, event) -> None:
+        """EventBus 回调：消息事件 → RegistryEngine"""
+        await self.registry_engine.handle_message_event(event.data)
+
+    async def _on_legacy_for_registry(self, event) -> None:
+        """EventBus 回调：通知/请求/元事件 → RegistryEngine"""
+        await self.registry_engine.handle_legacy_event(event.data)
 
     def _register_builtin_handlers(self):
         """注册内置处理器"""

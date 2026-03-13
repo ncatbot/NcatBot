@@ -38,9 +38,9 @@ class TestMessageEventReplyFlow:
         await event.reply("Hello World!")
 
         call = mock_api.get_last_call()
-        assert call[0] == "post_group_msg"
+        assert call[0] == "send_group_msg"
         assert call[1] == "701784439"  # group_id
-        assert call[2] == "Hello World!"  # text
+        assert call[2] == "Hello World!"  # message
 
     @pytest.mark.asyncio
     async def test_private_message_reply(self, mock_api):
@@ -65,7 +65,7 @@ class TestMessageEventReplyFlow:
         await event.reply("Hi there!")
 
         call = mock_api.get_last_call()
-        assert call[0] == "post_private_msg"
+        assert call[0] == "send_private_msg"
         assert call[1] == "3333355556"  # user_id
         assert call[2] == "Hi there!"
 
@@ -211,4 +211,4 @@ class TestGroupAdminOperationsFlow:
         assert len(mock_api.calls) == 3
         assert mock_api.calls[0][0] == "delete_msg"
         assert mock_api.calls[1][0] == "set_group_ban"
-        assert mock_api.calls[2][0] == "post_group_msg"
+        assert mock_api.calls[2][0] == "send_group_msg"

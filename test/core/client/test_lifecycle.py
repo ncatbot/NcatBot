@@ -58,9 +58,8 @@ class TestPrepareStartup:
         registry = EventRegistry(event_bus)
         return LifecycleManager(mock_services, event_bus, registry)
 
-    @patch("ncatbot.core.client.lifecycle.launch_napcat_service")
     @patch("ncatbot.core.client.lifecycle.ncatbot_config")
-    def test_prepare_startup_normal_mode(self, mock_config, mock_launch, manager):
+    def test_prepare_startup_normal_mode(self, mock_config, manager):
         """测试正常模式启动准备"""
         mock_config.debug = False
 
@@ -69,11 +68,9 @@ class TestPrepareStartup:
         assert manager._test_mode is False  # 非 test 模式 (Mock 模式)
         assert manager._running is True
         assert manager.plugin_loader is not None
-        mock_launch.assert_called_once()
 
-    @patch("ncatbot.core.client.lifecycle.launch_napcat_service")
     @patch("ncatbot.core.client.lifecycle.ncatbot_config")
-    def test_prepare_startup_mock_mode(self, mock_config, mock_launch, manager):
+    def test_prepare_startup_mock_mode(self, mock_config, manager):
         """测试 mock 模式启动准备（不启动 NapCat）"""
         mock_config.debug = False
 
@@ -81,11 +78,9 @@ class TestPrepareStartup:
 
         assert manager._test_mode is True  # test 模式 (Mock 模式)
         assert manager._running is True
-        mock_launch.assert_not_called()
 
-    @patch("ncatbot.core.client.lifecycle.launch_napcat_service")
     @patch("ncatbot.core.client.lifecycle.ncatbot_config")
-    def test_prepare_startup_load_plugin(self, mock_config, mock_launch, manager):
+    def test_prepare_startup_load_plugin(self, mock_config, manager):
         """测试加载插件"""
         mock_config.debug = False
         # 模拟 update_value 后 load_plugin 被设置为 True

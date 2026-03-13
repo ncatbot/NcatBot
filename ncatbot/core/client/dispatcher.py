@@ -1,19 +1,23 @@
 """
 事件分发器
 
-负责接收原始事件数据，解析并分发到 EventBus。
+负责接收事件，分发到 EventBus。
+支持两种模式：
+1. 接收原始 dict 数据（传统模式）
+2. 接收已转换的 BaseEvent 对象（新 Adapter 模式）
 """
 
 import traceback
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING, Optional, Union
 
 from ncatbot.utils import get_log
 from ..event.parser import EventParser
 from ..event.enums import PostType, EventType
+from ..event.events import BaseEvent
 
 if TYPE_CHECKING:
     from .event_bus import EventBus
-    from ncatbot.core.api import BotAPI
+    from ncatbot.core.api.interface import IBotAPI
 
 from .ncatbot_event import NcatBotEvent
 
@@ -61,7 +65,7 @@ class EventDispatcher:
     - 发布到 EventBus
     """
 
-    def __init__(self, event_bus: "EventBus", api: "BotAPI"):
+    def __init__(self, event_bus: "EventBus", api: "IBotAPI"):
         """
         初始化分发器
 
@@ -72,27 +76,38 @@ class EventDispatcher:
         self.event_bus = event_bus
         self.api = api
 
-    async def dispatch(self, data: dict) -> None:
+    async def dispatch(self, data_or_event: Union[dict, BaseEvent]) -> None:
         """
-        分发原始事件数据
+        分发事件数据
 
-        1. 解析事件类型
-        2. 解析为事件对象
-        3. 发布到 EventBus
+        支持两种输入：
+        1. dict: 原始事件数据（传统模式，内部解析）
+        2. BaseEvent: 已转换的事件对象（新 Adapter 模式）
 
         Args:
-            data: 原始事件数据（来自 WebSocket）
+            data_or_event: 原始数据 dict 或已转换的 BaseEvent
         """
+        if isinstance(data_or_event, BaseEvent):
+            # 新 Adapter 模式：事件已转换
+            event = data_or_event
+            event_type = self._get_event_type_from_event(event)
+            if not event_type:
+                LOG.debug(f"未知事件类型: {event.post_type}")
+                return
+
+            ncatbot_event = NcatBotEvent(f"ncatbot.{event_type.value}", event)
+            await self.event_bus.publish(ncatbot_event)
+            return
+
+        # 传统模式：从 dict 解析
+        data = data_or_event
         event_type = parse_event_type(data)
         if not event_type:
             LOG.debug(f"未知事件类型: {data.get('post_type')}")
             return
 
         try:
-            # 解析为事件对象
             event = EventParser.parse(data, self.api)
-
-            # 构造 NcatBotEvent 并发布
             ncatbot_event = NcatBotEvent(f"ncatbot.{event_type.value}", event)
             await self.event_bus.publish(ncatbot_event)
 
@@ -101,6 +116,25 @@ class EventDispatcher:
         except Exception as e:
             LOG.error(f"事件处理出错: {e}\n{traceback.format_exc()}")
 
-    async def __call__(self, data: dict) -> None:
+    @staticmethod
+    def _get_event_type_from_event(event: BaseEvent) -> Optional[EventType]:
+        """从 BaseEvent 对象获取事件类型"""
+        post_type = getattr(event, "post_type", None)
+        if not post_type:
+            return None
+
+        if post_type == PostType.MESSAGE or post_type == "message":
+            return EventType.MESSAGE
+        if post_type == "message_sent":
+            return EventType.MESSAGE_SENT
+        if post_type == PostType.NOTICE or post_type == "notice":
+            return EventType.NOTICE
+        if post_type == PostType.REQUEST or post_type == "request":
+            return EventType.REQUEST
+        if post_type == PostType.META_EVENT or post_type == "meta_event":
+            return EventType.META
+        return None
+
+    async def __call__(self, data_or_event: Union[dict, BaseEvent]) -> None:
         """支持作为回调函数使用"""
-        await self.dispatch(data)
+        await self.dispatch(data_or_event)

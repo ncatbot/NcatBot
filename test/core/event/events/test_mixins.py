@@ -74,9 +74,9 @@ class TestMessageActionMixin:
 
         await event.reply("hello group")
 
-        assert mock_api.get_last_call()[0] == "post_group_msg"
+        assert mock_api.get_last_call()[0] == "send_group_msg"
         assert mock_api.get_last_call()[1] == "123456"  # group_id
-        assert mock_api.get_last_call()[2] == "hello group"  # text
+        assert mock_api.get_last_call()[2] == "hello group"  # message
 
     @pytest.mark.asyncio
     async def test_reply_to_private_message(self, mock_api):
@@ -86,9 +86,9 @@ class TestMessageActionMixin:
 
         await event.reply("hello private")
 
-        assert mock_api.get_last_call()[0] == "post_private_msg"
+        assert mock_api.get_last_call()[0] == "send_private_msg"
         assert mock_api.get_last_call()[1] == "123456"  # user_id
-        assert mock_api.get_last_call()[2] == "hello private"  # text
+        assert mock_api.get_last_call()[2] == "hello private"  # message
 
     @pytest.mark.asyncio
     async def test_reply_with_kwargs(self, mock_api):

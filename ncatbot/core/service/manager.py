@@ -4,6 +4,7 @@
 负责服务的注册、加载、卸载。
 """
 
+from collections import deque
 from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 from ncatbot.utils import get_log
 from .base import BaseService
@@ -19,6 +20,7 @@ if TYPE_CHECKING:
         PluginDataService,
     )
     from ncatbot.core.client import BotClient
+    from ncatbot.core.client.event_bus import EventBus
 
 LOG = get_log("ServiceManager")
 
@@ -53,12 +55,26 @@ class ServiceManager:
     _debug_mode: bool = False
     _test_mode: bool = False
 
-    def __init__(self):
-        """初始化服务管理器"""
+    def __init__(self, event_bus: Optional["EventBus"] = None):
+        """初始化服务管理器
+
+        Args:
+            event_bus: 事件总线实例（新方式）。如不传入，可通过 set_bot_client 间接获取。
+        """
         self._services: Dict[str, BaseService] = {}
         self._service_classes: Dict[str, Type[BaseService]] = {}
         self._service_configs: Dict[str, Dict[str, Any]] = {}
+        self._event_bus: Optional["EventBus"] = event_bus
         self._bot_client: Optional["BotClient"] = None
+
+    @property
+    def event_bus(self) -> Optional["EventBus"]:
+        """获取 EventBus"""
+        if self._event_bus:
+            return self._event_bus
+        if self._bot_client:
+            return self._bot_client.event_bus
+        return None
 
     def set_debug_mode(self, enable: bool = True) -> None:
         """设置调试模式"""
@@ -154,8 +170,9 @@ class ServiceManager:
         del self._services[service_name]
 
     async def load_all(self) -> None:
-        """加载所有已注册的服务"""
-        for name in self._service_classes:
+        """按依赖顺序加载所有已注册的服务"""
+        order = self._topological_sort()
+        for name in order:
             if name not in self._services:
                 await self.load(name)
 
@@ -175,3 +192,50 @@ class ServiceManager:
     def list_services(self) -> List[str]:
         """列出所有已加载的服务名称"""
         return list(self._services.keys())
+
+    # -------------------------------------------------------------------------
+    # region 依赖排序
+    # -------------------------------------------------------------------------
+
+    def _topological_sort(self) -> List[str]:
+        """按依赖关系拓扑排序服务加载顺序
+
+        Returns:
+            排序后的服务名称列表
+
+        Raises:
+            ValueError: 检测到循环依赖
+        """
+        # 构建依赖图
+        in_degree: Dict[str, int] = {}
+        graph: Dict[str, List[str]] = {}
+
+        for name in self._service_classes:
+            in_degree.setdefault(name, 0)
+            graph.setdefault(name, [])
+
+            # 获取依赖列表
+            cls = self._service_classes[name]
+            deps = getattr(cls, "dependencies", []) or []
+            for dep in deps:
+                if dep in self._service_classes:
+                    graph.setdefault(dep, []).append(name)
+                    in_degree[name] = in_degree.get(name, 0) + 1
+
+        # Kahn 算法
+        queue: deque = deque(n for n, d in in_degree.items() if d == 0)
+        result: List[str] = []
+
+        while queue:
+            node = queue.popleft()
+            result.append(node)
+            for neighbor in graph.get(node, []):
+                in_degree[neighbor] -= 1
+                if in_degree[neighbor] == 0:
+                    queue.append(neighbor)
+
+        if len(result) != len(self._service_classes):
+            missing = set(self._service_classes) - set(result)
+            raise ValueError(f"检测到服务循环依赖: {missing}")
+
+        return result

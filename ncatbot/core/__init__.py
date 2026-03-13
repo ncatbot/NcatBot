@@ -6,7 +6,7 @@ NcatBot 核心模块
 
 from .client import BotClient, EventBus, NcatBotEvent, EventType, NcatBotEventFactory
 from .helper import ForwardConstructor  # noqa: F401
-from .api import BotAPI
+from .api import BotAPI, IBotAPI
 from .event import GroupMessageEvent as GroupMessage
 from .event import PrivateMessageEvent as PrivateMessage
 from .event import MessageEvent as BaseMessageEvent
@@ -22,6 +22,7 @@ from . import event
 __all__ = [
     # 核心
     "BotAPI",
+    "IBotAPI",
     "BotClient",
     "EventBus",
     "NcatBotEvent",

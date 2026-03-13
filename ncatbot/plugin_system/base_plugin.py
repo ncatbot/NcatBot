@@ -21,7 +21,7 @@ if TYPE_CHECKING:
         PluginConfigService,
         PluginConfig,
     )
-    from ncatbot.core import BotAPI
+    from ncatbot.core.api.interface import IBotAPI
 
 LOG = get_log("BasePlugin")
 
@@ -48,7 +48,7 @@ class BasePlugin:
 
     # -------- 外部注入的属性 -------
     services: ServiceManager  # 用于访问服务, 可见, 由 PluginLoader 在 init 时注入
-    api: "BotAPI"  # 访问 Bot API, 可见, 由 PluginLoader 在 init 时注入
+    api: "IBotAPI"  # 访问 Bot API, 可见, 由 PluginLoader 在 init 时注入
     _event_bus: (
         EventBus  # 用于发布数据和订阅事件, 不可见, 由 PluginLoader 在 init 时注入
     )

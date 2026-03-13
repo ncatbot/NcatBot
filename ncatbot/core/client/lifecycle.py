@@ -13,10 +13,9 @@ from pathlib import Path
 
 from ncatbot.utils import get_log, ncatbot_config
 from ncatbot.utils.error import NcatBotError
-from ncatbot.core.adapter import launch_napcat_service
 
 if TYPE_CHECKING:
-    from ncatbot.core.api import BotAPI
+    from ncatbot.core.api.interface import IBotAPI
     from ncatbot.core.service import ServiceManager
     from .event_bus import EventBus
     from .registry import EventRegistry
@@ -58,7 +57,7 @@ class LifecycleManager:
 
         self._running = False
         self.plugin_loader = None
-        self.api: Optional["BotAPI"] = None
+        self.api: Optional["IBotAPI"] = None
         self.dispatcher: Optional["EventDispatcher"] = None
 
         # 异步任务控制
@@ -96,59 +95,55 @@ class LifecycleManager:
         )
         self._running = True
 
-        if not self._test_mode:
-            launch_napcat_service()
-
     async def _core_execution(self):
-        """核心执行流"""
+        """核心执行流（按 SPEC-06 新流程）"""
         try:
-            # 0. 绑定事件循环（支持跨线程发布）
+            # Step 1: 绑定事件循环（支持跨线程发布）
             self.event_bus.bind_loop()
 
-            # 1. 加载服务
+            # Step 2: adapter.setup()（准备平台环境）
+            if not self._test_mode:
+                await self.adapter.setup()
+
+            # Step 3: adapter.connect()（建立连接）
+            if not self._test_mode:
+                await self.adapter.connect()
+
+            # Step 4: 加载所有内部服务
             await self.services.load_all()
 
-            # 2. 构建 API
-            router = self.services.message_router
-            from ncatbot.core.api import BotAPI
-            from .dispatcher import EventDispatcher
+            # Step 5: 获取 API 并构建分发器
+            await self._setup_api()
 
-            self.api = BotAPI(router.send, service_manager=self.services)
-            self.dispatcher = EventDispatcher(self.event_bus, self.api)
-            router.set_event_dispatcher(self.dispatcher)
-
-            # 3. 加载插件
+            # Step 6: 加载插件
             if self.plugin_loader:
                 if self._load_plugin:
                     await self.plugin_loader.load_external_plugins(
                         Path(ncatbot_config.plugin.plugins_dir).resolve()
                     )
                 await self.plugin_loader.load_builtin_plugins()
-            # 4. 关键：通知启动完成
-            # 在开始无限循环监听之前，设置事件，告知 start_background 可以返回了
+
+            # Step 7: 通知启动完成
             if self._startup_event:
                 self._startup_event.set()
 
-            # 5. 开始监听 (阻塞直到连接断开或任务取消)
-            if router.websocket:
-                await router.websocket.listen()
+            # Step 8: 开始监听（阻塞）
+            if not self._test_mode:
+                await self.adapter.listen()
 
         except asyncio.CancelledError:
-            # 正常退出信号
             LOG.info("Bot 运行任务被取消，正在停止...")
             raise
         except Exception as e:
             LOG.error(f"运行时发生错误: {e}")
-            # 如果错误发生在启动阶段，也要释放等待锁，否则 start_background 会死锁
             if self._startup_event and not self._startup_event.is_set():
-                # 这里不设置 set，而是让 task 结束，外层检测到 task done 会抛出异常
                 pass
             raise
         finally:
             await self._cleanup()
 
     async def _cleanup(self):
-        """资源清理"""
+        """资源清理（按 SPEC-06 关闭流程）"""
         if not self._running:
             return
 
@@ -158,24 +153,35 @@ class LifecycleManager:
         if self.plugin_loader:
             await self.plugin_loader.unload_all()
 
-        # 2. 关闭服务 (包括 Websocket 连接)
+        # 2. 关闭服务
         await self.services.close_all()
+
+        # 3. 断开适配器
+        if hasattr(self, "adapter") and self.adapter:
+            try:
+                await self.adapter.disconnect()
+            except Exception as e:
+                LOG.warning(f"适配器断开失败: {e}")
+
+        # 4. 清理 RegistryEngine
+        if hasattr(self, "registry_engine") and self.registry_engine:
+            self.registry_engine.clear()
 
         LOG.info("Bot 资源已释放")
 
     # ================= 启动入口 =================
 
-    async def run_backend_async(self, **kwargs: Unpack[StartArgs]) -> "BotAPI":
+    async def run_backend_async(self, **kwargs: Unpack[StartArgs]) -> "IBotAPI":
         """
         [推荐] 安全的异步非阻塞启动
 
-        1. 启动 NapCat
-        2. 建立 WebSocket 连接
-        3. 确认连接成功后，立即返回 BotAPI
+        1. 准备平台环境 (adapter.setup)
+        2. 建立连接 (adapter.connect)
+        3. 确认连接成功后，立即返回 IBotAPI
         4. Bot 在后台任务中运行
 
         Returns:
-            BotAPI: 操作 Bot 的接口对象
+            IBotAPI: 操作 Bot 的接口对象
 
         Raises:
             NcatBotError: 启动超时或失败
@@ -222,7 +228,9 @@ class LifecycleManager:
             LOG.error(f"启动失败: {e}")
             sys.exit(1)
 
-    def run_backend(self, daemon: bool = True, **kwargs: Unpack[StartArgs]) -> "BotAPI":
+    def run_backend(
+        self, daemon: bool = True, **kwargs: Unpack[StartArgs]
+    ) -> "IBotAPI":
         """
         [新增] 同步环境下的安全非阻塞启动
 
@@ -234,7 +242,7 @@ class LifecycleManager:
             **kwargs: 启动参数
 
         Returns:
-            BotAPI: Bot 操作接口 (注意：调用其方法时需注意线程安全或使用 run_coroutine_threadsafe)
+            IBotAPI: Bot 操作接口
         """
         import threading
         import concurrent.futures

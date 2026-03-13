@@ -8,14 +8,13 @@ from ncatbot.core.event.context import IBotAPI, ContextMixin
 
 
 class TestIBotAPI:
-    """测试 IBotAPI 协议"""
+    """测试 IBotAPI 抽象基类"""
 
-    def test_protocol_methods_defined(self):
-        """验证协议定义了必要的方法"""
-        # IBotAPI 是一个 Protocol，检查其定义的方法
+    def test_abc_methods_defined(self):
+        """验证 ABC 定义了必要的方法"""
         expected_methods = [
-            "post_group_msg",
-            "post_private_msg",
+            "send_group_msg",
+            "send_private_msg",
             "delete_msg",
             "set_group_kick",
             "set_group_ban",
@@ -83,13 +82,13 @@ class TestContextMixin:
 
 
 class TestMockAPIProtocolCompliance:
-    """测试 MockBotAPI 是否符合 IBotAPI 协议"""
+    """测试 MockBotAPI 是否符合 IBotAPI 接口"""
 
     def test_mock_api_has_all_methods(self, mock_api):
-        """验证 Mock API 实现了所有协议方法"""
+        """验证 Mock API 实现了所有接口方法"""
         expected_methods = [
-            "post_group_msg",
-            "post_private_msg",
+            "send_group_msg",
+            "send_private_msg",
             "delete_msg",
             "set_group_kick",
             "set_group_ban",
@@ -101,35 +100,35 @@ class TestMockAPIProtocolCompliance:
             assert callable(getattr(mock_api, method))
 
     @pytest.mark.asyncio
-    async def test_mock_api_post_group_msg(self, mock_api):
-        """测试 Mock API 的 post_group_msg"""
-        result = await mock_api.post_group_msg("123456", "hello")
+    async def test_mock_api_send_group_msg(self, mock_api):
+        """测试 Mock API 的 send_group_msg"""
+        result = await mock_api.send_group_msg("123456", "hello")
         assert "message_id" in result
-        assert mock_api.get_last_call()[0] == "post_group_msg"
+        assert mock_api.get_last_call()[0] == "send_group_msg"
 
     @pytest.mark.asyncio
-    async def test_mock_api_post_private_msg(self, mock_api):
-        """测试 Mock API 的 post_private_msg"""
-        result = await mock_api.post_private_msg("123456", "hello")
+    async def test_mock_api_send_private_msg(self, mock_api):
+        """测试 Mock API 的 send_private_msg"""
+        result = await mock_api.send_private_msg("123456", "hello")
         assert "message_id" in result
-        assert mock_api.get_last_call()[0] == "post_private_msg"
+        assert mock_api.get_last_call()[0] == "send_private_msg"
 
     @pytest.mark.asyncio
     async def test_mock_api_records_calls(self, mock_api):
         """测试 Mock API 记录调用"""
-        await mock_api.post_group_msg("111", "text1")
-        await mock_api.post_private_msg("222", "text2")
+        await mock_api.send_group_msg("111", "text1")
+        await mock_api.send_private_msg("222", "text2")
         await mock_api.delete_msg("333")
 
         assert len(mock_api.calls) == 3
-        assert mock_api.calls[0] == ("post_group_msg", "111", "text1", {})
-        assert mock_api.calls[1] == ("post_private_msg", "222", "text2", {})
+        assert mock_api.calls[0] == ("send_group_msg", "111", "text1", {})
+        assert mock_api.calls[1] == ("send_private_msg", "222", "text2", {})
         assert mock_api.calls[2] == ("delete_msg", "333")
 
     @pytest.mark.asyncio
     async def test_mock_api_clear_calls(self, mock_api):
         """测试清空调用记录"""
-        await mock_api.post_group_msg("123", "test")
+        await mock_api.send_group_msg("123", "test")
         assert len(mock_api.calls) == 1
 
         mock_api.clear_calls()

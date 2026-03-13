@@ -10,14 +10,14 @@ class MessageActionMixin(ContextMixin):
 
     async def reply(self, text: str, **kwargs):
         if getattr(self, "message_type", "") == "group" and hasattr(self, "group_id"):
-            return await self.api.post_group_msg(
-                group_id=self.group_id, text=text, **kwargs
+            return await self.api.send_group_msg(
+                group_id=self.group_id, message=text, **kwargs
             )
         elif getattr(self, "message_type", "") == "private" and hasattr(
             self, "user_id"
         ):
-            return await self.api.post_private_msg(
-                user_id=self.user_id, text=text, **kwargs
+            return await self.api.send_private_msg(
+                user_id=self.user_id, message=text, **kwargs
             )
         raise ValueError("Cannot reply to this event type")
 
