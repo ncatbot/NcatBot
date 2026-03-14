@@ -2,7 +2,7 @@
 
 - 操作系统：Windows11
 - 终端：Windows Terminal(PowerShell)
-- 环境管理：uv
+- 环境管理：uv，运行 Python 前先激活有关的环境 .venv\Scripts\activate.ps1
 
 # 文档规范
 

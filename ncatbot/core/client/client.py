@@ -7,18 +7,16 @@
 from __future__ import annotations
 
 import asyncio
-import signal
 from typing import Optional, TYPE_CHECKING
 
 from ncatbot.adapter.base import BaseAdapter
 from ncatbot.adapter.napcat.adapter import NapCatAdapter
 from ncatbot.api.client import BotAPIClient
 from ncatbot.core.dispatcher import AsyncEventDispatcher
-from ncatbot.event.factory import create_entity
-from ncatbot.utils import get_log
+from ncatbot.utils import get_log, setup_logging
 
 if TYPE_CHECKING:
-    from ncatbot.types import BaseEventData
+    pass
 
 LOG = get_log("BotClient")
 
@@ -38,6 +36,7 @@ class BotClient:
     """
 
     def __init__(self, adapter: Optional[BaseAdapter] = None) -> None:
+        setup_logging()
         self._adapter = adapter or NapCatAdapter()
         self._api: Optional[BotAPIClient] = None
         self._dispatcher: Optional[AsyncEventDispatcher] = None
@@ -94,7 +93,6 @@ class BotClient:
         #    dispatcher 内部把 api 传给 handler，但我们用 _wrap_handler 桥接，
         #    所以传底层 raw_api（满足 IBotAPI 类型），实际 handler 用 self._api
         self._dispatcher = AsyncEventDispatcher(raw_api)
-
 
         # 5. 把 adapter 的事件回调接到 dispatcher
         self._adapter.set_event_callback(self._dispatcher.dispatch)

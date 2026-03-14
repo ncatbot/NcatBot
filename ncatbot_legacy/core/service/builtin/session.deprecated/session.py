@@ -9,7 +9,7 @@ Session 模型
 
 import asyncio
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from typing import Any, Callable, Coroutine, Dict, List, Optional
 
 
@@ -94,9 +94,7 @@ class Session:
             name=name, on_enter=on_enter, on_exit=on_exit
         )
 
-    def add_transition(
-        self, from_state: str, trigger: str, to_state: str
-    ) -> None:
+    def add_transition(self, from_state: str, trigger: str, to_state: str) -> None:
         """添加状态转移"""
         self._transitions.append(
             Transition(from_state=from_state, trigger=trigger, to_state=to_state)

@@ -3,6 +3,9 @@
 import logging
 from typing import Any, Optional
 
+# 记录所有 early logger 创建的临时 handler，供 setup_logging() 清理
+_early_handlers: list[tuple[logging.Logger, logging.Handler]] = []
+
 
 class BoundLogger:
     """包装标准 Logger，支持 bind 上下文和消息预处理。
@@ -99,3 +102,27 @@ def get_log(name: Optional[str] = None) -> BoundLogger:
     if name is not None:
         logger.setLevel(logging.DEBUG)
     return BoundLogger(logger)
+
+
+def get_early_logger(name: str) -> logging.Logger:
+    """获取一个在 setup_logging() 之前就能输出的轻量 logger。
+
+    自带一个简单的 StreamHandler，setup_logging() 初始化时会自动清理。
+    适用于配置加载等早期阶段。
+    """
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.DEBUG)
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+        handler.setFormatter(logging.Formatter("[%(name)s] %(levelname)s: %(message)s"))
+        logger.addHandler(handler)
+        _early_handlers.append((logger, handler))
+    return logger
+
+
+def cleanup_early_handlers() -> None:
+    """清理所有 early handler（由 setup_logging 调用）。"""
+    for logger, handler in _early_handlers:
+        logger.removeHandler(handler)
+    _early_handlers.clear()

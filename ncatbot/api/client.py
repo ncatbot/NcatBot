@@ -5,13 +5,65 @@
 
 from __future__ import annotations
 
-from typing import Any, Union
+import asyncio
+import functools
+import json
+from typing import Any, Union, cast
 
 from ncatbot.api.interface import IBotAPI
 from ncatbot.api._sugar import MessageSugarMixin
 from ncatbot.api.extensions.manage import ManageExtension
 from ncatbot.api.extensions.info import InfoExtension
 from ncatbot.api.extensions.support import SupportExtension
+from ncatbot.utils import get_log
+
+LOG = get_log("BotAPIClient")
+
+_LOG_TRUNCATE = 2000
+
+
+class _LoggingAPIProxy:
+    """IBotAPI 的日志代理，所有异步调用自动打 INFO 日志"""
+
+    __slots__ = ("_real",)
+
+    def __init__(self, real: IBotAPI) -> None:
+        self._real = real
+
+    def __getattr__(self, name: str) -> Any:
+        attr = getattr(self._real, name)
+        if not (asyncio.iscoroutinefunction(attr) or name.startswith("_")):
+            return attr
+
+        @functools.wraps(attr)
+        async def _logged(*args: Any, **kwargs: Any) -> Any:
+            s = _fmt_call(name, args, kwargs)
+            LOG.info(f"API调用 {s}")
+            return await attr(*args, **kwargs)
+
+        return _logged
+
+
+def _fmt_call(name: str, args: tuple, kwargs: dict) -> str:
+    parts = [name]
+    for v in args:
+        parts.append(_trunc(v))
+    for k, v in kwargs.items():
+        parts.append(f"{k}={_trunc(v)}")
+    s = " ".join(parts)
+    if len(s) > _LOG_TRUNCATE:
+        s = s[:_LOG_TRUNCATE] + "..."
+    return s
+
+
+def _trunc(v: Any) -> str:
+    if isinstance(v, (dict, list)):
+        s = json.dumps(v, ensure_ascii=False, separators=(",", ":"))
+    else:
+        s = str(v)
+    if len(s) > _LOG_TRUNCATE:
+        s = s[:_LOG_TRUNCATE] + "..."
+    return s
 
 
 class BotAPIClient(MessageSugarMixin):
@@ -28,22 +80,29 @@ class BotAPIClient(MessageSugarMixin):
     """
 
     def __init__(self, adapter_api: IBotAPI) -> None:
-        self._base = adapter_api
+        logged = cast(IBotAPI, _LoggingAPIProxy(adapter_api))
+        self._base = logged
 
-        # 低频命名空间
-        self.manage = ManageExtension(adapter_api)
-        self.info = InfoExtension(adapter_api)
-        self.support = SupportExtension(adapter_api)
+        # 低频命名空间（同样走日志代理）
+        self.manage = ManageExtension(logged)
+        self.info = InfoExtension(logged)
+        self.support = SupportExtension(logged)
 
     # ---- 高频原子 API（显式透传）----
 
     async def send_group_msg(
-        self, group_id: Union[str, int], message: list, **kwargs: Any,
+        self,
+        group_id: Union[str, int],
+        message: list,
+        **kwargs: Any,
     ) -> dict:
         return await self._base.send_group_msg(group_id, message, **kwargs)
 
     async def send_private_msg(
-        self, user_id: Union[str, int], message: list, **kwargs: Any,
+        self,
+        user_id: Union[str, int],
+        message: list,
+        **kwargs: Any,
     ) -> dict:
         return await self._base.send_private_msg(user_id, message, **kwargs)
 
@@ -51,15 +110,23 @@ class BotAPIClient(MessageSugarMixin):
         await self._base.delete_msg(message_id)
 
     async def send_forward_msg(
-        self, message_type: str, target_id: Union[str, int],
-        messages: list, **kwargs: Any,
+        self,
+        message_type: str,
+        target_id: Union[str, int],
+        messages: list,
+        **kwargs: Any,
     ) -> dict:
         return await self._base.send_forward_msg(
-            message_type, target_id, messages, **kwargs,
+            message_type,
+            target_id,
+            messages,
+            **kwargs,
         )
 
     async def send_poke(
-        self, group_id: Union[str, int], user_id: Union[str, int],
+        self,
+        group_id: Union[str, int],
+        user_id: Union[str, int],
     ) -> None:
         await self._base.send_poke(group_id, user_id)
 

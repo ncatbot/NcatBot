@@ -41,12 +41,17 @@ class LoginTimeoutError(AuthError):
     pass
 
 
+class RateLimitError(AuthError):
+    pass
+
+
 class AuthHandler:
     """登录认证处理器"""
 
     WEBUI_CONNECT_TIMEOUT = 90
     QRCODE_LOGIN_TIMEOUT = 60
     QRCODE_FETCH_TIMEOUT = 15
+    WEBUI_RETRY_INTERVAL = 2
 
     def __init__(self):
         self._base_uri = (
@@ -58,21 +63,37 @@ class AuthHandler:
 
     def _connect_webui(self) -> None:
         expire_time = time.time() + self.WEBUI_CONNECT_TIMEOUT
+        last_error: Optional[Exception] = None
+        attempt = 0
 
         while time.time() < expire_time:
-            time.sleep(0.02)
+            if attempt > 0:
+                time.sleep(self.WEBUI_RETRY_INTERVAL)
+            attempt += 1
             try:
                 credential = self._try_auth()
                 if credential:
                     self._header = {"Authorization": f"Bearer {credential}"}
                     LOG.debug("成功连接到 WebUI")
                     return
+            except RateLimitError as e:
+                last_error = e
+                LOG.warning(f"WebUI 速率限制, 等待冷却后重试 (第{attempt}次)")
+                time.sleep(5)  # 额外等待
+                continue
+            except AuthError:
+                # 认证失败(非连接问题), 无需重试
+                raise
             except Exception as e:
-                if time.time() >= expire_time:
-                    self._handle_connection_error(e)
+                last_error = e
+                remaining = int(expire_time - time.time())
+                LOG.debug(f"连接 WebUI 失败 (第{attempt}次, 剩余{remaining}s): {e}")
                 continue
 
-        raise WebUIConnectionError("连接 WebUI 超时")
+        detail = f": {last_error}" if last_error else ""
+        raise WebUIConnectionError(
+            f"连接 WebUI 超时 (已重试{attempt}次, 超时{self.WEBUI_CONNECT_TIMEOUT}s){detail}"
+        )
 
     def _try_auth(self) -> Optional[str]:
         hashed_token = hashlib.sha256(
@@ -85,9 +106,26 @@ class AuthHandler:
                 payload={"hash": hashed_token},
                 timeout=5,
             )
-            return content.get("data", {}).get("Credential")
-        except Exception:
-            raise AuthError("认证失败, 请升级 NapCat 到最新版本")
+        except TimeoutError:
+            raise  # 连接超时, 交给 _connect_webui 重试
+        except Exception as e:
+            raise ConnectionError(f"无法连接 WebUI ({self._base_uri}): {e}") from e
+
+        code = content.get("code")
+        message = content.get("message", "")
+
+        if code == 0:
+            credential = content.get("data", {}).get("Credential")
+            if credential:
+                return credential
+            raise AuthError("认证响应异常: 缺少 Credential 字段")
+
+        if "rate limit" in message.lower():
+            raise RateLimitError(f"WebUI 登录速率限制: {message}")
+
+        raise AuthError(
+            f"WebUI 认证失败 (code={code}): {message}. 请检查 webui_token 配置是否正确"
+        )
 
     def _handle_connection_error(self, error: Exception) -> None:
         LOG.error("连接 WebUI 失败")
@@ -96,7 +134,10 @@ class AuthHandler:
         raise WebUIConnectionError(f"连接 WebUI 失败: {error}")
 
     def _api_call(
-        self, endpoint: str, payload: Optional[dict] = None, timeout: int = 5,
+        self,
+        endpoint: str,
+        payload: Optional[dict] = None,
+        timeout: int = 5,
     ) -> dict:
         return post_json(
             f"{self._base_uri}{endpoint}",

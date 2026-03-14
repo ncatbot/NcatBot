@@ -62,5 +62,11 @@ class NapCatAdapter(BaseAdapter):
     async def _on_event(self, raw_data: dict) -> None:
         """收到事件推送，解析为数据模型后回调给分发器"""
         data_model = self._parser.parse(raw_data)
-        if data_model and self._event_callback:
+        if data_model is None:
+            return
+        s = data_model.model_dump_json()
+        if len(s) > 2000:
+            s = s[:2000] + "..."
+        LOG.info(f"收到事件 {data_model.post_type.value}: {s}")
+        if self._event_callback:
             await self._event_callback(data_model)

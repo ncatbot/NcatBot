@@ -27,7 +27,9 @@ def __getattr__(name):
     """向后兼容: UnifiedRegistryService 已移至 ncatbot.legacy"""
     if name == "UnifiedRegistryService":
         from ncatbot.legacy.unified_registry.service import UnifiedRegistryService
+
         return UnifiedRegistryService
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
 
 __all__.extend(getattr(filter_system.decorators, "__all__", []))  # type: ignore

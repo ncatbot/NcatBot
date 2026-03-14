@@ -6,6 +6,7 @@ import logging
 from logging.handlers import TimedRotatingFileHandler
 from typing import Sequence
 
+from .core import cleanup_early_handlers
 from .formatter import ColoredFormatter, FileFormatter
 from .filters import MessageFoldFilter
 
@@ -38,6 +39,9 @@ def setup_logging(
     if _initialized:
         return
     _initialized = True
+
+    # 清理早期 handler，避免重复输出
+    cleanup_early_handlers()
 
     console_level = (console_level or os.getenv("LOG_LEVEL", "DEBUG")).upper()
     file_level = (file_level or os.getenv("FILE_LOG_LEVEL", "DEBUG")).upper()

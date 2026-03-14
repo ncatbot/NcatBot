@@ -3,9 +3,13 @@
 import os
 from typing import List, Optional
 
+from ncatbot.utils.logger import get_early_logger
+
 from .models import Config, NapCatConfig, PluginConfig, DEFAULT_BOT_UIN, DEFAULT_ROOT
 from .storage import ConfigStorage
 from .security import strong_password_check, generate_strong_token
+
+_log = get_early_logger("config")
 
 
 class ConfigValueError(Exception):
@@ -31,10 +35,12 @@ class ConfigManager:
     def config(self) -> Config:
         if self._config is None:
             self._config = self._storage.load()
+            _log.info("配置加载完成")
         return self._config
 
     def reload(self) -> Config:
         self._config = self._storage.load()
+        _log.info("配置已重新加载")
         return self._config
 
     def save(self) -> None:
@@ -118,6 +124,7 @@ class ConfigManager:
             if not strong_password_check(self.napcat.ws_token):
                 if auto_fix:
                     self.napcat.ws_token = generate_strong_token()
+                    _log.warning("WS 令牌强度不足, 已自动生成新令牌")
                 else:
                     issues.append("WS 令牌强度不足")
 
@@ -125,6 +132,7 @@ class ConfigManager:
             if not strong_password_check(self.napcat.webui_token):
                 if auto_fix:
                     self.napcat.webui_token = generate_strong_token()
+                    _log.warning("WebUI 令牌强度不足, 已自动生成新令牌")
                 else:
                     issues.append("WebUI 令牌强度不足")
 

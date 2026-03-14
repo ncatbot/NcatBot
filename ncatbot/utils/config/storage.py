@@ -5,7 +5,11 @@ from typing import Any, Dict, Optional
 
 import yaml
 
+from ncatbot.utils.logger import get_early_logger
+
 from .models import Config
+
+_log = get_early_logger("config.storage")
 
 CONFIG_PATH = os.getenv(
     "NCATBOT_CONFIG_PATH",
@@ -20,6 +24,7 @@ class ConfigStorage:
         self.path = path or CONFIG_PATH
 
     def load(self) -> Config:
+        _log.debug("加载配置文件: %s", self.path)
         data = self._load_raw()
         return Config.model_validate(data)
 
@@ -31,6 +36,7 @@ class ConfigStorage:
 
     def _load_raw(self) -> Dict[str, Any]:
         if not os.path.exists(self.path):
+            _log.info("配置文件不存在, 使用默认配置: %s", self.path)
             return {}
         with open(self.path, "r", encoding="utf-8") as f:
             return yaml.safe_load(f) or {}
@@ -43,3 +49,4 @@ class ConfigStorage:
         with open(tmp_path, "w", encoding="utf-8") as f:
             yaml.dump(data, f, allow_unicode=True, default_flow_style=False)
         os.replace(tmp_path, self.path)
+        _log.debug("配置文件已保存: %s", self.path)

@@ -4,7 +4,6 @@ SessionManager — BaseService
 管理所有 Session 的生命周期。
 """
 
-import time
 from typing import Dict, Optional
 
 from ncatbot.core.service.base import BaseService
@@ -93,9 +92,7 @@ class SessionManager(BaseService):
     def revoke_plugin(self, plugin_name: str) -> int:
         """热重载: 关闭该插件的所有 Session"""
         to_remove = [
-            key
-            for key, s in self._sessions.items()
-            if s.plugin_name == plugin_name
+            key for key, s in self._sessions.items() if s.plugin_name == plugin_name
         ]
         for key in to_remove:
             self.close_session(key)
@@ -103,9 +100,7 @@ class SessionManager(BaseService):
 
     def cleanup(self) -> int:
         """清理过期 Session"""
-        expired = [
-            key for key, s in self._sessions.items() if s.is_expired()
-        ]
+        expired = [key for key, s in self._sessions.items() if s.is_expired()]
         for key in expired:
             self._sessions.pop(key, None)
         return len(expired)
