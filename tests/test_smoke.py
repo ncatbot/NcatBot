@@ -64,6 +64,43 @@ class FakeAdapter(BaseAdapter):
         return iterator()
 
 
+class FlakyAdapter(BaseAdapter):
+    def __init__(self) -> None:
+        self.run_count = 0
+
+    @property
+    def platform_name(self) -> str:
+        return "fake"
+
+    @property
+    def adapter_name(self) -> str:
+        return "tests.FlakyAdapter"
+
+    @property
+    def adapter_version(self) -> str:
+        return "0.0"
+
+    async def __aenter__(self) -> "FlakyAdapter":
+        return self
+
+    async def __aexit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_val: BaseException | None,
+        exc_tb: TracebackType | None,
+    ) -> None:
+        return None
+
+    def __aiter__(self) -> AsyncIterator[object]:
+        async def iterator() -> AsyncIterator[object]:
+            self.run_count += 1
+            if self.run_count == 1:
+                raise RuntimeError("boom")
+            yield SmokeEvent("recovered")
+
+        return iterator()
+
+
 class SmokeTests(unittest.IsolatedAsyncioTestCase):
     def test_public_exports_are_available(self) -> None:
         self.assertTrue(issubclass(NapCatAdapter, BaseAdapter))
@@ -148,3 +185,24 @@ class SmokeTests(unittest.IsolatedAsyncioTestCase):
         await asyncio.wait_for(task, timeout=1)
 
         self.assertEqual(seen, ["boot", "hot-add"])
+
+    async def test_restarts_adapter_after_failure(self) -> None:
+        app = NcatBotApp(adapter_restart_delay=0.01)
+        adapter = FlakyAdapter()
+        handled = asyncio.Event()
+        seen: list[str] = []
+
+        @app.on_event
+        async def handle(event: SmokeEvent) -> None:
+            seen.append(event.value)
+            handled.set()
+            app.stop()
+
+        app.add_adapter(adapter)
+
+        task = asyncio.create_task(app.start())
+        await asyncio.wait_for(handled.wait(), timeout=1)
+        await asyncio.wait_for(task, timeout=1)
+
+        self.assertEqual(seen, ["recovered"])
+        self.assertEqual(adapter.run_count, 2)

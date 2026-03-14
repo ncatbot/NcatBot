@@ -12,7 +12,7 @@ type EventHandler[T] = Callable[[T], HandlerReturn]
 type HandlerType = Callable[..., HandlerReturn]
 
 class NcatBotApp:
-    def __init__(self):
+    def __init__(self, adapter_restart_delay: float = 5.0):
         # 现在的 key 是类型对象，比如 MessageEvent，value 是 handler 列表
         self.handlers: defaultdict[type, list[HandlerType]] = defaultdict(list)
         self.adapters: list[BaseAdapter] = []
@@ -22,6 +22,7 @@ class NcatBotApp:
         self._stop_event: asyncio.Event | None = None
         self._adapter_tasks: list[asyncio.Task[None]] = []
         self._loop: asyncio.AbstractEventLoop | None = None
+        self._adapter_restart_delay = adapter_restart_delay
 
     def events(self) -> AsyncIterator[object]:
         """返回广播所有 adapter 事件的异步迭代器。"""
@@ -176,13 +177,25 @@ class NcatBotApp:
             asyncio.create_task(handler(event_obj))
 
     async def _run_adapter(self, adapter: BaseAdapter):
-        try:
-            async with adapter:
-                # 现在拿到的是具体的事件对象
-                async for event_obj in adapter:
-                    await self._dispatch_event(event_obj)
-        except Exception as e:
-            print(f"Adapter {adapter.adapter_name} 发生错误: {e}")
+        while True:
+            try:
+                async with adapter:
+                    # 现在拿到的是具体的事件对象
+                    async for event_obj in adapter:
+                        await self._dispatch_event(event_obj)
+            except asyncio.CancelledError:
+                raise
+            except Exception as e:
+                print(f"Adapter {adapter.adapter_name} 发生错误: {e}")
+
+            if not self._running:
+                return
+
+            print(
+                f"Adapter {adapter.adapter_name} 已退出，"
+                f"{self._adapter_restart_delay} 秒后重试"
+            )
+            await asyncio.sleep(self._adapter_restart_delay)
 
     async def start(self):
         if self._running:
