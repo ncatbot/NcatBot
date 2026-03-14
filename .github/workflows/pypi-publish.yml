@@ -1,53 +1,18 @@
-# This workflow will upload a Python Package using Twine when a release is created
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python#publishing-to-package-registries
-
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
 name: Publish to PyPI
 
 on:
   push:
-    branches:
-      - main  # 指定触发的分支，根据实际情况修改
-    paths:
-      - "pyproject.toml"  # 当 pyproject.toml 文件发生变化时触发
-  workflow_dispatch:  # 允许手动触发
+    tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
-  # test:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       python-version: ["3.13", "3.11", "3.9"]
-
-  #   steps:
-  #     - uses: actions/checkout@v4
-
-  #     - name: Install uv
-  #       uses: astral-sh/setup-uv@v4
-
-  #     - name: Set up Python ${{ matrix.python-version }}
-  #       run: uv python install ${{ matrix.python-version }}
-
-  #     - name: Install dependencies
-  #       run: uv sync --extra dev
-
-  #     - name: Run tests
-  #       run: uv run pytest
-
-  build-and-publish:
+  publish:
     runs-on: ubuntu-latest
     permissions:
-      # 重要：如果使用 OIDC 发布，需要这个权限
       id-token: write
-    # needs:
-      # - test  # 如果启用了测试 Job，则在测试通过后再发布
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4
@@ -55,9 +20,10 @@ jobs:
       - name: Build
         run: uv build
 
+      - name: Verify package
+        run: uvx twine check dist/*
+
       - name: Publish to PyPI
-        # 使用官方专用的 Action
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          # 如果你在 PyPI 开启了 Trusted Publishing，甚至不需要配置 TOKEN
           password: ${{ secrets.PYPI_TOKEN }}
