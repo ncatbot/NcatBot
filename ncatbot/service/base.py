@@ -4,14 +4,19 @@
 所有服务必须继承此类，并实现生命周期钩子。
 """
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Optional, TYPE_CHECKING
+from typing import Any, Awaitable, Callable, Optional, TYPE_CHECKING
 from ncatbot.utils import get_log
 
 if TYPE_CHECKING:
-    from .manager import ServiceManager
+    from ncatbot.types import BaseEventData
 
 LOG = get_log("Service")
+
+# 事件发布回调类型
+EventCallback = Callable[["BaseEventData"], Awaitable[None]]
 
 
 class BaseService(ABC):
@@ -27,7 +32,7 @@ class BaseService(ABC):
         name (str): 服务名称（必须定义）
         description (str): 服务描述
         dependencies (list): 依赖的其他服务名称列表
-        service_manager (ServiceManager): 服务管理器引用
+        emit_event (EventCallback | None): 事件发布回调，由 ServiceManager 在 load 时注入
     """
 
     name: str = None
@@ -40,7 +45,7 @@ class BaseService(ABC):
 
         self.config = config
         self._loaded = False
-        self.service_manager: Optional["ServiceManager"] = None
+        self.emit_event: Optional[EventCallback] = None
 
     # ------------------------------------------------------------------
     # 生命周期钩子（子类应重写）
@@ -76,6 +81,7 @@ class BaseService(ABC):
 
         await self.on_close()
         self._loaded = False
+        self.emit_event = None
         LOG.debug(f"服务 {self.name} 关闭成功")
 
     @property

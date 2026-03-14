@@ -10,7 +10,7 @@ from typing import Callable, Optional, List, Dict, Any, Union
 
 from schedule import Scheduler
 
-from ncatbot.core.service.base import BaseService
+from ncatbot.service.base import BaseService
 from ncatbot.utils import get_log
 from .parser import TimeTaskParser
 

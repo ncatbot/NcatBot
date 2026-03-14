@@ -7,7 +7,7 @@
 from collections import deque
 from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 from ncatbot.utils import get_log
-from .base import BaseService
+from .base import BaseService, EventCallback
 
 if TYPE_CHECKING:
     from .builtin.rbac import RBACService
@@ -40,6 +40,11 @@ class ServiceManager:
         self._services: Dict[str, BaseService] = {}
         self._service_classes: Dict[str, Type[BaseService]] = {}
         self._service_configs: Dict[str, Dict[str, Any]] = {}
+        self._event_callback: Optional[EventCallback] = None
+
+    def set_event_callback(self, callback: EventCallback) -> None:
+        """注入事件发布回调，load 时会传递给服务实例。"""
+        self._event_callback = callback
 
     def set_debug_mode(self, enable: bool = True) -> None:
         """设置调试模式"""
@@ -91,7 +96,7 @@ class ServiceManager:
         service = self._service_classes[service_name](
             **self._service_configs[service_name]
         )
-        service.service_manager = self
+        service.emit_event = self._event_callback
         await service._load()
         self._services[service_name] = service
         return service

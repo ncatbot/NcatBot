@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Callable, Optional, Set, Dict
 
-from ncatbot.core.service.base import BaseService
+from ncatbot.service.base import BaseService
 from ncatbot.utils import get_log
 
 LOG = get_log("FileWatcher")
@@ -171,7 +171,7 @@ class FileWatcherService(BaseService):
 
     def _on_file_changed(self, file_path: str, plugins_dir: str) -> None:
         """处理文件变化"""
-        if not getattr(self.service_manager, "_debug_mode", False):
+        if not self.config.get("debug_mode", False):
             return
 
         LOG.info(f"检测到文件变化: {file_path}")
