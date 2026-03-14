@@ -7,7 +7,9 @@ authors = [
     { name = "faithleysath", email = "faithleysath@gmail.com" }
 ]
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "napcat-sdk>=0.6.8",
+]
 
 [build-system]
 requires = ["uv_build>=0.10.7,<0.11.0"]
