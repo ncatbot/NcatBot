@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
 from types import TracebackType
+from typing import Self
 
 
 class BaseAdapter(ABC):
@@ -24,7 +25,7 @@ class BaseAdapter(ABC):
         pass
 
     @abstractmethod
-    async def __aenter__(self):
+    async def __aenter__(self) -> Self:
         pass
 
     @abstractmethod

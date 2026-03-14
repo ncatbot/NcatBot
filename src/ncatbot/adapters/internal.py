@@ -2,6 +2,7 @@ from asyncio import Queue
 from collections.abc import AsyncIterator
 from importlib.metadata import PackageNotFoundError, version
 from types import TracebackType
+from typing import Self
 
 from .base import BaseAdapter
 
@@ -30,7 +31,7 @@ class InternalEventAdapter(BaseAdapter):
     def adapter_version(self) -> str:
         return self._adapter_version
 
-    async def __aenter__(self) -> "InternalEventAdapter":
+    async def __aenter__(self) -> Self:
         return self
 
     async def __aexit__(
