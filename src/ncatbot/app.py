@@ -11,7 +11,7 @@ type HandlerReturn = Coroutine[Any, Any, None]
 type EventHandler[T] = Callable[[T], HandlerReturn]
 type HandlerType = Callable[..., HandlerReturn]
 
-class BotApp:
+class NcatBotApp:
     def __init__(self):
         # 现在的 key 是类型对象，比如 MessageEvent，value 是 handler 列表
         self.handlers: defaultdict[type, list[HandlerType]] = defaultdict(list)

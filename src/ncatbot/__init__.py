@@ -1,2 +1,3 @@
-def hello() -> str:
-    return "Hello from ncatbot!"
+from .app import NcatBotApp
+
+__all__ = ["NcatBotApp"]
