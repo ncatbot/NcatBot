@@ -3,10 +3,10 @@ import napcat.matcher
 import napcat.types
 from napcat import NapCatClient, __version__
 
-from ncatbot.adapters import BaseAdapter
+from ..base import BaseAdapter
 
 
-class NapcatAdapter(BaseAdapter, NapCatClient):
+class NapcatAdapter(NapCatClient, BaseAdapter):
     @property
     def adapter_name(self) -> str:
         return "Ncatbot.NapcatAdapter"
