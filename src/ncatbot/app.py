@@ -1,7 +1,7 @@
 import asyncio
 import inspect
 from collections import defaultdict
-from collections.abc import Callable, Coroutine
+from collections.abc import AsyncIterator, Callable, Coroutine
 from types import UnionType
 from typing import Any, Union, cast, get_args, get_origin, overload
 
@@ -16,10 +16,39 @@ class BotApp:
         # 现在的 key 是类型对象，比如 MessageEvent，value 是 handler 列表
         self.handlers: defaultdict[type, list[HandlerType]] = defaultdict(list)
         self.adapters: list[BaseAdapter] = []
+        self._event_stream_closed = object()
+        self._event_subscribers: list[asyncio.Queue[object]] = []
         self._running = False
         self._stop_event: asyncio.Event | None = None
         self._adapter_tasks: list[asyncio.Task[None]] = []
         self._loop: asyncio.AbstractEventLoop | None = None
+
+    def events(self) -> AsyncIterator[object]:
+        """返回广播所有 adapter 事件的异步迭代器。"""
+        queue: asyncio.Queue[object] = asyncio.Queue()
+        self._event_subscribers.append(queue)
+
+        async def iterator() -> AsyncIterator[object]:
+            try:
+                while True:
+                    event_obj = await queue.get()
+                    if event_obj is self._event_stream_closed:
+                        return
+                    yield event_obj
+            finally:
+                if queue in self._event_subscribers:
+                    self._event_subscribers.remove(queue)
+
+        return iterator()
+
+    def _publish_event(self, event_obj: object):
+        for subscriber in tuple(self._event_subscribers):
+            subscriber.put_nowait(event_obj)
+
+    def _close_event_streams(self):
+        for subscriber in tuple(self._event_subscribers):
+            subscriber.put_nowait(self._event_stream_closed)
+        self._event_subscribers.clear()
 
     @property
     def is_running(self) -> bool:
@@ -113,6 +142,8 @@ class BotApp:
 
     async def _dispatch_event(self, event_obj: object):
         """分发事件给对应的 handler"""
+        self._publish_event(event_obj)
+
         # 查找监听该类型的 handlers
         handlers: list[HandlerType] = []
         for registered_type, funcs in self.handlers.items():
@@ -155,6 +186,7 @@ class BotApp:
                 task.cancel()
             if tasks:
                 await asyncio.gather(*tasks, return_exceptions=True)
+            self._close_event_streams()
 
     def stop(self):
         if self._stop_event is not None:
