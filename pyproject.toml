@@ -1,7 +1,7 @@
 [project]
 name = "ncatbot"
 version = "0.1.0"
-description = "Add your description here"
+description = "A generic async bot framework built around pluggable adapters and event streams."
 readme = "README.md"
 authors = [
     { name = "faithleysath", email = "faithleysath@gmail.com" }
