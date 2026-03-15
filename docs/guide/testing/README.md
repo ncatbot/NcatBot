@@ -11,7 +11,7 @@
 ### 1. 安装测试依赖
 
 ```bash
-uv pip install ncatbot5[test]
+uv pip install ncatbot55[test]
 ```
 
 ### 2. 创建测试文件

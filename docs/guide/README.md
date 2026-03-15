@@ -9,7 +9,7 @@
 ### 1. 安装与配置
 
 ```bash
-pip install ncatbot
+pip install ncatbot5
 mkdir my-bot && cd my-bot
 ```
 

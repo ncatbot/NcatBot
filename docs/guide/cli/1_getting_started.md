@@ -4,7 +4,7 @@
 
 ## 前提条件
 
-- 已安装 NcatBot（`pip install ncatbot`）
+- 已安装 NcatBot（`pip install ncatbot5`）
 - NapCat 已在本地运行
 
 ## 初始化项目

@@ -11,7 +11,7 @@
 ### 1. 安装
 
 ```bash
-uv add ncatbot    # 或 pip install ncatbot
+uv add ncatbot5    # 或 pip install ncatbot5
 ```
 
 ### 2. 创建插件目录

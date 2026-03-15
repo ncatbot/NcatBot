@@ -29,7 +29,7 @@ license: MIT
 ### 3. 搭建项目
 
 ```bash
-pip install ncatbot
+pip install ncatbot5
 ncatbot init                        # 交互式创建 config.yaml + plugins/
 ```
 
@@ -151,6 +151,35 @@ if __name__ == "__main__":
 | `ncatbot plugin create/list/enable/disable` | 插件管理 |
 | `ncatbot config show/get/set/check` | 配置管理 |
 | `ncatbot napcat diagnose` | 连接诊断 |
+
+### CLI 交互式命令注意事项
+
+以下命令包含交互式提示（`click.confirm` / `click.prompt`），在终端中运行时会阻塞等待用户输入。**在自动化脚本或 agent 中使用时，必须通过管道提供输入来避免阻塞**：
+
+| 命令 | 交互点 | 非交互写法 |
+|------|--------|-----------|
+| `ncatbot init` | 覆盖确认 + QQ 号 + 管理员号 | `echo "y\n{bot_uin}\n{root}" \| ncatbot init` |
+| `ncatbot plugin remove {name}` | 删除确认 | `echo "y" \| ncatbot plugin remove {name}` |
+
+**推荐做法**：对于 `ncatbot init`，直接手动创建 `config.yaml`（参考 `ncatbot/cli/commands/init.py` 中的默认配置模板）和 `plugins/` 目录，跳过交互式流程：
+
+```python
+# config.yaml 默认模板
+bot_uin: "{QQ号}"
+root: "{管理员QQ号}"
+debug: false
+napcat:
+  ws_uri: ws://localhost:3001
+  ws_token: napcat_ws
+  webui_uri: http://localhost:6099
+  webui_token: napcat_webui
+  enable_webui: true
+plugin:
+  plugins_dir: plugins
+  load_plugin: true
+  plugin_whitelist: []
+  plugin_blacklist: []
+```
 
 ## 示例索引
 
