@@ -18,25 +18,15 @@ dependencies = [
   "schedule",
   # 配置文件
   "pyyaml>=6.0",
-  "toml",
   # 网络通信
   "websockets",
   "requests>=2.28",
-  # 异步文件操作
-  "aiofiles",
-  # 系统信息
-  "psutil>=5.9",
   # 版本解析
   "packaging",
   # 终端输出
-  "rich",
   "tqdm>=4.60",
-  # 类型提示
-  "typing-extensions",
   # QR 码生成
   "qrcode",
-  # Windows 终端颜色支持
-  "colorama>=0.4.6; platform_system == \"Windows\"",
 ]
 
 [project.optional-dependencies]

@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-import toml
+import tomllib
 
 from ncatbot.utils import get_log
 
@@ -53,7 +53,8 @@ class PluginManifest:
         if not manifest_path.exists():
             raise FileNotFoundError(f"manifest.toml 不存在: {manifest_path}")
 
-        raw = toml.load(manifest_path)
+        with open(manifest_path, "rb") as f:
+            raw = tomllib.load(f)
         plugin_dir = manifest_path.parent
 
         # 验证必填字段
