@@ -5,8 +5,10 @@
   - self.api 消息发送 (post_group_msg / send_group_image)
   - self.api.manage 群管理 (禁言 / 踢人)
   - self.api.info 信息查询 (群列表 / 成员信息 / 登录信息)
+  - self.api.info.get_msg() 通过消息 ID 查询消息
   - 消息语法糖 (text / image / at / reply 关键字参数)
   - @registrar.on_group_command() 命令匹配 + At/int 参数绑定
+  - 合并转发：通过消息 ID 转发已有消息
 
 使用方式:
   "查群列表"         → 返回 Bot 加入的群列表
@@ -17,6 +19,7 @@
   "戳我"            → Bot 戳你一下
   "禁言 @xxx 60"    → 禁言被 @用户 60 秒
   "解禁 @xxx"       → 解除被 @用户 的禁言
+  回复任意消息 "转发" → 输出被回复消息的 raw_message，并转发到同一群
 """
 
 from pathlib import Path
@@ -24,7 +27,7 @@ from pathlib import Path
 from ncatbot.core.registry import registrar
 from ncatbot.event import GroupMessageEvent
 from ncatbot.plugin import NcatBotPlugin
-from ncatbot.types import At
+from ncatbot.types import At, MessageArray, PlainText, Reply
 from ncatbot.utils import get_log
 
 LOG = get_log("BotAPI")
@@ -137,3 +140,31 @@ class BotAPIPlugin(NcatBotPlugin):
 
         await self.api.manage.set_group_ban(event.group_id, target.qq, 0)
         await event.reply("已解除禁言")
+
+    # ==================== 转发（通过消息 ID）====================
+
+    @registrar.on_group_command("转发")
+    async def on_forward_by_quote(self, event: GroupMessageEvent):
+        """回复任意消息并发送"转发"，Bot 输出被引用消息的 raw_message 并转发到群里"""
+        # 从消息中提取 Reply 段，判断是否引用了某条消息
+        replies = event.message.filter(Reply)
+        if not replies:
+            await event.reply("请先回复（引用）一条消息，再发送「转发」")
+            return
+
+        quoted_msg_id = replies[0].id
+
+        # 通过 get_msg 获取被引用消息的详情
+        msg_data = await self.api.info.get_msg(quoted_msg_id)
+        if not msg_data:
+            await event.reply("获取被引用消息失败")
+            return
+
+        raw = msg_data.get("raw_message", "（无内容）")
+        # 用 PlainText 直接构造纯文本段，避免 raw_message 中的 CQ 码被解析为实际消息段
+        info = MessageArray()
+        info.add_segment(PlainText(text=f"被转发消息的 raw_message:\n{raw}"))
+        await event.reply(rtf=info)
+
+        # 通过消息 ID 直接转发到同一个群
+        await self.api.send_group_forward_msg_by_id(event.group_id, [quoted_msg_id])

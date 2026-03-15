@@ -4,3 +4,6 @@ main = "main.py"
 entry_class = "ExternalAPIPlugin"
 author = "NcatBot"
 description = "外部 API 集成 — HTTP 请求、配置管理、错误处理"
+
+[pip_dependencies]
+aiohttp = ">=3.8.0"
