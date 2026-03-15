@@ -16,6 +16,7 @@ from ncatbot.utils import get_log
 from .context import get_current_plugin
 from .hook import Hook
 from .builtin_hooks import MessageTypeFilter
+from .command_hook import CommandHook
 
 if TYPE_CHECKING:
     from .dispatcher import HandlerDispatcher
@@ -131,6 +132,92 @@ class Registrar:
     def on_meta(self, priority: int = 0, **metadata: Any) -> Callable:
         """注册元事件 handler"""
         return self.on("meta_event", priority=priority, **metadata)
+
+    # ==================== 命令装饰器 (匹配 + 参数绑定) ====================
+
+    def on_command(
+        self,
+        *names: str,
+        priority: int = 0,
+        ignore_case: bool = False,
+        **metadata: Any,
+    ) -> Callable:
+        """注册命令 handler (群+私聊)
+
+        匹配 message.text，支持注解式参数绑定。
+        """
+
+        def decorator(func: Callable) -> Callable:
+            if not hasattr(func, "__hooks__"):
+                func.__hooks__ = []
+            func.__hooks__.append(CommandHook(*names, ignore_case=ignore_case))
+            return self.on("message", priority=priority, **metadata)(func)
+
+        return decorator
+
+    def on_group_command(
+        self,
+        *names: str,
+        priority: int = 0,
+        ignore_case: bool = False,
+        **metadata: Any,
+    ) -> Callable:
+        """注册群命令 handler
+
+        组合 MessageTypeFilter("group") + CommandHook 匹配 + 参数绑定。
+        """
+
+        def decorator(func: Callable) -> Callable:
+            if not hasattr(func, "__hooks__"):
+                func.__hooks__ = []
+            func.__hooks__.append(MessageTypeFilter("group"))
+            func.__hooks__.append(CommandHook(*names, ignore_case=ignore_case))
+            return self.on("message", priority=priority, **metadata)(func)
+
+        return decorator
+
+    def on_private_command(
+        self,
+        *names: str,
+        priority: int = 0,
+        ignore_case: bool = False,
+        **metadata: Any,
+    ) -> Callable:
+        """注册私聊命令 handler
+
+        组合 MessageTypeFilter("private") + CommandHook 匹配 + 参数绑定。
+        """
+
+        def decorator(func: Callable) -> Callable:
+            if not hasattr(func, "__hooks__"):
+                func.__hooks__ = []
+            func.__hooks__.append(MessageTypeFilter("private"))
+            func.__hooks__.append(CommandHook(*names, ignore_case=ignore_case))
+            return self.on("message", priority=priority, **metadata)(func)
+
+        return decorator
+
+    # ==================== 通知/请求精确类型 ====================
+
+    def on_group_increase(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册群成员增加事件 handler"""
+        return self.on("notice.group_increase", priority=priority, **metadata)
+
+    def on_group_decrease(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册群成员减少事件 handler"""
+        return self.on("notice.group_decrease", priority=priority, **metadata)
+
+    def on_friend_request(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册好友请求 handler"""
+        return self.on("request.friend", priority=priority, **metadata)
+
+    def on_group_request(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册群请求 handler"""
+        return self.on("request.group", priority=priority, **metadata)
+
+    def on_poke(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册戳一戳事件 handler"""
+        return self.on("notice.poke", priority=priority, **metadata)
 
 
 def flush_pending(

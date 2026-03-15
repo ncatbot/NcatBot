@@ -25,10 +25,21 @@ from .builtin_hooks import (
     PostTypeFilter,
     SubTypeFilter,
     SelfFilter,
+    StartsWithHook,
+    KeywordHook,
+    RegexHook,
+    NoticeTypeFilter,
+    RequestTypeFilter,
     group_only,
     private_only,
     non_self,
+    startswith,
+    keyword,
+    regex,
 )
+
+# 命令 Hook
+from .command_hook import CommandHook
 
 # Dispatcher
 from .dispatcher import HandlerDispatcher, HandlerEntry
@@ -47,14 +58,24 @@ __all__ = [
     "HookContext",
     "add_hooks",
     "get_hooks",
-    # 内置 Hook
+    # 内置 Hook (低级过滤)
     "MessageTypeFilter",
     "PostTypeFilter",
     "SubTypeFilter",
     "SelfFilter",
+    "StartsWithHook",
+    "KeywordHook",
+    "RegexHook",
+    "NoticeTypeFilter",
+    "RequestTypeFilter",
     "group_only",
     "private_only",
     "non_self",
+    "startswith",
+    "keyword",
+    "regex",
+    # 命令 Hook (高级匹配 + 参数绑定)
+    "CommandHook",
     # Dispatcher
     "HandlerDispatcher",
     "HandlerEntry",

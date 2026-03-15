@@ -184,6 +184,7 @@ class HandlerDispatcher:
                 event=event,
                 event_type=event_type,
                 handler_entry=entry,
+                api=self._api,
                 services=self._service_manager,
             )
 
