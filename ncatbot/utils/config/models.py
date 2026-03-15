@@ -44,6 +44,8 @@ class PluginConfig(BaseConfig):
     plugin_whitelist: List[str] = Field(default_factory=list)
     plugin_blacklist: List[str] = Field(default_factory=list)
     load_plugin: bool = False
+    auto_install_pip_deps: bool = True
+    """是否允许自动安装插件声明的 pip 依赖（仍会先询问用户确认）。"""
     plugin_configs: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     """全局配置文件中的插件配置覆盖。键为插件名，值为配置字典。"""
 
