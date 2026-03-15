@@ -15,6 +15,10 @@ from abc import ABC, abstractmethod
 from pathlib import Path
 from typing import Optional
 
+if sys.platform == "win32":
+    import ctypes
+    import winreg
+
 from ncatbot.utils import get_log
 from ncatbot.adapter.napcat.constants import LINUX_NAPCAT_DIR, WINDOWS_NAPCAT_DIR
 
@@ -84,37 +88,97 @@ class WindowsOps(PlatformOps):
         return Path(WINDOWS_NAPCAT_DIR)
 
     def is_napcat_running(self, uin: Optional[str] = None) -> bool:
-        return True
+        try:
+            result = subprocess.run(
+                ["tasklist", "/FI", "IMAGENAME eq QQ.exe", "/FO", "CSV", "/NH"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+            )
+            return "QQ.exe" in result.stdout
+        except Exception:
+            return False
 
     def start_napcat(self, uin: str) -> None:
         launcher = self._get_launcher_name()
-        launcher_path = self.napcat_dir / launcher
+        launcher_path = self.napcat_dir.resolve() / launcher
 
         if not launcher_path.exists():
             raise FileNotFoundError(f"找不到启动文件: {launcher_path}")
 
         LOG.info(f"正在启动 QQ, 启动器路径: {launcher_path}")
-        subprocess.Popen(
-            f'"{launcher_path}" {uin}',
-            shell=True,
-            cwd=str(self.napcat_dir),
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+
+        # 通过 ShellExecuteW + runas 进行 UAC 提权启动 launcher.bat
+        # launcher.bat 在独立的管理员进程中运行, NcatBot 退出不影响 NapCat
+        ret = ctypes.windll.shell32.ShellExecuteW(
+            None,  # hwnd
+            "runas",  # lpOperation: 请求管理员权限
+            "cmd.exe",  # lpFile
+            f'/c cd /d "{self.napcat_dir.resolve()}" && "{launcher_path}" {uin}',
+            None,  # lpDirectory
+            1,  # nShowCmd: SW_SHOWNORMAL, 显示 NapCat 运行状态窗口
         )
+        # ShellExecuteW 返回值 > 32 表示成功
+        if ret <= 32:
+            raise RuntimeError(
+                f"UAC 提权启动失败 (错误码={ret}), "
+                f"请以管理员身份运行 NcatBot 或手动执行: {launcher_path} {uin}"
+            )
+
+    # # ==================== 备用: 直接调用模式 (无需管理员) ====================
+    # def _start_napcat_direct(self, uin: str) -> None:
+    #     """直接调用 NapCatWinBootMain.exe, 绕过 launcher.bat 的管理员检查"""
+    #     napcat_dir = self.napcat_dir.resolve()
+    #
+    #     launcher_exe = napcat_dir / "NapCatWinBootMain.exe"
+    #     inject_dll = napcat_dir / "NapCatWinBootHook.dll"
+    #     napcat_mjs = napcat_dir / "napcat.mjs"
+    #     load_js = napcat_dir / "loadNapCat.js"
+    #
+    #     for path in [launcher_exe, inject_dll, napcat_mjs]:
+    #         if not path.exists():
+    #             raise FileNotFoundError(f"找不到 NapCat 文件: {path}")
+    #
+    #     qq_path = self._find_qq_path()
+    #     if not qq_path.exists():
+    #         raise FileNotFoundError(f"找不到 QQ.exe: {qq_path}")
+    #
+    #     napcat_main_posix = napcat_mjs.as_posix()
+    #     load_js.write_text(
+    #         f'(async () => {{await import("file:///{napcat_main_posix}")}})()',
+    #         encoding="utf-8",
+    #     )
+    #
+    #     env = os.environ.copy()
+    #     env["NAPCAT_PATCH_PACKAGE"] = str(napcat_dir / "qqnt.json")
+    #     env["NAPCAT_LOAD_PATH"] = str(load_js)
+    #     env["NAPCAT_INJECT_PATH"] = str(inject_dll)
+    #     env["NAPCAT_LAUNCHER_PATH"] = str(launcher_exe)
+    #     env["NAPCAT_MAIN_PATH"] = str(napcat_mjs)
+    #
+    #     LOG.info(f"正在启动 QQ, 注入器: {launcher_exe}")
+    #     process = subprocess.Popen(
+    #         [str(launcher_exe), str(qq_path), str(inject_dll), str(uin)],
+    #         cwd=str(napcat_dir),
+    #         env=env,
+    #         stdout=subprocess.PIPE,
+    #         stderr=subprocess.PIPE,
+    #     )
+    #
+    #     try:
+    #         process.wait(timeout=3)
+    #         stdout = process.stdout.read().decode(errors="ignore").strip()
+    #         stderr = process.stderr.read().decode(errors="ignore").strip()
+    #         if process.returncode != 0:
+    #             detail = stderr or stdout or "无输出"
+    #             raise RuntimeError(
+    #                 f"NapCat 启动器异常退出 (code={process.returncode}): {detail}"
+    #             )
+    #     except subprocess.TimeoutExpired:
+    #         LOG.debug("NapCat 启动器进程运行中")
 
     def stop_napcat(self) -> None:
-        try:
-            subprocess.run(
-                ["taskkill", "/F", "/IM", "QQ.exe"],
-                check=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
-            )
-            LOG.info("已成功停止 QQ.exe 进程")
-        except subprocess.CalledProcessError as e:
-            stderr = e.stderr.decode(errors="ignore") if e.stderr else ""
-            LOG.error(f"停止 NapCat 服务失败: {stderr}")
-            raise RuntimeError(f"无法停止 QQ.exe 进程: {stderr}")
+        LOG.warning("Windows 下不支持按进程名停止 NapCat (会误杀普通 QQ 客户端)")
 
     def _get_launcher_name(self) -> str:
         platform_info = platform.platform()
@@ -142,6 +206,19 @@ class WindowsOps(PlatformOps):
 
         LOG.info("当前操作系统: Windows 10")
         return "launcher-win10.bat"
+
+    @staticmethod
+    def _find_qq_path() -> Path:
+        """从注册表查找 QQ 安装路径"""
+        reg_key = r"SOFTWARE\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\QQ"
+        try:
+            with winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, reg_key) as key:
+                uninstall_str, _ = winreg.QueryValueEx(key, "UninstallString")
+                return Path(uninstall_str).parent / "QQ.exe"
+        except OSError:
+            raise FileNotFoundError(
+                "无法从注册表找到 QQ 安装路径, 请确认 QQ 已正确安装"
+            )
 
 
 class LinuxOps(PlatformOps):

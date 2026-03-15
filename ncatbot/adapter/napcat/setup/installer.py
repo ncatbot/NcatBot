@@ -70,6 +70,21 @@ class NapCatInstaller:
         self._platform = platform_ops
 
     @staticmethod
+    def _get_version_from_redirect() -> Optional[str]:
+        """通过 releases/latest 重定向获取最新版本号（不依赖 API 限额）"""
+        url = "https://github.com/NapNeko/NapCatQQ/releases/latest"
+        try:
+            resp = requests.head(url, allow_redirects=True, timeout=10)
+            # 最终 URL 形如: https://github.com/NapNeko/NapCatQQ/releases/tag/vX.X.X
+            version = resp.url.rsplit("/", 1)[-1].lstrip("v")
+            if version:
+                LOG.debug(f"通过重定向获取版本号成功: {version}")
+                return version
+        except Exception as e:
+            LOG.error(f"备用方式获取版本信息也失败: {e}")
+        return None
+
+    @staticmethod
     def get_latest_version() -> Optional[str]:
         """从 GitHub 获取最新版本号"""
         api_url = "https://api.github.com/repos/NapNeko/NapCatQQ/tags"
@@ -83,8 +98,9 @@ class NapCatInstaller:
                     return version
             LOG.warning("获取最新版本信息失败")
         except Exception as e:
-            LOG.error(f"获取版本信息时发生错误: {e}")
-        return None
+            LOG.warning(f"通过 API 获取版本信息失败: {e}, 尝试备用方式...")
+
+        return NapCatInstaller._get_version_from_redirect()
 
     def ensure_installed(self) -> bool:
         """确保 NapCat 已安装并为最新版本"""

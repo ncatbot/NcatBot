@@ -60,6 +60,9 @@ testpaths = ["tests"]
 python_classes = ["Test*"]
 # 忽略 examples 目录
 addopts = "--ignore=examples --cov=ncatbot --cov-report=term-missing --cov-report=html"
+markers = [
+    "napcat: 需要真实 NapCat WebSocket 连接的 E2E 测试",
+]
 
 [tool.coverage.run]
 source = ["ncatbot"]
@@ -100,7 +103,7 @@ skip_covered = false
 directory = "htmlcov"
 
 [tool.codespell]
-ignore-words-list = "ans"
+ignore-words-list = "ans,fo"
 
 [tool.ruff.lint.per-file-ignores]
 # 这些文件使用 star imports 来导出公共 API
