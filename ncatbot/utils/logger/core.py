@@ -82,7 +82,7 @@ class BoundLogger:
         extra = kwargs.pop("extra", {})
         extra.update(self._context)
         kwargs["extra"] = extra
-        kwargs.setdefault("stacklevel", 2)
+        kwargs.setdefault("stacklevel", 3)
         self._logger.log(level, msg, *args, **kwargs)
 
 

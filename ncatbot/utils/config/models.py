@@ -62,7 +62,7 @@ class NapCatConfig(BaseConfig):
     enable_webui: bool = True
     enable_update_check: bool = False
     stop_napcat: bool = False
-    remote_mode: bool = False
+    skip_setup: bool = False
 
     @field_validator("ws_uri")
     @classmethod
