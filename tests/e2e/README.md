@@ -60,3 +60,52 @@ $env:NAPCAT_TEST_USER = "654321"
 # 运行 NapCat E2E 测试 (需要 NapCat 服务已启动)
 python tests/e2e/napcat/run.py
 ```
+
+## 插件 E2E 人工验收 (`plugin/`)
+
+逐个加载/卸载 `examples/` 中的示例插件，由人类测试者手动验证功能并判定结果。
+
+### 工作流程
+
+1. 启动 Bot 并连接 NapCat
+2. 按顺序加载每个 example 插件
+3. 显示插件功能说明和可测试命令
+4. 测试者在群/私聊中手动验证
+5. 回到终端输入判定: **Y**(通过) / **N**(失败) / **S**(跳过) / **Q**(退出)
+6. 卸载当前插件，加载下一个
+7. 输出汇总报告
+
+### 配置
+
+| 变量 | 说明 | 默认值 |
+|------|------|--------|
+| `NAPCAT_TEST_GROUP` | 测试群号 (必填) | — |
+
+### 覆盖插件
+
+| # | 插件 | 验证要点 |
+|---|------|---------|
+| 01 | hello_world | 基础生命周期、命令回复 |
+| 02 | event_handling | 装饰器路由、事件流、wait_event |
+| 03 | message_types | MessageArray、图文混排、合并转发 |
+| 04 | config_and_data | ConfigMixin、DataMixin、持久化 |
+| 05 | bot_api | 消息发送、群管理、信息查询 |
+| 06 | hook_and_filter | BEFORE/AFTER/ON_ERROR Hook |
+| 07 | rbac | 角色权限、权限检查 |
+| 08 | scheduled_tasks | 定时任务、条件执行 |
+| 09 | notice_and_request | 入群欢迎、戳一戳、好友请求 |
+| 10 | multi_step_dialog | 多步对话、超时、取消 |
+| 11 | group_manager | 群管理综合 (踢/禁言/欢迎) |
+| 12 | qa_bot | 问答匹配、数据持久化 |
+| 13 | scheduled_reporter | 活跃度统计、合并转发报告 |
+| 14 | external_api | HTTP 请求、配置管理 |
+| 15 | full_featured_bot | 全功能综合验证 |
+
+### 运行方式
+
+```powershell
+$env:NAPCAT_TEST_GROUP = "123456"
+
+# 运行插件 E2E 人工验收 (需要 NapCat 服务已启动)
+python tests/e2e/plugin/run.py
+```
