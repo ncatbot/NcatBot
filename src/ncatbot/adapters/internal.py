@@ -4,6 +4,7 @@ from importlib.metadata import PackageNotFoundError, version
 from types import TracebackType
 from typing import Self
 
+from ..events import FrameworkEvent
 from .base import BaseAdapter
 
 
@@ -30,6 +31,10 @@ class InternalEventAdapter(BaseAdapter):
     @property
     def adapter_version(self) -> str:
         return self._adapter_version
+
+    @property
+    def base_event_type(self) -> type[FrameworkEvent]:
+        return FrameworkEvent
 
     async def __aenter__(self) -> Self:
         return self

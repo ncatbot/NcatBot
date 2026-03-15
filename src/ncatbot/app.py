@@ -431,7 +431,7 @@ class NcatBotApp:
                 f"Adapter {adapter.adapter_name} 已退出，"
                 f"{self._adapter_restart_delay} 秒后重试"
             )
-            await asyncio.sleep(self._adapter_restart_delay)
+            await asyncio.sleep(self._adapter_restart_delay, result=None)
 
     async def start(self):
         if self._running:
@@ -452,7 +452,7 @@ class NcatBotApp:
         finally:
             if self._running:
                 self._emit_framework_event(AppStopping())
-                await asyncio.sleep(0)
+                await asyncio.sleep(0, result=None)
             self._running = False
             self._stop_event = None
             self._loop = None

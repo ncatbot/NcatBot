@@ -24,6 +24,11 @@ class BaseAdapter(ABC):
     def adapter_version(self) -> str:
         pass
 
+    @property
+    @abstractmethod
+    def base_event_type(self) -> type:
+        pass
+
     @abstractmethod
     async def __aenter__(self) -> Self:
         pass
@@ -40,3 +45,4 @@ class BaseAdapter(ABC):
     @abstractmethod
     def __aiter__(self) -> AsyncIterator[object]:
         pass
+
