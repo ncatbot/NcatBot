@@ -3,7 +3,6 @@ from .message import GroupMessageEvent, MessageEvent, PrivateMessageEvent
 from .notice import GroupIncreaseEvent, NoticeEvent
 from .request import FriendRequestEvent, GroupRequestEvent, RequestEvent
 from .meta import MetaEvent
-from .parser import EventParser
 from .factory import create_entity
 
 __all__ = [
@@ -23,6 +22,5 @@ __all__ = [
     # meta
     "MetaEvent",
     # infra
-    "EventParser",
     "create_entity",
 ]
