@@ -1,13 +1,17 @@
 import sys
 
 import napcat
-from napcat import NapCatClient, __version__
+from napcat import NapCatClient, NapCatEvent, __version__
 
 from .base import BaseAdapter
 from .internal import InternalEventAdapter
 
 
 class NapCatAdapter(NapCatClient, BaseAdapter):
+    @property
+    def base_event_type(self) -> type[NapCatEvent]:
+        return NapCatEvent
+
     @property
     def adapter_name(self) -> str:
         return "Ncatbot.NapCatAdapter"
@@ -19,6 +23,7 @@ class NapCatAdapter(NapCatClient, BaseAdapter):
     @property
     def platform_name(self) -> str:
         return "qq"
+
 
 sys.modules[f"{__name__}.napcat"] = napcat
 

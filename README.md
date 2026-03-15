@@ -130,6 +130,7 @@ adapter 是平台接入层，也是这个框架最核心的扩展点。一个 ad
 - `platform_name`
 - `adapter_name`
 - `adapter_version`
+- `base_event_type`
 - `async with` 生命周期
 - `__aiter__()` 异步事件流
 
@@ -244,6 +245,10 @@ from typing import Self
 from ncatbot.adapters import BaseAdapter
 
 
+class MyEvent:
+    pass
+
+
 class MyAdapter(BaseAdapter):
     @property
     def platform_name(self) -> str:
@@ -256,6 +261,10 @@ class MyAdapter(BaseAdapter):
     @property
     def adapter_version(self) -> str:
         return "0.1.0"
+
+    @property
+    def base_event_type(self) -> type[MyEvent]:
+        return MyEvent
 
     async def __aenter__(self) -> Self:
         return self

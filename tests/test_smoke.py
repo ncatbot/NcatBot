@@ -15,8 +15,8 @@ from ncatbot.events import (
     EventReceived,
     HandlerCompleted,
     HandlerFailed,
-    HandlersResolved,
     HandlerScheduled,
+    HandlersResolved,
     WaitCancelled,
     WaitMatched,
     WaitRegistered,
@@ -32,6 +32,15 @@ class SmokeEvent:
 class OtherSmokeEvent:
     def __init__(self, value: str):
         self.value = value
+
+
+class BaseInheritedSmokeEvent:
+    def __init__(self, value: str):
+        self.value = value
+
+
+class DerivedInheritedSmokeEvent(BaseInheritedSmokeEvent):
+    pass
 
 
 class FakeAdapter(BaseAdapter):
@@ -57,6 +66,10 @@ class FakeAdapter(BaseAdapter):
     @property
     def adapter_version(self) -> str:
         return "0.0"
+
+    @property
+    def base_event_type(self) -> type[object]:
+        return object
 
     async def __aenter__(self) -> "FakeAdapter":
         if self._entered_event is not None:
@@ -97,6 +110,10 @@ class FlakyAdapter(BaseAdapter):
     def adapter_version(self) -> str:
         return "0.0"
 
+    @property
+    def base_event_type(self) -> type[SmokeEvent]:
+        return SmokeEvent
+
     async def __aenter__(self) -> "FlakyAdapter":
         return self
 
@@ -131,6 +148,10 @@ class IdleAdapter(BaseAdapter):
     def adapter_version(self) -> str:
         return "0.0"
 
+    @property
+    def base_event_type(self) -> type[object]:
+        return object
+
     async def __aenter__(self) -> "IdleAdapter":
         return self
 
@@ -153,10 +174,12 @@ class IdleAdapter(BaseAdapter):
 
 class SmokeTests(unittest.IsolatedAsyncioTestCase):
     def test_public_exports_are_available(self) -> None:
+        adapter = NapCatAdapter()
         self.assertTrue(issubclass(NapCatAdapter, BaseAdapter))
         self.assertTrue(issubclass(InternalEventAdapter, BaseAdapter))
         self.assertEqual(NapCatAdapter.platform_name.fget(None), "qq")
         self.assertIsNotNone(getattr(napcat, "NapCatClient", None))
+        self.assertIs(adapter.base_event_type, napcat.NapCatEvent)
         self.assertTrue(issubclass(AppStarting, AppEvent))
 
     def test_internal_adapter_is_registered_by_default(self) -> None:
@@ -370,6 +393,28 @@ class SmokeTests(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual(seen, ["boot", "hot-add"])
 
+    async def test_deduplicates_union_handler_for_inherited_event(self) -> None:
+        app = NcatBotApp()
+        calls = 0
+        handled = asyncio.Event()
+
+        @app.on_event
+        async def handle(
+            event: BaseInheritedSmokeEvent | DerivedInheritedSmokeEvent,
+        ) -> None:
+            nonlocal calls
+            calls += 1
+            handled.set()
+            app.stop()
+
+        app.add_adapter(FakeAdapter([DerivedInheritedSmokeEvent("payload")], delay=0.01))
+
+        task = asyncio.create_task(app.start())
+        await asyncio.wait_for(handled.wait(), timeout=1)
+        await asyncio.wait_for(task, timeout=1)
+
+        self.assertEqual(calls, 1)
+
     async def test_emits_event_and_handler_lifecycle_events(self) -> None:
         app = NcatBotApp()
         received: EventReceived | None = None
@@ -528,3 +573,29 @@ class SmokeTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(seen_failed.adapter_name, adapter.adapter_name)
         self.assertEqual(seen_failed.attempt, 1)
         self.assertEqual(seen_restart.delay, 0.01)
+
+    async def test_waits_for_running_handlers_during_shutdown(self) -> None:
+        app = NcatBotApp()
+        handler_completed = False
+        handler_cancelled = False
+
+        @app.on_event
+        async def handle_slow(event: SmokeEvent) -> None:
+            nonlocal handler_completed, handler_cancelled
+            try:
+                await asyncio.sleep(0.05)
+            except asyncio.CancelledError:
+                handler_cancelled = True
+                raise
+            handler_completed = True
+
+        @app.on_event
+        async def stop_after_first_event(event: SmokeEvent) -> None:
+            app.stop()
+
+        app.add_adapter(FakeAdapter([SmokeEvent("payload")], delay=0.01))
+
+        await asyncio.wait_for(app.start(), timeout=1)
+
+        self.assertTrue(handler_completed)
+        self.assertFalse(handler_cancelled)
