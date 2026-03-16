@@ -72,3 +72,11 @@
 | R-04 | `on_private_message()` | 自动附加 `MessageTypeFilter("private")` |
 | R-05 | `fork()` | 创建独立 Registrar 实例 |
 | R-06 | `clear_pending()` | 清理残留的 pending handler |
+
+### Registrar 堆叠装饰器去重 (`test_duplicate_handler.py`)
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| R-07 | 堆叠装饰器 pending 去重 | 同一函数堆叠装饰器后 pending 只收集 1 次 |
+| R-08 | 堆叠装饰器 flush 去重 | flush 后同一函数只注册 1 个 entry |
+| R-09 | 堆叠装饰器端到端分发去重 | 注入一条群消息 handler 只执行 1 次 |
