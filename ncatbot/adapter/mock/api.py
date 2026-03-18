@@ -1,5 +1,5 @@
 """
-MockBotAPI — IBotAPI 的内存实现
+MockBotAPI — IQQAPIClient 的内存实现
 
 记录所有 API 调用，返回可配置的模拟响应，不进行任何网络通信。
 """
@@ -9,7 +9,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Union
 
-from ncatbot.api import IBotAPI
+from ncatbot.api.qq import IQQAPIClient
 from ncatbot.types.napcat import (
     BotStatus,
     DownloadResult,
@@ -44,8 +44,8 @@ class APICall:
     kwargs: dict
 
 
-class MockBotAPI(IBotAPI):
-    """IBotAPI 的完整 Mock 实现
+class MockBotAPI(IQQAPIClient):
+    """IQQAPIClient 的完整 Mock 实现
 
     使用方式::
 
@@ -99,7 +99,14 @@ class MockBotAPI(IBotAPI):
     def reset(self) -> None:
         self._calls.clear()
 
-    # ---- IBotAPI 实现 ----
+    @property
+    def platform(self) -> str:
+        return "qq"
+
+    async def call(self, action: str, params: dict | None = None) -> Any:
+        return self._record(action, **(params or {}))
+
+    # ---- IQQAPIClient 实现 ----
 
     async def send_private_msg(
         self, user_id: Union[str, int], message: list, **kwargs

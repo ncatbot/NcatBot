@@ -95,16 +95,27 @@ async def diagnose():
     # 加载配置
     try:
         from ncatbot.utils import ncatbot_config
+        from ncatbot.utils.config.models import NapCatConfig
 
-        ws_uri = ncatbot_config.napcat.ws_uri
-        ws_token = ncatbot_config.napcat.ws_token or ""
-        webui_token = ncatbot_config.napcat.webui_token
-        webui_uri = getattr(ncatbot_config.napcat, "webui_uri", None)
+        # 从 adapters 列表中提取 napcat 适配器配置
+        nc = None
+        for entry in ncatbot_config.config.adapters:
+            if entry.type == "napcat":
+                nc = NapCatConfig.model_validate(entry.config)
+                break
+        if nc is None:
+            print("[ERROR] 配置中未找到 napcat 适配器")
+            return
+
+        ws_uri = nc.ws_uri
+        ws_token = nc.ws_token or ""
+        webui_token = nc.webui_token
+        webui_uri = getattr(nc, "webui_uri", None)
         if webui_uri:
             webui_base = webui_uri
         else:
-            webui_host = ncatbot_config.napcat.webui_host
-            webui_port = ncatbot_config.napcat.webui_port
+            webui_host = nc.webui_host
+            webui_port = nc.webui_port
             webui_base = f"http://{webui_host}:{webui_port}"
         bot_uin = str(ncatbot_config.bot_uin)
     except Exception as e:

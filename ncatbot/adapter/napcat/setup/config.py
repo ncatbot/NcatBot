@@ -7,27 +7,47 @@ NapCat 配置管理
 import json
 import shutil
 from pathlib import Path
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 from urllib.parse import urlparse
 
-from ncatbot.utils import get_log, ncatbot_config, confirm
+from ncatbot.utils import get_log, confirm
 from .default_webui_config import config as default_webui_config
 from .platform import PlatformOps
 
-LOG = get_log("NapCatConfig")
+if TYPE_CHECKING:
+    from ncatbot.utils.config.models import NapCatConfig
+
+LOG = get_log("NapCatConfigManager")
 
 
-class NapCatConfig:
-    """NapCat 配置管理器"""
+class NapCatConfigManager:
+    """NapCat 配置管理器
 
-    def __init__(self, platform_ops: Optional[PlatformOps] = None):
+    Parameters
+    ----------
+    platform_ops:
+        平台操作实例。
+    napcat_config:
+        NapCatConfig 实例，由 NapCatAdapter 注入。
+    bot_uin:
+        目标 QQ 号。
+    """
+
+    def __init__(
+        self,
+        platform_ops: Optional[PlatformOps] = None,
+        napcat_config: Optional["NapCatConfig"] = None,
+        bot_uin: str = "",
+    ):
         self._platform = platform_ops or PlatformOps.create()
         self._napcat_dir = self._platform.napcat_dir
         self._config_dir = self._platform.config_dir
+        self._napcat_config = napcat_config
+        self._bot_uin = bot_uin
 
     @property
     def uin(self) -> str:
-        return str(ncatbot_config.bot_uin)
+        return self._bot_uin
 
     # ==================== 路径属性 ====================
 
@@ -58,13 +78,14 @@ class NapCatConfig:
     # ==================== OneBot11 配置 ====================
 
     def _build_expected_ws_server(self) -> dict:
-        ws_port = urlparse(ncatbot_config.napcat.ws_uri).port or 3001
-        ws_token = ncatbot_config.napcat.ws_token
+        nc = self._napcat_config
+        ws_port = urlparse(nc.ws_uri).port or 3001
+        ws_token = nc.ws_token
 
         return {
             "name": "WsServer",
             "enable": True,
-            "host": ncatbot_config.napcat.ws_listen_ip,
+            "host": nc.ws_listen_ip,
             "port": int(ws_port),
             "messagePostFormat": "array",
             "reportSelfMessage": False,
@@ -117,7 +138,7 @@ class NapCatConfig:
     # ==================== WebUI 配置 ====================
 
     def configure_webui(self) -> None:
-        nc = ncatbot_config.napcat
+        nc = self._napcat_config
 
         if not self.webui_config_path.exists():
             LOG.warning("第一次运行 WebUI, 将创建配置文件")

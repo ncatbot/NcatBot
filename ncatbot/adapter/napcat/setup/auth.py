@@ -8,12 +8,15 @@ import hashlib
 import time
 import traceback
 from enum import IntEnum
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import qrcode
 
-from ncatbot.utils import get_log, ncatbot_config, post_json
+from ncatbot.utils import get_log, post_json
 from ..constants import NAPCAT_WEBUI_SALT
+
+if TYPE_CHECKING:
+    from ncatbot.utils.config.models import NapCatConfig
 
 LOG = get_log("AuthHandler")
 
@@ -46,18 +49,29 @@ class RateLimitError(AuthError):
 
 
 class AuthHandler:
-    """登录认证处理器"""
+    """登录认证处理器
+
+    Parameters
+    ----------
+    napcat_config:
+        NapCatConfig 实例。
+    bot_uin:
+        目标 QQ 号。
+    """
 
     WEBUI_CONNECT_TIMEOUT = 90
     QRCODE_LOGIN_TIMEOUT = 60
     QRCODE_FETCH_TIMEOUT = 15
     WEBUI_RETRY_INTERVAL = 2
 
-    def __init__(self):
-        self._base_uri = (
-            f"http://{ncatbot_config.napcat.webui_host}:"
-            f"{ncatbot_config.napcat.webui_port}"
-        )
+    def __init__(
+        self,
+        napcat_config: "NapCatConfig",
+        bot_uin: str = "",
+    ):
+        self._napcat_config = napcat_config
+        self._bot_uin = bot_uin
+        self._base_uri = f"http://{napcat_config.webui_host}:{napcat_config.webui_port}"
         self._header: Optional[dict] = None
         self._connect_webui()
 
@@ -97,7 +111,7 @@ class AuthHandler:
 
     def _try_auth(self) -> Optional[str]:
         hashed_token = hashlib.sha256(
-            f"{ncatbot_config.napcat.webui_token}.{NAPCAT_WEBUI_SALT}".encode()
+            f"{self._napcat_config.webui_token}.{NAPCAT_WEBUI_SALT}".encode()
         ).hexdigest()
 
         try:
@@ -171,7 +185,7 @@ class AuthHandler:
         if not info:
             return LoginStatus.ABNORMAL
 
-        target_uin = str(ncatbot_config.bot_uin)
+        target_uin = self._bot_uin
         current_uin = str(info.get("uin", ""))
         is_online = info.get("online", False)
 
@@ -194,7 +208,7 @@ class AuthHandler:
             return []
 
     def quick_login(self) -> bool:
-        uin = str(ncatbot_config.bot_uin)
+        uin = self._bot_uin
         quick_list = self.get_quick_login_list()
         LOG.info(f"快速登录列表: {quick_list}")
 
@@ -240,7 +254,6 @@ class AuthHandler:
 
     @staticmethod
     def show_qrcode(url: str) -> None:
-        LOG.info(f"二维码对应的 QQ 号: {ncatbot_config.bot_uin}")
         qr = qrcode.QRCode()
         qr.add_data(url)
         qr.print_ascii(invert=True)

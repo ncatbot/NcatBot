@@ -11,7 +11,7 @@ import asyncio
 from typing import Optional
 
 from ..base import BaseAdapter
-from ncatbot.api import IBotAPI
+from ncatbot.api import IAPIClient
 from ncatbot.types import BaseEventData
 
 from .api import MockBotAPI
@@ -38,8 +38,11 @@ class MockAdapter(BaseAdapter):
     name = "mock"
     description = "Mock 适配器（测试用）"
     supported_protocols = ["mock"]
+    platform = "mock"
 
-    def __init__(self) -> None:
+    def __init__(self, platform: str = "mock", **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.platform = platform
         self._mock_api = MockBotAPI()
         self._connected = False
         self._stop_event: Optional[asyncio.Event] = None
@@ -68,7 +71,7 @@ class MockAdapter(BaseAdapter):
             raise RuntimeError("MockAdapter 尚未 connect")
         await self._stop_event.wait()
 
-    def get_api(self) -> IBotAPI:
+    def get_api(self) -> IAPIClient:
         return self._mock_api
 
     @property

@@ -1,5 +1,5 @@
 """
-NapCat IBotAPI 实现
+NapCat IQQAPIClient 实现
 
 组合所有 Mixin 并提供 _call / _call_data 入口。
 """
@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import Any, Optional, Union, TYPE_CHECKING
 
-from ncatbot.api import IBotAPI
+from ncatbot.api.qq import IQQAPIClient
 from ncatbot.api.errors import raise_for_retcode
 from ncatbot.types.napcat import SendMessageResult
 from ncatbot.utils import get_log
@@ -31,9 +31,13 @@ class NapCatBotAPI(
     AccountAPIMixin,
     QueryAPIMixin,
     FileAPIMixin,
-    IBotAPI,
+    IQQAPIClient,
 ):
-    """NapCat 平台的 IBotAPI 实现"""
+    """NapCat 平台的 IQQAPIClient 实现"""
+
+    @property
+    def platform(self) -> str:
+        return "qq"
 
     def __init__(self, protocol: "OB11Protocol"):
         self._protocol = protocol
@@ -41,13 +45,15 @@ class NapCatBotAPI(
 
         self._preupload = PreUploadService(protocol)
 
-    async def _call(self, action: str, params: Optional[dict] = None) -> dict:
+    async def call(self, action: str, params: Optional[dict] = None) -> dict:
         resp = await self._protocol.call(action, params)
         raise_for_retcode(resp, action=action)
         return resp
 
+    _call = call  # alias for mixin compatibility
+
     async def _call_data(self, action: str, params: Optional[dict] = None) -> Any:
-        resp = await self._call(action, params)
+        resp = await self.call(action, params)
         return resp.get("data")
 
     async def _preupload_message(self, message: list) -> list:

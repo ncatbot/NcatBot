@@ -188,22 +188,28 @@ def main():
     args = parser.parse_args()
 
     if args.token is None:
-        # 尝试从 dev/config.yaml 读取
+        # 尝试从 config.yaml 读取
         try:
             from ncatbot.utils import ncatbot_config
+            from ncatbot.utils.config.models import NapCatConfig as _NC
 
-            token = ncatbot_config.napcat.webui_token
+            nc = None
+            for entry in ncatbot_config.config.adapters:
+                if entry.type == "napcat":
+                    nc = _NC.model_validate(entry.config)
+                    break
+            if nc is None:
+                raise RuntimeError("未找到 napcat 适配器配置")
+
+            token = nc.webui_token
             host = args.host
             port = args.port
-            if hasattr(ncatbot_config.napcat, "webui_uri"):
-                uri = ncatbot_config.napcat.webui_uri
-                if uri:
-                    # 从 uri 解析
-                    from urllib.parse import urlparse
+            if nc.webui_uri:
+                from urllib.parse import urlparse
 
-                    parsed = urlparse(uri)
-                    host = parsed.hostname or host
-                    port = parsed.port or port
+                parsed = urlparse(nc.webui_uri)
+                host = parsed.hostname or host
+                port = parsed.port or port
         except Exception:
             print("[WARN] 无法从 ncatbot_config 读取配置, 请通过 --token 传入")
             token = "napcat_webui"

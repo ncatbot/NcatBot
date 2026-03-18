@@ -14,7 +14,7 @@ from typing import Optional
 import requests
 from tqdm import tqdm
 
-from ncatbot.utils import gen_url_with_proxy, get_json, get_log, ncatbot_config
+from ncatbot.utils import gen_url_with_proxy, get_json, get_log
 from ..constants import INSTALL_SCRIPT_URL, WINDOWS_NAPCAT_DIR
 from .platform import PlatformOps, LinuxOps
 
@@ -66,8 +66,9 @@ def unzip_file(file_name: str, extract_path: str, remove: bool = False) -> None:
 class NapCatInstaller:
     """NapCat 安装/更新管理"""
 
-    def __init__(self, platform_ops: PlatformOps):
+    def __init__(self, platform_ops: PlatformOps, napcat_config=None):
         self._platform = platform_ops
+        self._napcat_config = napcat_config
 
     @staticmethod
     def _get_version_from_redirect() -> Optional[str]:
@@ -107,7 +108,7 @@ class NapCatInstaller:
         if not self._platform.is_napcat_installed():
             return self._install("install")
 
-        if not ncatbot_config.napcat.enable_update_check:
+        if not self._napcat_config or not self._napcat_config.enable_update_check:
             return True
 
         current = self._platform.get_installed_version()

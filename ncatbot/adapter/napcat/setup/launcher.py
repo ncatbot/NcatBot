@@ -11,26 +11,47 @@ NapCat 启动编排
 import asyncio
 import json
 import time
-from typing import Optional
+from typing import Optional, TYPE_CHECKING
 
 import websockets
 
-from ncatbot.utils import NcatBotError, get_log, ncatbot_config  # type: ignore[attr-defined]
+from ncatbot.utils import NcatBotError, get_log  # type: ignore[attr-defined]
 from .auth import AuthHandler
-from .config import NapCatConfig
+from .config import NapCatConfigManager
 from .installer import NapCatInstaller
 from .platform import PlatformOps, UnsupportedPlatformError
+
+if TYPE_CHECKING:
+    from ncatbot.utils.config.models import NapCatConfig
 
 LOG = get_log("NapCatLauncher")
 
 
 class NapCatLauncher:
-    """NapCat 启动编排"""
+    """NapCat 启动编排
 
-    def __init__(self):
+    Parameters
+    ----------
+    napcat_config:
+        NapCatConfig 实例，由 NapCatAdapter 注入。
+    bot_uin:
+        目标 QQ 号。
+    websocket_timeout:
+        WebSocket 超时秒数。
+    """
+
+    def __init__(
+        self,
+        napcat_config: "NapCatConfig",
+        bot_uin: str = "",
+        websocket_timeout: int = 15,
+    ):
+        self._napcat_config = napcat_config
+        self._bot_uin = bot_uin
+        self._websocket_timeout = websocket_timeout
         self._platform: Optional[PlatformOps] = None
         self._installer: Optional[NapCatInstaller] = None
-        self._config: Optional[NapCatConfig] = None
+        self._config: Optional[NapCatConfigManager] = None
 
     @property
     def platform(self) -> PlatformOps:
@@ -40,16 +61,22 @@ class NapCatLauncher:
 
     def _ensure_components(self) -> None:
         if self._installer is None:
-            self._installer = NapCatInstaller(self.platform)
+            self._installer = NapCatInstaller(
+                self.platform,
+                napcat_config=self._napcat_config,
+            )
         if self._config is None:
-            self._config = NapCatConfig(self.platform)
+            self._config = NapCatConfigManager(
+                self.platform,
+                napcat_config=self._napcat_config,
+                bot_uin=self._bot_uin,
+            )
 
     # ==================== WebSocket 连接测试 ====================
 
-    @staticmethod
-    async def _test_websocket(log_failure: bool = False) -> Optional[int]:
+    async def _test_websocket(self, log_failure: bool = False) -> Optional[int]:
         """测试 WS 连接, 成功返回 self_id (登录的 QQ 号), 失败返回 None。"""
-        uri = ncatbot_config.get_uri_with_token()
+        uri = self._napcat_config.get_uri_with_token()
         try:
             async with websockets.connect(uri, open_timeout=5) as ws:
                 data = json.loads(await ws.recv())
@@ -93,7 +120,7 @@ class NapCatLauncher:
         LOG.info("Connect 模式, 正在连接 NapCat 服务...")
         if not await self.is_service_ok():
             raise NcatBotError(
-                f"无法连接 NapCat WebSocket ({ncatbot_config.napcat.ws_uri}), "
+                f"无法连接 NapCat WebSocket ({self._napcat_config.ws_uri}), "
                 f"请检查 NapCat 服务是否已启动"
             )
         LOG.info("NapCat 服务连接成功")
@@ -106,7 +133,7 @@ class NapCatLauncher:
 
         # 环境已就绪, 跳过准备
         if await self.is_service_ok():
-            LOG.info(f"NapCat 服务 {ncatbot_config.napcat.ws_uri} 在线, 跳过环境准备")
+            LOG.info(f"NapCat 服务 {self._napcat_config.ws_uri} 在线, 跳过环境准备")
             await self._verify_account()
             return
 
@@ -124,7 +151,7 @@ class NapCatLauncher:
             raise NcatBotError("安装或更新 NapCat 失败")
 
         self._config.configure_all()
-        self.platform.start_napcat(str(ncatbot_config.bot_uin))
+        self.platform.start_napcat(self._bot_uin)
 
         await self._wait_and_login()
 
@@ -134,7 +161,7 @@ class NapCatLauncher:
         if self_id is None:
             raise NcatBotError("WebSocket 连接异常, 无法获取登录账号信息")
 
-        target_uin = int(ncatbot_config.bot_uin)
+        target_uin = int(self._bot_uin)
         if self_id != target_uin:
             raise NcatBotError(
                 f"NapCat 当前登录账号 {self_id} 与目标账号 {target_uin} 不匹配"
@@ -148,9 +175,9 @@ class NapCatLauncher:
             LOG.info("NapCat 已就绪 (缓存登录)")
             return
 
-        if not ncatbot_config.napcat.enable_webui:
+        if not self._napcat_config.enable_webui:
             # WebUI 禁用, 只能等待 NapCat 自行完成登录
-            timeout = ncatbot_config.websocket_timeout
+            timeout = self._websocket_timeout
             if not await self.is_service_ok(timeout):
                 raise NcatBotError(
                     f"NapCat 未能在 {timeout} 秒内完成登录, WebSocket 连接失败"
@@ -159,7 +186,10 @@ class NapCatLauncher:
 
         # 通过 WebUI 引导登录
         LOG.info("NapCat 未自动登录, 通过 WebUI 引导...")
-        AuthHandler().login()
+        AuthHandler(
+            napcat_config=self._napcat_config,
+            bot_uin=self._bot_uin,
+        ).login()
         await self.wait_for_service()
         LOG.info("NapCat 登录成功")
 
@@ -167,7 +197,7 @@ class NapCatLauncher:
 
     async def launch(self) -> None:
         """启动 NapCat 服务（根据配置选择模式）"""
-        if ncatbot_config.napcat.skip_setup:
+        if self._napcat_config.skip_setup:
             await self._connect_only()
         else:
             await self._setup_and_connect()

@@ -8,8 +8,8 @@ from __future__ import annotations
 
 from typing import Any, Dict, Optional, Tuple, Type
 
-from ncatbot.types import (
-    BaseEventData,
+from ncatbot.types import BaseEventData
+from ncatbot.types.qq import (
     FriendRequestEventData,
     GroupMessageEventData,
     GroupRequestEventData,
@@ -130,6 +130,7 @@ class NapCatEventParser:
     def parse(self, raw_data: dict) -> Optional[BaseEventData]:
         if "post_type" not in raw_data:
             return None
+        raw_data.setdefault("platform", "qq")
         try:
             return EventParser.parse(raw_data)
         except ValueError as e:
