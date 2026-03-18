@@ -14,11 +14,21 @@ from .session import BiliPrivateMessageEvent, BiliPrivateMessageWithdrawEvent
 from .comment import BiliCommentEvent
 from .factory import create_bili_entity
 
-# 自动注册 Bilibili 平台工厂到通用工厂
-from ncatbot.event.common.factory import register_platform_factory as _register
+# 自动注册 Bilibili 平台工厂和 secondary keys 到通用工厂
+from ncatbot.event.common.factory import (
+    register_platform_factory as _register,
+    register_platform_secondary_keys as _register_keys,
+)
 
 _register("bilibili", create_bili_entity)
-del _register
+_register_keys(
+    "bilibili",
+    {
+        "live": "live_event_type",
+        "comment": "comment_event_type",
+    },
+)
+del _register, _register_keys
 
 __all__ = [
     # live

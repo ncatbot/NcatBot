@@ -203,17 +203,23 @@ class AsyncEventDispatcher:
     def _resolve_type(data: "BaseEventData") -> str:
         """从数据模型推导事件类型字符串
 
+        优先使用平台注册的 secondary key，再 fallback 到全局 map。
+        类型值统一 lowercase 归一化。
+
         例:
-          post_type=message, message_type=group → "message.group"
-          post_type=notice, notice_type=group_increase → "notice.group_increase"
-          post_type=request, request_type=friend → "request.friend"
-          post_type=meta_event, meta_event_type=heartbeat → "meta_event.heartbeat"
+          QQ:       post_type=message, message_type=group → "message.group"
+          Bilibili: post_type=live, live_event_type=DANMU_MSG → "live.danmu_msg"
+          GitHub:   post_type=issue, action=opened → "issue.opened"
         """
+        from ncatbot.event.common.factory import get_secondary_key
+
         post_type = getattr(data, "post_type", "")
         if hasattr(post_type, "value"):
             post_type = post_type.value
+        post_type = str(post_type)
 
-        secondary_key_map = {
+        # 全局 secondary key map（QQ 兼容）
+        _global_secondary_map = {
             "message": "message_type",
             "message_sent": "message_type",
             "notice": "notice_type",
@@ -221,12 +227,22 @@ class AsyncEventDispatcher:
             "meta_event": "meta_event_type",
         }
 
-        attr_name = secondary_key_map.get(post_type, "")
+        # 优先查平台注册的 secondary key
+        platform = getattr(data, "platform", "")
+        if hasattr(platform, "value"):
+            platform = platform.value
+        attr_name = get_secondary_key(str(platform), post_type)
+
+        # fallback 到全局 map
+        if not attr_name:
+            attr_name = _global_secondary_map.get(post_type, "")
+
         secondary = ""
         if attr_name:
             val = getattr(data, attr_name, "")
             secondary = val.value if hasattr(val, "value") else str(val) if val else ""
 
+            # QQ 特殊情况: notice + notify → 使用 sub_type
             if post_type == "notice" and secondary == "notify":
                 sub = getattr(data, "sub_type", "")
                 secondary = (
@@ -237,9 +253,10 @@ class AsyncEventDispatcher:
                     else secondary
                 )
 
+        # 统一 lowercase 归一化
         if secondary:
-            return f"{post_type}.{secondary}"
-        return str(post_type)
+            return f"{post_type}.{secondary.lower()}"
+        return post_type
 
 
 class _Waiter:

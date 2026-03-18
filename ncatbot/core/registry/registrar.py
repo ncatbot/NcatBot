@@ -7,8 +7,12 @@ flush_pending() 将指定插件的 handler 批量注册到 HandlerDispatcher。
 
 事件类型格式统一使用 AsyncEventDispatcher 的 resolved 格式:
   "message"、"message.group"、"notice.group_increase" 等。
+
+平台专属装饰器通过子注册器提供:
+  registrar.qq.on_poke()、registrar.bilibili.on_danmu()、registrar.github.on_push()
 """
 
+from functools import cached_property
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
 from ncatbot.utils import get_log
@@ -36,6 +40,11 @@ class Registrar:
     - 将默认 hooks setattr 到 func.__hooks__
     - 标记 func.__handler_meta__ 元信息
     - 读取 ContextVar 获取当前 plugin name，按 name 隔离收集
+
+    平台子注册器:
+    - registrar.qq — QQ 专属装饰器
+    - registrar.bilibili — Bilibili 专属装饰器
+    - registrar.github — GitHub 专属装饰器
     """
 
     def __init__(self, default_hooks: Optional[List[Hook]] = None):
@@ -103,7 +112,30 @@ class Registrar:
         new_hooks.extend(extra_hooks or [])
         return Registrar(default_hooks=new_hooks)
 
-    # ==================== 便捷装饰器 ====================
+    # ==================== 平台子注册器 ====================
+
+    @cached_property
+    def qq(self):
+        """QQ 平台子注册器"""
+        from .platform import QQRegistrar
+
+        return QQRegistrar(self)
+
+    @cached_property
+    def bilibili(self):
+        """Bilibili 平台子注册器"""
+        from .platform import BilibiliRegistrar
+
+        return BilibiliRegistrar(self)
+
+    @cached_property
+    def github(self):
+        """GitHub 平台子注册器"""
+        from .platform import GitHubRegistrar
+
+        return GitHubRegistrar(self)
+
+    # ==================== 跨平台便捷装饰器 ====================
     # 事件类型使用 AsyncEventDispatcher._resolve_type() 产出的格式
 
     def on_group_message(
@@ -238,46 +270,6 @@ class Registrar:
             )
 
         return decorator
-
-    # ==================== 通知/请求精确类型 ====================
-
-    def on_group_increase(
-        self, priority: int = 0, platform: Optional[str] = None, **metadata: Any
-    ) -> Callable:
-        """注册群成员增加事件 handler"""
-        return self.on(
-            "notice.group_increase", priority=priority, platform=platform, **metadata
-        )
-
-    def on_group_decrease(
-        self, priority: int = 0, platform: Optional[str] = None, **metadata: Any
-    ) -> Callable:
-        """注册群成员减少事件 handler"""
-        return self.on(
-            "notice.group_decrease", priority=priority, platform=platform, **metadata
-        )
-
-    def on_friend_request(
-        self, priority: int = 0, platform: Optional[str] = None, **metadata: Any
-    ) -> Callable:
-        """注册好友请求 handler"""
-        return self.on(
-            "request.friend", priority=priority, platform=platform, **metadata
-        )
-
-    def on_group_request(
-        self, priority: int = 0, platform: Optional[str] = None, **metadata: Any
-    ) -> Callable:
-        """注册群请求 handler"""
-        return self.on(
-            "request.group", priority=priority, platform=platform, **metadata
-        )
-
-    def on_poke(
-        self, priority: int = 0, platform: Optional[str] = None, **metadata: Any
-    ) -> Callable:
-        """注册戳一戳事件 handler"""
-        return self.on("notice.poke", priority=priority, platform=platform, **metadata)
 
 
 def flush_pending(

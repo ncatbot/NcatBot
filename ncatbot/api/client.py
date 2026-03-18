@@ -1,6 +1,6 @@
 """BotAPIClient — 多平台 API 纯组合器
 
-各平台通过 ``api.qq`` / ``api.platform("telegram")`` 访问。
+各平台通过 ``api.qq`` / ``api.github`` / ``api.platform("telegram")`` 访问。
 BotAPIClient 本身不持有业务逻辑，仅组合各平台的 APIClient。
 
 调用示例::
@@ -17,6 +17,7 @@ from typing import Any, Dict
 from ncatbot.utils import get_log
 from .qq import QQAPIClient
 from .bilibili import IBiliAPIClient
+from .github import IGitHubAPIClient
 
 
 LOG = get_log("BotAPIClient")
@@ -28,6 +29,8 @@ class BotAPIClient:
     每个平台注册自己的 APIClient，通过属性访问::
 
         api.qq          -> QQAPIClient
+        api.bilibili    -> IBiliAPIClient
+        api.github      -> IGitHubAPIClient
         api.telegram    -> TelegramAPIClient (future)
     """
 
@@ -54,6 +57,11 @@ class BotAPIClient:
     def bilibili(self) -> IBiliAPIClient:
         """Bilibili 平台 API 快捷访问"""
         return self.platform("bilibili")
+
+    @property
+    def github(self) -> IGitHubAPIClient:
+        """GitHub 平台 API 快捷访问"""
+        return self.platform("github")
 
     @property
     def platforms(self) -> Dict[str, Any]:

@@ -83,7 +83,7 @@ class FileWatcherService(BaseService):
             target=self._watch_loop, daemon=True, name="FileWatcherThread"
         )
         self._watcher_thread.start()
-        LOG.info("文件监视服务已启动")
+        LOG.debug("文件监视服务已启动")
 
     async def on_close(self) -> None:
         """停止文件监视"""
@@ -95,7 +95,7 @@ class FileWatcherService(BaseService):
         with self._pending_lock:
             self._pending_dirs.clear()
 
-        LOG.info("文件监视服务已停止")
+        LOG.debug("文件监视服务已停止")
 
     # ------------------------------------------------------------------
     # 公开接口
@@ -171,7 +171,7 @@ class FileWatcherService(BaseService):
 
     def _watch_loop(self) -> None:
         """文件监视主循环"""
-        LOG.info(f"开始监视目录: {self._watch_dirs}")
+        LOG.debug(f"开始监视目录: {self._watch_dirs}")
 
         while not self._stop_event.is_set():
             try:

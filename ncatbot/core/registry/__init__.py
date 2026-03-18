@@ -8,9 +8,12 @@ Hook 驱动 + HandlerDispatcher 分发 + Registrar 装饰器 + ContextVar 隔离
 - HandlerDispatcher: 纯机械分发器，通过 listener 接收 Event → 收集 handler → 执行 Hook 链
 - Registrar: ContextVar 驱动的装饰器集合，按插件隔离收集 handler
 - ContextVar: PluginLoader 在 exec_module 前后设置/重置，装饰器内读取
+- PlatformRegistrar: 平台子注册器，提供平台专属便捷装饰器
 
 事件类型格式统一使用 AsyncEventDispatcher._resolve_type() 产出的格式:
-  "message.group"、"notice.group_increase"、"request.friend" 等。
+  QQ: "message.group"、"notice.group_increase"、"request.friend" 等。
+  Bilibili: "live.danmu_msg"、"live.send_gift"、"comment.new_reply" 等。
+  GitHub: "issue.opened"、"pull_request.closed"、"push" 等。
 """
 
 # ContextVar
@@ -47,6 +50,9 @@ from .dispatcher import HandlerDispatcher, HandlerEntry
 
 # Registrar
 from .registrar import Registrar, registrar, flush_pending, clear_pending
+
+# 平台子注册器
+from .platform import PlatformRegistrar, QQRegistrar, BilibiliRegistrar, GitHubRegistrar
 
 __all__ = [
     # ContextVar
@@ -86,4 +92,9 @@ __all__ = [
     "registrar",
     "flush_pending",
     "clear_pending",
+    # 平台子注册器
+    "PlatformRegistrar",
+    "QQRegistrar",
+    "BilibiliRegistrar",
+    "GitHubRegistrar",
 ]

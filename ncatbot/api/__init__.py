@@ -9,6 +9,7 @@ from .errors import (
 from .traits import IMessaging, IGroupManage, IQuery, IFileTransfer
 from .qq import IQQAPIClient, QQAPIClient
 from .bilibili import IBiliAPIClient
+from .github import IGitHubAPIClient
 
 __all__ = [
     "IAPIClient",
@@ -27,4 +28,6 @@ __all__ = [
     "QQAPIClient",
     # bilibili
     "IBiliAPIClient",
+    # github
+    "IGitHubAPIClient",
 ]

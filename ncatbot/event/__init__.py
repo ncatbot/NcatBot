@@ -21,9 +21,11 @@ from .common import (
 # 确保平台工厂被注册
 import ncatbot.event.qq as _qq  # noqa: F401
 import ncatbot.event.bilibili as _bili  # noqa: F401
+import ncatbot.event.github as _gh  # noqa: F401
 
 del _qq
 del _bili
+del _gh
 
 __all__ = [
     # common
