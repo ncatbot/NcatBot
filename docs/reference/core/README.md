@@ -4,265 +4,80 @@
 
 ---
 
-## Quick Start
-
-### 最小启动示例
+## Quick Reference
 
 ```python
-import asyncio
-from ncatbot.core import AsyncEventDispatcher, EventType
-from ncatbot.core import HandlerDispatcher
-
-async def main():
-    # 1. 创建事件分发器
-    event_dispatcher = AsyncEventDispatcher(stream_queue_size=500)
-
-    # 2. 创建处理器分发器并启动
-    handler_dispatcher = HandlerDispatcher(api=bot_api)
-    handler_dispatcher.start(event_dispatcher)
-
-    # 3. 消费事件流
-    async with event_dispatcher.events(EventType.MESSAGE) as stream:
-        async for event in stream:
-            print(event.type, event.data)
-
-    # 4. 关闭
-    await handler_dispatcher.stop()
-    await event_dispatcher.close()
-
-asyncio.run(main())
+from ncatbot.core import registrar, Hook
 ```
 
-### 一次性等待事件
+### 组件角色
 
-```python
-# 等待指定群的下一条消息，最多 30 秒
-event = await event_dispatcher.wait_event(
-    predicate=lambda e: (
-        e.type == "message.group"
-        and getattr(e.data, "group_id", None) == 12345
-    ),
-    timeout=30.0,
-)
-```
+| 组件 | 职责 | 关键方法 |
+|------|------|---------|
+| `AsyncEventDispatcher` | 事件广播 + 事件流 | `callback`, `events(type)`, `wait_event(predicate, timeout)`, `close()` |
+| `HandlerDispatcher` | Handler 匹配与执行 | `start(dispatcher)`, `stop()`, `register_handler(...)`, `unregister_handler(entry)`, `revoke_plugin(name)` |
+| `Registrar` | 装饰器注册 | `on_group_command(...)`, `on_message(...)`, `on(...)`, `fork(...)` |
+| `Hook` (ABC) | 拦截链 | `execute(ctx) → HookAction` — CONTINUE / SKIP |
+
+### Registrar 装饰器索引
+
+| 装饰器 | 监听 |
+|--------|------|
+| `on(event_type, priority=, platform=)` | 通用 |
+| `on_command(*names, ignore_case=)` | 群+私聊命令 |
+| `on_group_command(*names, ignore_case=)` | 群命令 |
+| `on_private_command(*names, ignore_case=)` | 私聊命令 |
+| `on_message()` / `on_group_message()` / `on_private_message()` | 消息 |
+| `on_notice()` / `on_request()` / `on_meta()` | 通知/请求/元 |
+| `on_poke()` | 戳一戳 |
+| `on_group_increase()` / `on_group_decrease()` | 群成员变动 |
+| `on_friend_request()` / `on_group_request()` | 好友/群请求 |
+| `on_message_sent()` | 消息发送 |
+
+### Hook 系统
+
+| 概念 | 说明 |
+|------|------|
+| `HookStage` | `BEFORE_CALL`、`AFTER_CALL`、`ON_ERROR` |
+| `HookAction` | `CONTINUE`（继续）、`SKIP`（跳过当前 handler） |
+| `HookContext` | `event`, `event_type`, `handler_entry`, `api`, `services`, `kwargs`, `result`, `error` |
+| `add_hooks(*hooks)` | 批量添加 Hook 装饰器 |
+| `get_hooks(func, stage=)` | 获取函数绑定的 hooks |
+
+### 内置 Hook
+
+| Hook 类 | 说明 |
+|---------|------|
+| `MessageTypeFilter(message_type)` | 过滤 group/private |
+| `PostTypeFilter(post_type)` | 过滤 post_type |
+| `SubTypeFilter(sub_type)` | 过滤 sub_type |
+| `SelfFilter()` | 跳过 bot 自身消息 |
+| `PlatformFilter(platform)` | 过滤平台 |
+| `CommandHook(*names, ignore_case=)` | 命令匹配 + 参数绑定 |
+
+### Predicate DSL 工厂函数
+
+| 函数 | 说明 |
+|------|------|
+| `same_user(...)` | 同用户 |
+| `same_group(...)` | 同群 |
+| `is_private(...)` / `is_group(...)` | 私聊/群聊 |
+| `is_message(...)` | 消息类型 |
+| `has_keyword(...)` | 包含关键词 |
+| `msg_equals(...)` | 精确匹配 |
+| `msg_in(...)` | 匹配列表 |
+| `msg_matches(...)` | 正则匹配 |
+| `event_type(...)` | 事件类型 |
+| `from_event(...)` | 同 session（同用户+同群） |
+
+> 运算符：`p1 & p2`（AND）、`p1 | p2`（OR）、`~p`（NOT）
 
 ---
 
-## 核心类速查
+## 本目录索引
 
-### AsyncEventDispatcher — 异步事件分发器
-
-**模块**: `ncatbot.core.dispatcher.dispatcher`
-
-纯事件路由器——生产端通过 `callback` 接收 `BaseEventData`，消费端通过事件流或一次性等待获取事件。
-
-```python
-class AsyncEventDispatcher:
-    def __init__(self, stream_queue_size: int = 500): ...
-```
-
-| 参数 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `stream_queue_size` | `int` | `500` | 每个事件流的内部队列大小，满时丢弃最旧事件 |
-
-#### 核心方法
-
-| 方法/属性 | 签名 | 说明 |
-|---|---|---|
-| `callback` | `@property → Callable[[BaseEventData], Awaitable[None]]` | 异步回调，供 Adapter 推送事件 |
-| `events()` | `(event_type: str \| EventType \| None = None) → EventStream` | 创建事件流（支持类型过滤） |
-| `wait_event()` | `(predicate, timeout) → Event` | 等待下一个满足条件的事件 |
-| `close()` | `() → None` | 关闭 dispatcher，终止所有流和 waiter（幂等） |
-
-#### callback 内部流程
-
-接收 `BaseEventData` → `_resolve_type()` 推导事件类型字符串 → 构造 `Event` → 广播到所有流队列 + resolve 匹配的 waiter。
-
-#### events() 详细参数
-
-```python
-def events(
-    self,
-    event_type: Optional[Union[str, EventType]] = None,
-) -> EventStream: ...
-```
-
-**异常**: `RuntimeError` — dispatcher 已关闭时调用。
-
-```python
-# 仅消费消息事件
-async with dispatcher.events(EventType.MESSAGE) as stream:
-    async for event in stream:
-        print(event.type, event.data)
-```
-
-#### wait_event() 详细参数
-
-```python
-async def wait_event(
-    self,
-    predicate: Optional[Callable[[Event], bool]] = None,
-    timeout: Optional[float] = None,
-) -> Event: ...
-```
-
-| 参数 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `predicate` | `Callable[[Event], bool] \| None` | `None` | 过滤函数，`None` 接受任意事件 |
-| `timeout` | `float \| None` | `None` | 超时秒数，`None` 无限等待 |
-
-**异常**: `asyncio.TimeoutError`（超时）/ `RuntimeError`（已关闭）
-
----
-
-### Event — 事件数据类
-
-**模块**: `ncatbot.core.dispatcher.event`
-
-```python
-@dataclass(frozen=True, slots=True)
-class Event:
-    type: str              # resolved 类型字符串，如 "message.group"
-    data: "BaseEventData"  # 原始 Pydantic 数据模型
-```
-
-`Event` 是 **frozen** 不可变数据类，使用 `__slots__` 优化内存。
-
-#### 事件类型格式
-
-格式为 `"{post_type}.{secondary_type}"`，由 `_resolve_type()` 自动推导：
-
-| post_type | secondary 字段 | 示例 |
-|---|---|---|
-| `message` | `message_type` | `"message.group"`、`"message.private"` |
-| `message_sent` | `message_type` | `"message_sent.group"` |
-| `notice` | `notice_type`（`notify` 时取 `sub_type`） | `"notice.group_increase"`、`"notice.poke"` |
-| `request` | `request_type` | `"request.friend"`、`"request.group"` |
-| `meta_event` | `meta_event_type` | `"meta_event.heartbeat"` |
-
----
-
-### EventStream — 事件流
-
-**模块**: `ncatbot.core.dispatcher.stream`
-
-通过 `AsyncEventDispatcher.events()` 创建，**不应直接实例化**。
-
-实现了 **异步迭代器** + **异步上下文管理器** 协议：
-
-```python
-class EventStream:
-    def __aiter__(self) -> "EventStream": ...
-    async def __anext__(self) -> Event: ...
-    async def __aenter__(self) -> "EventStream": ...
-    async def __aexit__(self, ...) -> None: ...
-    async def aclose(self) -> None: ...
-```
-
-#### 三种使用方式
-
-```python
-# 方式 1: async with（推荐，自动关闭）
-async with dispatcher.events(EventType.MESSAGE) as stream:
-    async for event in stream:
-        ...
-
-# 方式 2: 手动管理
-stream = dispatcher.events()
-async for event in stream:
-    ...
-await stream.aclose()
-
-# 方式 3: 提前退出
-stream = dispatcher.events()
-try:
-    async for event in stream:
-        if should_stop(event):
-            break
-finally:
-    await stream.aclose()
-```
-
-#### 类型过滤（前缀匹配）
-
-| 传入类型 | 过滤规则 |
-|---|---|
-| `EventType.MESSAGE` | 匹配 `"message"` 及 `"message.*"` |
-| `"message.group"` | 精确匹配 `"message.group"` |
-| `None` | 不过滤，接收全部事件 |
-
-`EventType` 枚举映射：`MESSAGE` → `"message"` / `MESSAGE_SENT` → `"message_sent"` / `NOTICE` → `"notice"` / `REQUEST` → `"request"` / `META` → `"meta_event"`
-
----
-
-### HandlerDispatcher — 处理器分发器
-
-**模块**: `ncatbot.core.registry.dispatcher`
-
-订阅 `AsyncEventDispatcher` 的事件流，将事件分发到已注册的 handlers。
-
-```python
-class HandlerDispatcher:
-    def __init__(
-        self,
-        api: Optional["IBotAPI"] = None,
-        service_manager: Optional["ServiceManager"] = None,
-    ): ...
-```
-
-| 参数 | 类型 | 默认值 | 说明 |
-|---|---|---|---|
-| `api` | `IBotAPI \| None` | `None` | Bot API 实例，注入到 Hook 上下文和事件实体 |
-| `service_manager` | `ServiceManager \| None` | `None` | 服务管理器，注入到 Hook 上下文 |
-
-#### 核心方法
-
-| 方法 | 签名 | 说明 |
-|---|---|---|
-| `start()` | `(event_dispatcher: AsyncEventDispatcher) → None` | 订阅事件流并启动后台消费循环 |
-| `stop()` | `() → None` | 取消后台 task 并关闭事件流 |
-| `revoke_plugin()` | `(plugin_name: str) → int` | 移除指定插件的所有 handler，返回移除数量（热重载用） |
-
----
-
-## 启动流程
-
-核心引擎的启动分为三个阶段：
-
-```text
-1. 创建阶段
-   AsyncEventDispatcher(stream_queue_size) → 初始化事件队列
-   HandlerDispatcher(api, service_manager)  → 初始化 handler 存储
-
-2. 连接阶段
-   HandlerDispatcher.start(event_dispatcher) → 订阅事件流，启动后台 Task
-   Adapter 获取 event_dispatcher.callback   → 建立事件推送通道
-
-3. 运行阶段
-   Adapter 推送 BaseEventData → callback → Event → 广播到流
-   HandlerDispatcher 消费事件 → 匹配 handler → Hook 链 → 执行
-```
-
-关闭时按相反顺序：`HandlerDispatcher.stop()` → `AsyncEventDispatcher.close()`
-
----
-
-## 深入阅读
-
-| 文档 | 内容 |
-|---|---|
-| [内部机制](1_internals.md) | 事件匹配算法、分发执行流程、Hook 链执行、错误处理、扩展点 |
-
----
-
-## 源码位置
-
-| 模块 | 源码位置 |
-|---|---|
-| `AsyncEventDispatcher` | `ncatbot/core/dispatcher/dispatcher.py` |
-| `Event` | `ncatbot/core/dispatcher/event.py` |
-| `EventStream` | `ncatbot/core/dispatcher/stream.py` |
-| `HandlerDispatcher` | `ncatbot/core/registry/dispatcher.py` |
-| `Registrar` | `ncatbot/core/registry/registrar.py` |
-| `Hook` / `HookContext` | `ncatbot/core/registry/hook.py` |
-| 内置 Hooks | `ncatbot/core/registry/builtin_hooks.py` |
+| 文件 | 说明 |
+|------|------|
+| [1_internals.md](1_internals.md) | Dispatcher 分发引擎内部机制详解 |
+| [2_predicate.md](2_predicate.md) | Predicate DSL 完整 API 参考 |
+| [3_registry.md](3_registry.md) | Registrar + Hook/Filter 完整 API 参考 |

@@ -129,7 +129,7 @@ msg.add_image(str(EXAMPLE_IMAGE))
 fc.attach_message(msg)
 
 forward = fc.build()
-await self.api.post_group_forward_msg(event.group_id, forward)
+await self.api.qq.post_group_forward_msg(event.group_id, forward)
 ```
 
 ### 切换作者
@@ -167,7 +167,7 @@ outer_fc.attach_forward(inner_forward)  # 嵌套内层转发
 outer_fc.attach_text("🔸 外层第三条消息（在嵌套转发之后）")
 
 forward = outer_fc.build()
-await self.api.post_group_forward_msg(event.group_id, forward)
+await self.api.qq.post_group_forward_msg(event.group_id, forward)
 ```
 
 ---
@@ -183,12 +183,12 @@ await self.api.post_group_forward_msg(event.group_id, forward)
 
 ```python
 # 发送构造的合并转发
-await self.api.post_group_forward_msg(group_id, forward)
+await self.api.qq.post_group_forward_msg(group_id, forward)
 
 # 通过消息 ID 转发已有消息
-await self.api.send_group_forward_msg_by_id(group_id, [msg_id_1, msg_id_2])
+await self.api.qq.send_group_forward_msg_by_id(group_id, [msg_id_1, msg_id_2])
 ```
 
 ---
 
-[← 上一篇：MessageArray](3_array.md) | [返回目录](README.md) | [下一篇：便捷接口参考 →](5_sugar.md)
+[← 上一篇：MessageArray](../common/2_array.md) | [返回目录](../README.md) | [下一篇：便捷接口 →](1_sugar.md)

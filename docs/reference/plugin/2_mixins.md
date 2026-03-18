@@ -86,6 +86,7 @@ def add_scheduled_task(
     interval: Union[str, int, float],
     conditions: Optional[List[Callable[[], bool]]] = None,
     max_runs: Optional[int] = None,
+    callback: Optional[Callable] = None,
 ) -> bool
 ```
 
@@ -97,6 +98,7 @@ def add_scheduled_task(
 | `interval` | `str \| int \| float` | — | 调度参数（见下表） |
 | `conditions` | `List[Callable[[], bool]] \| None` | `None` | 执行条件列表，全部为 True 时才执行 |
 | `max_runs` | `int \| None` | `None` | 最大执行次数 |
+| `callback` | `Callable \| None` | `None` | 自定义回调函数，覆盖默认的同名方法查找 |
 
 **`interval` 支持的格式**：
 

@@ -1,194 +1,90 @@
 # Bot API 使用指南
 
-> 掌握 `BotAPIClient` 的全部能力 — 消息收发、群管理、信息查询、文件操作与请求处理。
+> 掌握 `BotAPIClient` 的全部能力 — 跨平台通用方法与各平台专属 API。
 
 ---
 
-## Quick Start
+## Quick Reference
 
-### 获取 API 客户端
+### 多平台 API 访问
 
-插件中通过 `self.api` 访问，类型为 `BotAPIClient`：
+```python
+# 通用 — 任何平台
+await event.reply(text="收到")
+
+# QQ 平台
+await self.api.qq.post_group_msg(group_id, text="Hello!")
+await self.api.qq.messaging.send_group_msg(group_id, message)
+await self.api.qq.manage.set_group_ban(group_id, user_id, 600)
+
+# Bilibili 平台
+await self.api.bilibili.send_danmu(room_id, "弹幕内容")
+await self.api.bilibili.send_private_msg(user_id, "私信内容")
+```
+
+### API 架构总览
+
+```text
+BotAPIClient                        ← 多平台路由（纯门面）
+├── .qq : QQAPIClient               ← QQ 平台 API
+│   ├── .messaging : QQMessaging    ← 消息收发
+│   ├── .manage : QQManage          ← 群管理
+│   ├── .query : QQQuery            ← 信息查询
+│   ├── .file : QQFile              ← 文件操作
+│   └── post_group_msg() ...        ← Sugar 便捷方法
+├── .bilibili : IBiliAPIClient      ← Bilibili 平台 API
+│   ├── send_danmu()                ← 弹幕
+│   ├── send_private_msg()          ← 私信
+│   ├── send_comment()              ← 评论
+│   └── ban_user() ...              ← 直播间管理
+├── .platform("xxx")                ← 按名称获取平台 API
+└── .platforms                      ← 所有已注册平台
+```
+
+### 插件模式示例
 
 ```python
 from ncatbot.plugin import NcatBotPlugin
 from ncatbot.core import registrar
-from ncatbot.event import GroupMessageEvent
+from ncatbot.event.qq import GroupMessageEvent
 
-
-class MyPlugin(NcatBotPlugin):
-    name = "my_plugin"
+class DemoPlugin(NcatBotPlugin):
+    name = "demo"
     version = "1.0.0"
 
     @registrar.on_group_command("ping")
     async def on_ping(self, event: GroupMessageEvent):
-        await self.api.post_group_msg(event.group_id, text="pong!")
+        await event.reply(text="pong!", image="photo.jpg")
+        await self.api.qq.post_group_msg(event.group_id, text="Hello!", at=event.user_id)
 ```
-
-事件对象也提供 `event.api`（底层 `IBotAPI`），但推荐优先使用 `self.api`（含语法糖 + 自动日志）。
-
-> **最便捷的回复方式**：`await event.reply(text="pong!")`，内部自动引用原消息并 @发送者。
-
-### 发送消息
-
-```python
-# 语法糖 — 最常用
-await self.api.post_group_msg(group_id, text="Hello!")
-await self.api.post_group_msg(group_id, text="看图", image="/path/to/img.jpg")
-await self.api.post_private_msg(user_id, text="私聊消息")
-
-# 原子 API — 手动构造消息段
-await self.api.send_group_msg(group_id, [{"type": "text", "data": {"text": "你好"}}])
-```
-
-### 群管理
-
-```python
-# 禁言 60 秒
-await self.api.manage.set_group_ban(group_id, user_id, 60)
-
-# 踢人
-await self.api.manage.set_group_kick(group_id, user_id)
-
-# 撤回 + 踢出 + 拉黑（一步到位）
-await self.api.manage.kick_and_block(group_id, user_id, message_id)
-```
-
-### API 分层结构
-
-| 层级 | 访问方式 | 说明 |
-|------|---------|------|
-| 高频原子 API | `self.api.send_group_msg(...)` | 直接平铺在顶层，最常用 |
-| 语法糖 | `self.api.post_group_msg(...)` | `MessageSugarMixin` 提供，关键字自动组装消息 |
-| 群管理 | `self.api.manage.set_group_ban(...)` | `ManageExtension` 提供 |
-| 信息查询 | `self.api.info.get_group_list()` | `InfoExtension` 提供 |
-| 辅助功能 | `self.api.support.upload_group_file(...)` | `SupportExtension` 提供 |
 
 ---
 
-## API 速查表
+## 本目录索引
 
-### 顶层高频 API
-
-| 方法 | 参数 | 返回值 | 说明 |
-|------|------|--------|------|
-| `send_group_msg` | `(group_id, message, **kwargs)` | `dict` | 发送群消息 |
-| `send_private_msg` | `(user_id, message, **kwargs)` | `dict` | 发送私聊消息 |
-| `send_forward_msg` | `(message_type, target_id, messages, **kwargs)` | `dict` | 发送合并转发 |
-| `delete_msg` | `(message_id)` | `None` | 撤回消息 |
-| `send_poke` | `(group_id, user_id)` | `None` | 戳一戳 |
-
-### 语法糖方法（MessageSugarMixin）
-
-#### post_group_msg / post_private_msg
-
-```python
-async def post_group_msg(
-    self, group_id, text=None, at=None, reply=None, image=None, video=None, rtf=None,
-) -> dict
-
-async def post_private_msg(
-    self, user_id, text=None, reply=None, image=None, video=None, rtf=None,
-) -> dict
-```
-
-#### 单类型快捷方法
-
-| 方法 | 参数 | 说明 |
-|------|------|------|
-| `send_group_text` | `(group_id, text)` | 发送群纯文本 |
-| `send_group_image` | `(group_id, image)` | 发送群图片 |
-| `send_group_record` | `(group_id, file)` | 发送群语音 |
-| `send_group_file` | `(group_id, file, name=None)` | 发送群文件消息 |
-| `send_group_video` | `(group_id, video)` | 发送群视频 |
-| `send_group_sticker` | `(group_id, image)` | 发送群动画表情 |
-| `send_private_text` | `(user_id, text)` | 发送私聊纯文本 |
-| `send_private_image` | `(user_id, image)` | 发送私聊图片 |
-| `send_private_record` | `(user_id, file)` | 发送私聊语音 |
-| `send_private_file` | `(user_id, file, name=None)` | 发送私聊文件消息 |
-| `send_private_video` | `(user_id, video)` | 发送私聊视频 |
-| `send_private_sticker` | `(user_id, image)` | 发送私聊动画表情 |
-
-#### 合并转发快捷方法
-
-| 方法 | 参数 | 说明 |
-|------|------|------|
-| `post_group_forward_msg` | `(group_id, forward)` | 发送群合并转发（`Forward` 对象） |
-| `post_private_forward_msg` | `(user_id, forward)` | 发送私聊合并转发 |
-| `send_group_forward_msg_by_id` | `(group_id, message_ids)` | 通过消息 ID 列表转发群消息 |
-| `send_private_forward_msg_by_id` | `(user_id, message_ids)` | 通过消息 ID 列表转发私聊消息 |
-
-#### MessageArray 快捷方法
-
-| 方法 | 参数 | 说明 |
-|------|------|------|
-| `post_group_array_msg` | `(group_id, msg)` | 发送 `MessageArray` 群消息 |
-| `post_private_array_msg` | `(user_id, msg)` | 发送 `MessageArray` 私聊消息 |
-
-### .manage 群管理
-
-| 方法 | 参数 | 说明 |
-|------|------|------|
-| `set_group_kick` | `(group_id, user_id, reject_add_request=False)` | 踢出群成员 |
-| `set_group_ban` | `(group_id, user_id, duration=1800)` | 禁言（`0` 解禁） |
-| `set_group_whole_ban` | `(group_id, enable=True)` | 全员禁言 |
-| `set_group_admin` | `(group_id, user_id, enable=True)` | 设置/取消管理员 |
-| `set_group_card` | `(group_id, user_id, card="")` | 设置群名片 |
-| `set_group_name` | `(group_id, name)` | 设置群名 |
-| `set_group_leave` | `(group_id, is_dismiss=False)` | 退群 |
-| `set_group_special_title` | `(group_id, user_id, special_title="")` | 设置专属头衔 |
-| `set_friend_add_request` | `(flag, approve=True, remark="")` | 处理好友请求 |
-| `set_group_add_request` | `(flag, sub_type, approve=True, reason="")` | 处理群请求 |
-| `kick_and_block` | `(group_id, user_id, message_id=None)` | 撤回+踢出+拉黑 |
-
-### .info 信息查询
-
-| 方法 | 参数 | 返回值 | 说明 |
-|------|------|--------|------|
-| `get_login_info` | `()` | `dict` | Bot 登录信息 |
-| `get_stranger_info` | `(user_id)` | `dict` | 陌生人信息 |
-| `get_friend_list` | `()` | `List[dict]` | 好友列表 |
-| `get_group_info` | `(group_id)` | `dict` | 群信息 |
-| `get_group_list` | `()` | `list` | 群列表 |
-| `get_group_member_info` | `(group_id, user_id)` | `dict` | 群成员信息 |
-| `get_group_member_list` | `(group_id)` | `list` | 群成员列表 |
-| `get_msg` | `(message_id)` | `dict` | 消息详情 |
-| `get_forward_msg` | `(message_id)` | `dict` | 合并转发内容 |
-| `get_group_root_files` | `(group_id)` | `dict` | 群根目录文件 |
-| `get_group_file_url` | `(group_id, file_id)` | `str` | 群文件下载链接 |
-
-### .support 辅助功能
-
-| 方法 | 参数 | 说明 |
-|------|------|------|
-| `upload_group_file` | `(group_id, file, name, folder_id="")` | 上传群文件 |
-| `delete_group_file` | `(group_id, file_id)` | 删除群文件 |
-| `send_like` | `(user_id, times=1)` | 点赞 |
-
----
-
-## 常见错误码
-
-OneBot v11 协议的 API 调用可能返回以下错误：
-
-| retcode | 含义 | 常见原因 |
-|---------|------|----------|
-| `0` | 成功 | — |
-| `1` | 异步操作已提交 | 操作需要排队处理 |
-| `100` | 参数缺失或无效 | 检查 `group_id`、`user_id` 等参数 |
-| `102` | 操作失败 | Bot 权限不足 / 目标不存在 |
-| `103` | 操作超时 | NapCat 与 QQ 通信超时 |
-| `104` | 未找到资源 | 消息已撤回 / 群已退出 |
-| `200` | Bot 未连接 | NapCat 未启动或连接已断开 |
-
----
-
-## 深入阅读
+### 通用
 
 | 文档 | 内容 |
 |------|------|
-| [消息发送详解](1_messaging.md) | `send_group_msg` / `send_private_msg` / `send_forward_msg` / `delete_msg` / `send_poke` 完整参数表与示例，语法糖方法完整示例 |
-| [群管理详解](2_manage.md) | `.manage` 命名空间每个方法的完整参数表与示例 |
-| [查询与支持操作](3_query_support.md) | `.info` + `.support` 方法详解、请求处理、错误处理最佳实践 |
+| [通用 API](common/README.md) | 跨平台事件方法与 Trait 协议 |
+| [事件方法](common/1_event_methods.md) | `event.reply()`, `event.delete()`, `event.kick()` 等 |
+| [API Trait 协议](common/2_traits.md) | `IMessaging`, `IGroupManage`, `IQuery`, `IFileTransfer` |
 
-> **相关文档**：[消息发送指南](../send_message/README.md) · [架构文档](../../architecture.md) · [插件开发入门](../plugin/README.md)
+### QQ 平台
+
+| 文档 | 内容 |
+|------|------|
+| [QQ API 概览](qq/README.md) | QQ 平台 API 分层结构与速查 |
+| [消息发送详解](qq/1_messaging.md) | sugar 方法、原子 messaging API、合并转发 |
+| [群管理详解](qq/2_manage.md) | .manage 每个方法的参数与示例 |
+| [查询与文件操作](qq/3_query_support.md) | .query + .file 方法详解 |
+
+### Bilibili 平台
+
+| 文档 | 内容 |
+|------|------|
+| [Bilibili API 概览](bilibili/README.md) | Bilibili 平台 API 功能分类与速查 |
+| [直播间操作](bilibili/1_live_room.md) | 弹幕、禁言、房间信息 |
+| [私信操作](bilibili/2_private_msg.md) | 私信文字/图片、历史记录 |
+| [评论操作](bilibili/3_comment.md) | 发送/回复/删除/点赞评论 |
+| [数据源与查询](bilibili/4_source_query.md) | 监听管理、用户信息查询 |

@@ -4,6 +4,29 @@
 
 ---
 
+## Quick Reference
+
+### 按需查找
+
+| 你在找… | 去这里 | 关键类/模块 |
+|---------|--------|------------|
+| 消息发送方法签名 | [api/](api/) | `QQMessaging`, `QQMessageSugarMixin` |
+| 群管理/好友/账号操作 | [api/](api/) | `QQManage` |
+| 信息查询（群/好友/消息） | [api/](api/) | `QQQuery` |
+| 文件上传/下载 | [api/](api/) | `QQFile` |
+| 事件类型和属性 | [events/](events/) | `GroupMessageEvent`, `NoticeEvent`, `RequestEvent` |
+| 消息段类型（PlainText/At/Image） | [types/](types/) | `MessageSegment`, `MessageArray` |
+| 装饰器注册和 Hook | [core/](core/) | `Registrar`, `Hook`, `HookStage` |
+| Predicate DSL | [core/](core/) | `same_user`, `has_keyword`, `msg_matches` |
+| 插件基类和 Mixin | [plugin/](plugin/) | `NcatBotPlugin`, `ConfigMixin`, `EventMixin` |
+| RBAC/定时任务服务 | [services/](services/) | `RBACService`, `TimeTaskService` |
+| 适配器接口 | [adapter/](adapter/) | `BaseAdapter`, `AdapterRegistry` |
+| 日志/网络/配置工具 | [utils/](utils/) | `get_log`, `ConfigManager`, `post_json` |
+| 测试框架 | [testing/](testing/) | `PluginTestHarness`, `Scenario` |
+| CLI 命令 | [cli.md](cli.md) | `ncatbot init/run/dev` |
+
+---
+
 ## 模块索引
 
 | 目录 | 说明 |
@@ -11,136 +34,13 @@
 | [api/](api/) | Bot API 方法参考 |
 | [events/](events/) | 事件类型参考 |
 | [types/](types/) | 数据类型参考（消息段、MessageArray） |
-| [core/](core/) | 核心模块参考（BotClient、Registry、Dispatcher） |
+| [core/](core/) | 核心模块参考（Dispatcher、Predicate DSL、Registry / Hook） |
 | [plugin/](plugin/) | 插件系统参考（基类、Mixin） |
 | [services/](services/) | 服务层参考（RBAC、定时任务、配置存储） |
 | [adapter/](adapter/) | 适配器参考（WebSocket、协议处理） |
 | [utils/](utils/) | 工具模块参考（日志、IO、装饰器） |
 | [cli.md](cli.md) | CLI 命令参考（全部命令签名与参数） |
 | [testing/](testing/) | 测试框架参考（TestHarness、事件工厂、Mock） |
-
----
-
-## api/ — Bot API 方法
-
-Bot 可调用的所有 API 方法签名，按功能分类：
-
-- 消息发送（send_private_msg / send_group_msg / ...）
-- 群管理（set_group_kick / set_group_ban / ...）
-- 信息查询（get_login_info / get_stranger_info / ...）
-- 文件操作（upload_group_file / get_group_file_url / ...）
-
-> 旧版单文件参考：[api/](api/)
-
----
-
-## events/ — 事件类型
-
-所有事件实体的字段定义与继承关系：
-
-- **BaseEvent** — 事件基类
-- **MessageEvent** — 消息事件（私聊 / 群聊）
-- **NoticeEvent** — 通知事件（群成员变动、撤回等）
-- **RequestEvent** — 请求事件（加好友、加群请求）
-
-> 旧版单文件参考：[events/](events/)
-
----
-
-## types/ — 数据类型
-
-消息段类型、枚举值、Pydantic 数据模型：
-
-- **消息段** — Text / Image / At / Reply / Face / ...
-- **MessageArray** — 消息容器，链式构造
-- **枚举** — 事件类型、消息类型、角色类型等
-
-> 旧版单文件参考：[types/](types/)
-
----
-
-## core/ — 核心模块
-
-框架核心引擎：
-
-- **BotClient** — 机器人客户端，入口与生命周期管理
-- **Registry** — 处理器注册表，路由映射
-- **Dispatcher** — 事件分发器，匹配 → 排序 → 派发
-- **Hook** — 钩子链管理，中间件执行
-- **EventStream** — 事件流，异步队列
-
-> 旧版单文件参考：[core/](core/)
-
----
-
-## plugin/ — 插件系统
-
-插件基类与扩展体系：
-
-- **BasePlugin** — 插件抽象基类
-- **NcatBotPlugin** — 标准插件基类（包含全部 Mixin）
-- **Mixin 体系** — ConfigMixin / DataMixin / RBACMixin / TimeTaskMixin / ...
-- **Manifest** — 插件描述文件解析
-- **Loader** — 插件加载器与热重载
-
-> 旧版单文件参考：[plugin/](plugin/)
-
----
-
-## services/ — 服务层
-
-可注入的服务组件：
-
-- **ServiceManager** — 服务容器与生命周期
-- **RBAC** — 角色权限访问控制
-- **TimeTask** — 定时任务调度
-- **FileWatcher** — 文件监听（热重载）
-
-> 旧版单文件参考：[services/](services/)
-
----
-
-## adapter/ — 适配器
-
-协议适配层：
-
-- **BaseAdapter** — 适配器抽象基类
-- **NapCatAdapter** — NapCat WebSocket 适配器
-- **MockAdapter** — 测试用模拟适配器
-
-> 旧版单文件参考：[adapter/](adapter/)
-
----
-
-## utils/ — 工具模块
-
-通用工具集：
-
-- **ConfigManager** — 配置文件读写
-- **Logger** — 日志系统
-- **Network** — 网络请求封装
-- **IO** — 文件 IO 工具
-- **Decorators** — 通用装饰器
-
-> 旧版单文件参考：[utils/](utils/)
-
----
-
-## cli/ — CLI 命令
-
-`ncatbot` 命令行工具完整参考：见 [cli.md](cli.md)。
-
----
-
-## testing/ — 测试框架
-
-插件测试工具集：
-
-- **TestHarness** — 测试编排器（BotClient + MockAdapter）
-- **PluginTestHarness** — 插件选择性加载测试
-- **Scenario** — 链式场景构建器
-- **Factory** — 事件工厂（8 种事件类型）
-- **MockBotAPI** — API 调用记录与响应配置
 
 ---
 

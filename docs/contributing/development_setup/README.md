@@ -4,7 +4,7 @@
 
 ---
 
-## Quick Start
+## Quick Reference
 
 以下步骤可在 5 分钟内完成 NcatBot 开发环境搭建。
 
@@ -177,7 +177,7 @@ uv sync --extra dev
 ```text
 ncatbot/
 ├── adapter/    协议适配器（NapCat、Mock）
-├── api/        Bot API 封装（IBotAPI / BotAPIClient）
+├── api/        Bot API 封装（IAPIClient / BotAPIClient）
 ├── app/        应用编排层（BotClient 生命周期管理）
 ├── cli/        命令行工具（ncatbot run / dev / config / plugin）
 ├── core/       核心引擎（Dispatcher 事件分发 / Registry 处理器注册）

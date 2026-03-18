@@ -1,249 +1,105 @@
 # 插件开发指南
 
-> NcatBot 插件开发从入门到实战——覆盖插件结构、生命周期、事件处理、Mixin 能力、Hook 机制和高级主题。
+> 插件开发从入门到实战 — 覆盖插件结构、生命周期、事件处理、Mixin 能力、Hook 机制和高级主题。
 
 ---
 
-## Quick Start
+## Quick Reference
 
-5 分钟跑通第一个插件。
-
-### 1. 安装
-
-```bash
-uv add ncatbot5    # 或 pip install ncatbot5
-```
-
-### 2. 创建插件目录
-
-```text
-plugins/
-└── hello_world/
-    ├── manifest.toml
-    └── main.py
-```
-
-### 3. manifest.toml
-
-```toml
-name = "hello_world"
-version = "1.0.0"
-main = "main.py"
-entry_class = "HelloWorldPlugin"
-```
-
-### 4. main.py
+### 最小可运行插件
 
 ```python
-from ncatbot.core import registrar
-from ncatbot.event import GroupMessageEvent, PrivateMessageEvent
 from ncatbot.plugin import NcatBotPlugin
-from ncatbot.utils import get_log
+from ncatbot.core import registrar
+from ncatbot.event.qq import GroupMessageEvent
 
-LOG = get_log("HelloWorld")
-
-
-class HelloWorldPlugin(NcatBotPlugin):
-    name = "hello_world"
+class HelloPlugin(NcatBotPlugin):
+    name = "hello"
     version = "1.0.0"
 
-    async def on_load(self):
-        LOG.info("HelloWorld 插件已加载！")
-
-    @registrar.on_group_command("hello", ignore_case=True)
+    @registrar.on_group_command("hello")
     async def on_hello(self, event: GroupMessageEvent):
-        await self.api.post_group_msg(event.group_id, text="Hello, World! 👋")
-
-    @registrar.on_group_command("hi", ignore_case=True)
-    async def on_hi(self, event: GroupMessageEvent):
-        await event.reply(text="你好呀！🎉")
-
-    @registrar.on_private_command("hello", ignore_case=True)
-    async def on_private_hello(self, event: PrivateMessageEvent):
-        await event.reply(text="你好！👋")
+        await event.reply(text="Hello!")
 ```
 
-### 5. 入口与运行
+### 生命周期钩子
 
-```python
-# main.py（项目根目录）
-from ncatbot.app import BotClient
-bot = BotClient()
-if __name__ == "__main__":
-    bot.run()
-```
+| 钩子 | 说明 |
+|------|------|
+| `_init_()` | 同步初始化（on_load 之前） |
+| `on_load()` | 异步初始化（注册权限、定时任务等） |
+| `on_close()` | 异步清理 |
+| `_close_()` | 同步清理 |
 
-```bash
-python main.py   # 启动 Bot，自动扫描 plugins/
-```
+### 运行时属性
 
-> 完整入门教程 → [1. 快速入门](1.quick-start.md)
-
----
-
-## 速查参考
-
-### 插件结构
-
-#### manifest.toml 关键字段
-
-| 字段 | 必填 | 说明 |
+| 属性 | 类型 | 说明 |
 |------|------|------|
-| `name` | ✅ | 插件唯一标识 |
-| `version` | ✅ | 语义化版本号 |
-| `main` | ✅ | 入口文件名 |
-| `entry_class` | ❌ | 插件类名（省略则自动发现） |
-| `[dependencies]` | ❌ | 依赖的其他插件 + 版本约束 |
-| `[pip_dependencies]` | ❌ | pip 依赖 |
+| `self.api` | `BotAPIClient` | Bot API 客户端 |
+| `self.services` | `ServiceManager` | 服务管理器 |
+| `self.workspace` | `Path` | 插件工作目录 |
+| `self.debug` | `bool` | 调试模式 |
 
-#### 基类选择
+### Registrar 装饰器
 
-| 特性 | `BasePlugin` | `NcatBotPlugin`（推荐） |
-|------|-------------|-----------------|
-| 生命周期 + 事件注册 + API | ✅ | ✅ |
-| ConfigMixin（配置持久化） | ❌ | ✅ |
-| DataMixin（数据持久化） | ❌ | ✅ |
-| RBACMixin（权限管理） | ❌ | ✅ |
-| TimeTaskMixin（定时任务） | ❌ | ✅ |
-| EventMixin（事件流） | ❌ | ✅ |
+| 装饰器 | 监听事件 |
+|--------|---------|
+| `@registrar.on_group_command("cmd")` | 群命令 |
+| `@registrar.on_private_command("cmd")` | 私聊命令 |
+| `@registrar.on_command("cmd")` | 群+私聊命令 |
+| `@registrar.on_group_message()` | 群消息 |
+| `@registrar.on_private_message()` | 私聊消息 |
+| `@registrar.on_message()` | 所有消息 |
+| `@registrar.on_notice()` | 通知事件 |
+| `@registrar.on_request()` | 请求事件 |
+| `@registrar.on_poke()` | 戳一戳 |
+| `@registrar.on_group_increase()` | 群成员增加 |
+| `@registrar.on_group_decrease()` | 群成员减少 |
+| `@registrar.on_friend_request()` | 好友请求 |
+| `@registrar.on_group_request()` | 群请求 |
+| `@registrar.on(event_type, ...)` | 通用注册 |
 
----
+> 所有装饰器支持 `priority=`（优先级）和 `platform=`（平台过滤）参数。命令装饰器额外支持 `ignore_case=`。
 
-### 事件处理
+### Mixin 能力（继承 NcatBotPlugin 自动获得）
 
-#### 装饰器一览
+| Mixin | 方法 | 说明 |
+|-------|------|------|
+| **ConfigMixin** | `get_config(key, default=None)` | 读取 YAML 配置 |
+| | `set_config(key, value)` | 写入并持久化 |
+| | `remove_config(key)` | 移除配置项 |
+| | `update_config(updates)` | 批量更新 |
+| **DataMixin** | `self.data[key]` | 读写 JSON 持久化数据（字典） |
+| **RBACMixin** | `check_permission(user, permission)` | 检查权限 |
+| | `add_permission(path)` | 注册权限路径 |
+| | `add_role(role, exist_ok=True)` | 创建角色 |
+| | `self.rbac` | 访问 RBACService 实例 |
+| **TimeTaskMixin** | `add_scheduled_task(name, interval, ...)` | 添加定时任务 |
+| | `remove_scheduled_task(name)` | 移除定时任务 |
+| | `list_scheduled_tasks()` | 列出任务 |
+| **EventMixin** | `wait_event(predicate=, timeout=)` | 等待匹配事件 |
+| | `self.events(type)` | 创建事件流（async for） |
 
-| 装饰器 | 事件类型 | 自动添加的 Hook |
-|--------|---------|----------------|
-| `on_group_command(*names)` | `message` | `MessageTypeFilter("group")` + `CommandHook` |
-| `on_private_command(*names)` | `message` | `MessageTypeFilter("private")` + `CommandHook` |
-| `on_command(*names)` | `message` | `CommandHook` |
-| `on_group_message()` | `message` | `MessageTypeFilter("group")` |
-| `on_private_message()` | `message` | `MessageTypeFilter("private")` |
-| `on_message()` | `message` | — |
-| `on_notice()` | `notice` | — |
-| `on_request()` | `request` | — |
-| `on_group_increase()` | `notice` | `NoticeTypeFilter("group_increase")` |
-| `on_group_decrease()` | `notice` | `NoticeTypeFilter("group_decrease")` |
-| `on_poke()` | `notice` | `NoticeTypeFilter("notify")` + `SubTypeFilter("poke")` |
-| `on_friend_request()` | `request` | `RequestTypeFilter("friend")` |
-| `on_group_request()` | `request` | `RequestTypeFilter("group")` |
-| `on(event_type)` | 自定义 | 精确/前缀匹配 |
+### 阅读路线
 
-#### 三种模式对比
-
-| 维度 | A: 装饰器（推荐） | B: 事件流 | C: wait_event |
-|------|-----------------|----------|---------------|
-| 场景 | 命令响应、通知处理 | 后台监控 | 交互确认、多步对话 |
-| 风格 | 声明式 | 响应式（async for） | 命令式（await） |
-| 并发 | 框架自动路由 | 手动 create_task | Handler 内顺序 |
-| 优先级 | ✅ | ❌ | ❌ |
-| 参数绑定 | ✅ CommandHook | ❌ | ❌ |
-
----
-
-### Mixin API 速查表
-
-#### ConfigMixin
-
-| 方法 | 签名 |
-|------|------|
-| `get_config` | `(key, default=None) -> Any` |
-| `set_config` | `(key, value) -> None` — 立即保存 |
-| `update_config` | `(updates: dict) -> None` |
-| `remove_config` | `(key) -> bool` |
-
-#### DataMixin
-
-| 属性 | 说明 |
-|------|------|
-| `self.data` | `Dict[str, Any]` — 直接读写，卸载时自动保存 |
-
-#### RBACMixin
-
-| 方法 | 签名 |
-|------|------|
-| `check_permission` | `(user, permission) -> bool` |
-| `add_permission` | `(path) -> None` |
-| `add_role` | `(role, exist_ok=True) -> None` |
-| `user_has_role` | `(user, role) -> bool` |
-
-#### TimeTaskMixin
-
-| 方法 | 签名 |
-|------|------|
-| `add_scheduled_task` | `(name, interval, conditions=None, max_runs=None) -> bool` |
-| `remove_scheduled_task` | `(name) -> bool` |
-| `list_scheduled_tasks` | `() -> List[str]` |
-| `get_task_status` | `(name) -> Optional[Dict]` |
-
-#### EventMixin
-
-| 方法 | 签名 |
-|------|------|
-| `events` | `(event_type=None) -> EventStream` — `async with` + `async for` |
-| `wait_event` | `(predicate=None, timeout=None) -> Event` |
+- **新手**：1 → 2 → 4a（快速入门 → 插件结构 → 事件注册）
+- **进阶**：5a / 5b → 6（Mixin 能力 → Hook 机制）
+- **高级**：4c → 7a → 7b（Predicate DSL → 模式 → 实战）
 
 ---
 
-### Hook 速查
-
-#### 内置 Hook
-
-| Hook | 类型 | 说明 |
-|------|------|------|
-| `MessageTypeFilter` | 过滤 | 按 `"group"` / `"private"` 过滤 |
-| `PostTypeFilter` | 过滤 | 按 post_type 过滤 |
-| `SubTypeFilter` | 过滤 | 按 sub_type 过滤 |
-| `NoticeTypeFilter` | 过滤 | 按通知类型过滤 |
-| `RequestTypeFilter` | 过滤 | 按请求类型过滤 |
-| `SelfFilter` | 过滤 | 过滤 Bot 自身消息 |
-| `StartsWithHook` | 匹配 | 消息以指定前缀开头 |
-| `KeywordHook` | 匹配 | 消息包含任一关键词 |
-| `RegexHook` | 匹配 | 正则匹配 |
-| `CommandHook` | 命令 | 命令匹配 + 参数绑定 |
-
-#### 自定义 Hook 骨架
-
-```python
-from ncatbot.core.registry.hook import Hook, HookAction, HookContext, HookStage
-
-class MyHook(Hook):
-    stage = HookStage.BEFORE_CALL
-    priority = 50
-
-    async def execute(self, ctx: HookContext) -> HookAction:
-        # 你的逻辑
-        return HookAction.CONTINUE  # 或 SKIP
-```
-
----
-
-## 深入阅读
+## 本目录索引
 
 | 章节 | 说明 | 难度 |
 |------|------|------|
 | [1. 快速入门](1.quick-start.md) | 环境准备、安装、5 分钟跑通第一个插件 | ⭐ |
 | [2. 插件结构](2.structure.md) | manifest.toml 详解、基类选择、多文件组织 | ⭐ |
-| [3. 生命周期](3.lifecycle.md) | 加载流程、卸载流程、生命周期钩子、常见模式 | ⭐ |
-| [4a. 事件注册与装饰器](4a.event-registration.md) | 事件类型体系、装饰器路由、优先级、通知/请求 | ⭐⭐ |
-| [4b. 事件高级用法](4b.event-advanced.md) | 事件流、wait_event、事件实体、实战组合 | ⭐⭐ |
-| [5a. 配置与数据 Mixin](5a.config-data.md) | ConfigMixin + DataMixin 用法与对比 | ⭐⭐ |
-| [5b. 权限、定时任务与事件 Mixin](5b.rbac-schedule-event.md) | RBACMixin + TimeTaskMixin + EventMixin | ⭐⭐ |
-| [6. Hook 机制](6.hooks.md) | 三阶段模型、内置 Hook 清单、自定义编写、优先级 | ⭐⭐ |
-| [7a. 高级模式](7a.patterns.md) | 热重载、依赖管理、跨插件交互、多步对话 | ⭐⭐⭐ |
-| [7b. 实战案例与调试](7b.case-studies.md) | 群管理/定时报告/外部 API 案例、调试排查 | ⭐⭐⭐ |
-
-### 阅读路线图
-
-| 角色 | 推荐阅读 |
-|------|--------|
-| **新手** | 1.快速入门 → 2.插件结构 → 4a.事件注册 |
-| **进阶** | 5a/5b.Mixin → 6.Hook |
-| **高级** | 7a.高级模式 → 7b.实战案例 |
-
-### 相关资源
-
-- [架构总览](../../architecture.md) — NcatBot 整体分层架构
-- [消息类型详解](../send_message/) — 消息段构造、MessageArray、合并转发
-- [示例插件集合](../../../examples/README.md) — 15 个渐进式示例插件
+| [3. 生命周期](3.lifecycle.md) | 加载流程、卸载流程、生命周期钩子 | ⭐ |
+| [4a. 事件注册](4a.event-registration.md) | 事件类型体系、装饰器路由、优先级 | ⭐⭐ |
+| [4b. 事件高级用法](4b.event-advanced.md) | 事件流、wait_event、实战组合 | ⭐⭐ |
+| [4c. Predicate DSL](4c.predicate-dsl.md) | 谓词组合、P 基类、工厂函数 | ⭐⭐ |
+| [5a. 配置与数据](5a.config-data.md) | ConfigMixin + DataMixin | ⭐⭐ |
+| [5b. 权限/定时/事件](5b.rbac-schedule-event.md) | RBACMixin + TimeTaskMixin + EventMixin | ⭐⭐ |
+| [6. Hook 机制](6.hooks.md) | 三阶段模型、内置 Hook、自定义编写 | ⭐⭐ |
+| [7a. 高级模式](7a.patterns.md) | 热重载、依赖管理、跨插件交互 | ⭐⭐⭐ |
+| [7b. 实战案例](7b.case-studies.md) | 群管理/定时报告/外部 API 案例 | ⭐⭐⭐ |

@@ -1,6 +1,6 @@
 # 配置管理
 
-> ConfigManager、Config / NapCatConfig / PluginConfig 模型、ConfigStorage 完整 API。
+> ConfigManager、Config / AdapterEntry / NapCatConfig / PluginConfig 模型、ConfigStorage 完整 API。
 
 **源码位置**：`ncatbot/utils/config/`
 
@@ -14,10 +14,11 @@
 graph LR
     A[config.yaml] -->|YAML 读写| B[ConfigStorage]
     B -->|Model Validate| C[Config]
-    C --> D[NapCatConfig]
+    C --> D[AdapterEntry]
     C --> E[PluginConfig]
-    F[ConfigManager] -->|持有| B
-    F -->|懒加载| C
+    D --> F[NapCatConfig]
+    G[ConfigManager] -->|持有| B
+    G -->|懒加载| C
 ```
 
 ### ConfigManager
@@ -48,7 +49,7 @@ class ConfigManager:
 | 属性 | 类型 | 说明 |
 |------|------|------|
 | `config` | `Config` | 主配置对象（懒加载，首次访问时从文件读取） |
-| `napcat` | `NapCatConfig` | NapCat 连接子配置 |
+| `napcat` | `NapCatConfig` | **已弃用** — NapCat 连接子配置，请改用 `get_adapter_config("napcat")` |
 | `plugin` | `PluginConfig` | 插件子配置 |
 | `bot_uin` | `str` | 机器人 QQ 号 |
 | `root` | `str` | 管理员 QQ 号 |
@@ -61,8 +62,10 @@ class ConfigManager:
 | `reload` | `() -> Config` | 从文件重新加载配置 |
 | `save` | `() -> None` | 将当前配置写回文件 |
 | `update_value` | `(key: str, value) -> None` | 更新配置项，支持嵌套键如 `"napcat.ws_uri"` |
-| `update_napcat` | `(**kwargs) -> None` | 批量更新 NapCat 子配置 |
-| `get_uri_with_token` | `() -> str` | 返回带 `access_token` 参数的 WS URI |
+| `get_adapter_configs` | `() -> List[AdapterEntry]` | 获取所有已启用的适配器列表 |
+| `get_adapter_config` | `(adapter_type: str) -> Optional[AdapterEntry]` | 获取指定类型的第一个适配器 |
+| `update_napcat` | `(**kwargs) -> None` | **已弃用** — 批量更新 NapCat 子配置 |
+| `get_uri_with_token` | `() -> str` | **已弃用** — 返回带 `access_token` 参数的 WS URI |
 | `is_local` | `() -> bool` | 判断 WS 连接是否为本地 |
 | `is_default_uin` | `() -> bool` | 判断 QQ 号是否为默认值 |
 | `is_default_root` | `() -> bool` | 判断管理员号是否为默认值 |
@@ -84,7 +87,8 @@ def get_config_manager(path: Optional[str] = None) -> ConfigManager
 
 | 字段 | 类型 | 默认值 | 说明 |
 |------|------|--------|------|
-| `napcat` | `NapCatConfig` | `NapCatConfig()` | NapCat 连接配置 |
+| `adapters` | `List[AdapterEntry]` | `[]` | 适配器列表 |
+| `napcat` | `Optional[NapCatConfig]` | `None` | **已弃用** — 旧格式兼容字段 |
 | `plugin` | `PluginConfig` | `PluginConfig()` | 插件配置 |
 | `bot_uin` | `str` | `"123456"` | 机器人 QQ 号 |
 | `root` | `str` | `"123456"` | 管理员 QQ 号 |
@@ -97,6 +101,8 @@ def get_config_manager(path: Optional[str] = None) -> ConfigManager
 
 **验证器**：`bot_uin`、`root` 自动转换为字符串；`websocket_timeout` 强制最小值为 1。
 
+**迁移验证器**：`_migrate_legacy_napcat` — 自动将旧版顶层 `napcat:` 配置迁移到 `adapters:` 列表格式。
+
 **对应 YAML 示例**：
 
 ```yaml
@@ -104,13 +110,28 @@ bot_uin: "1234567890"
 root: "9876543210"
 debug: false
 websocket_timeout: 15
-napcat:
-  ws_uri: "ws://localhost:3001"
-  ws_token: "your_token"
+adapters:
+  - type: napcat
+    platform: qq
+    enabled: true
+    config:
+      ws_uri: "ws://localhost:3001"
+      ws_token: "your_token"
 plugin:
   plugins_dir: "plugins"
   load_plugin: true
 ```
+
+### AdapterEntry 模型
+
+每个适配器的声明配置。
+
+| 字段 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `type` | `str` | — | 适配器类型标识（如 `"napcat"`） |
+| `platform` | `str` | `""` | 平台标识（如 `"qq"`） |
+| `enabled` | `bool` | `True` | 是否启用 |
+| `config` | `Dict[str, Any]` | `{}` | 适配器专属配置字典 |
 
 ### NapCatConfig 模型
 

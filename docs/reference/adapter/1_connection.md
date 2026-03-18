@@ -50,7 +50,7 @@ async def connect(self) -> None:
 1. 从配置获取 WebSocket URI（含 Token）
 2. 创建 `NapCatWebSocket` 并建立连接
 3. 创建 `OB11Protocol` 用于请求-响应匹配
-4. 创建 `NapCatBotAPI` 作为 `IBotAPI` 实现
+4. 创建 `NapCatBotAPI` 作为 `IQQAPIClient` 实现
 5. 将内部事件处理方法注册到协议层
 
 ### 监听与消息分流

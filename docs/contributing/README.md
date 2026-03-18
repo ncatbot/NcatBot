@@ -4,7 +4,7 @@
 
 ---
 
-## Quick Start
+## Quick Reference
 
 5 步完成你的第一次贡献：
 
@@ -52,43 +52,13 @@ git push origin feat/my-feature
 
 ---
 
-## 文档索引
+## 本目录索引
 
 | 目录 | 说明 |
 |------|------|
-| [development_setup/](development_setup/) | 开发环境搭建 |
-| [design_decisions/](design_decisions/) | 设计决策记录（ADR） |
+| [development_setup/](development_setup/) | 开发环境搭建、工具链、常用命令 |
+| [design_decisions/](design_decisions/) | 架构决策记录（ADR） |
 | [module_internals/](module_internals/) | 模块内部实现详解 |
-
-### development_setup/ — 开发环境
-
-详细的环境搭建与工具链配置：
-
-- [基础环境](development_setup/README.md) — Python、uv、依赖安装
-- [高级配置](development_setup/1_advanced.md) — IDE 配置、调试、代码规范
-
-> 旧版单文件指南：[development_setup/](development_setup/)
-
-### design_decisions/ — 设计决策
-
-架构决策记录（ADR），记录关键设计选择的背景与理由：
-
-- [架构决策](design_decisions/1_architecture.md) — 分层架构、适配器模式
-- [实现决策](design_decisions/2_implementation.md) — Dispatcher、Hook、热重载
-
-> 旧版单文件指南：[design_decisions/](design_decisions/)
-
-### module_internals/ — 模块内部实现
-
-深入各模块的内部实现细节：
-
-- WebSocket 连接管理
-- 协议匹配与路由
-- 拓扑排序（插件依赖）
-- Trie 权限树
-- 热重载机制
-
-> 旧版单文件指南：[module_internals/](module_internals/)
 
 ---
 

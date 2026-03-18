@@ -1,10 +1,14 @@
 # 消息 API — 核心方法与便捷方法
 
-> 核心消息方法与 MessageSugarMixin 便捷方法的完整参数表、返回值和示例。
+> QQMessaging 核心消息方法 + QQMessageSugarMixin 便捷方法的完整参数表、返回值和示例。
+>
+> 核心方法通过 `api.qq.messaging.xxx()` 调用，Sugar 方法通过 `api.qq.xxx()` 调用。
 
 ---
 
 ## 核心消息方法
+
+> 命名空间：`api.qq.messaging`（`QQMessaging`）
 
 ### send_group_msg()
 
@@ -67,11 +71,69 @@ async def send_poke(
 
 戳一戳（NapCat 扩展）。
 
+### friend_poke()
+
+```python
+async def friend_poke(self, user_id: Union[str, int]) -> None:
+```
+
+私聊戳一戳。
+
+### send_like()
+
+```python
+async def send_like(self, user_id: Union[str, int], times: int = 1) -> None:
+```
+
+给用户点赞。`times` 为点赞次数，默认 `1`。
+
+### set_msg_emoji_like()
+
+```python
+async def set_msg_emoji_like(
+    self, message_id: Union[str, int], emoji_id: str, set: bool = True,
+) -> None:
+```
+
+对消息设置/取消表情回应。`emoji_id` 为 QQ 表情 ID，`set=False` 取消。
+
+### mark_group_msg_as_read() / mark_private_msg_as_read() / mark_all_as_read()
+
+```python
+async def mark_group_msg_as_read(self, group_id: Union[str, int]) -> None:
+async def mark_private_msg_as_read(self, user_id: Union[str, int]) -> None:
+async def mark_all_as_read(self) -> None:
+```
+
+标记群/私聊/全部消息为已读。
+
+### forward_friend_single_msg() / forward_group_single_msg()
+
+```python
+async def forward_friend_single_msg(self, user_id: Union[str, int], message_id: Union[str, int]) -> None:
+async def forward_group_single_msg(self, group_id: Union[str, int], message_id: Union[str, int]) -> None:
+```
+
+逐条转发单条消息到好友/群。
+
+### get_group_msg_history() / get_friend_msg_history()
+
+```python
+async def get_group_msg_history(
+    self, group_id: Union[str, int], message_seq: Optional[int] = None, count: int = 20,
+) -> MessageHistory:
+async def get_friend_msg_history(
+    self, user_id: Union[str, int], message_seq: Optional[int] = None, count: int = 20,
+) -> MessageHistory:
+```
+
+获取群/好友消息历史。`message_seq` 为起始消息序号，`count` 为拉取条数。
+
 ---
 
-## MessageSugarMixin 便捷方法
+## QQMessageSugarMixin 便捷方法
 
-> 源码：`ncatbot/api/_sugar.py`
+> 通过 `api.qq.xxx()` 直接调用（QQAPIClient 继承了 QQMessageSugarMixin）。
 
 ### post_group_msg()
 

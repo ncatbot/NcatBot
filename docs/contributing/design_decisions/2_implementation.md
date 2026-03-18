@@ -267,34 +267,36 @@ OneBot v11 协议定义了 60+ 个 API。将它们全部平铺在 `BotAPIClient`
 
 ### 决策
 
-将 API 分为 **顶层高频** + **命名空间低频** 两层：
+将 API 分为 **多平台路由器** + **平台 API 命名空间** 两层：
 
 ```python
 # api/client.py
-class BotAPIClient(MessageSugarMixin):
-    def __init__(self, adapter_api: IBotAPI):
-        self._base = _LoggingAPIProxy(adapter_api)
-        self.manage = ManageExtension(self._base)  # 群管理
-        self.info = InfoExtension(self._base)       # 信息查询
-        self.support = SupportExtension(self._base)  # 文件·杂项
+class BotAPIClient:
+    """多平台纯组合器，不持有业务方法"""
+    def __init__(self):
+        self._platforms: Dict[str, Any] = {}
+    def register_platform(self, name, client): ...
+    @property
+    def qq(self) -> QQAPIClient: ...
+
+# api/qq/client.py
+class QQAPIClient(QQMessageSugarMixin):
+    def __init__(self, adapter_api):
+        self.messaging = QQMessaging(adapter_api)  # 消息
+        self.manage = QQManage(adapter_api)        # 群管理
+        self.query = QQQuery(adapter_api)          # 查询
+        self.file = QQFile(adapter_api)            # 文件
 ```
 
 | 层级 | 方法示例 | 使用频率 |
 |---|---|---|
-| **顶层** | `api.send_group_msg()` / `api.send_private_msg()` / `api.delete_msg()` | 每个插件都用 |
-| **Sugar** | `api.post_group_msg(text=, image=)` / `api.send_group_text()` | 高频便捷 |
-| `api.manage.*` | `api.manage.set_group_ban()` / `api.manage.set_group_kick()` | 管理类插件 |
-| `api.info.*` | `api.info.get_group_list()` / `api.info.get_login_info()` | 按需 |
-| `api.support.*` | `api.support.upload_group_file()` | 低频 |
+| **核心** | `api.qq.messaging.send_group_msg()` / `api.qq.messaging.delete_msg()` | 每个插件都用 |
+| **Sugar** | `api.qq.post_group_msg(text=, image=)` / `api.qq.send_group_text()` | 高频便捷 |
+| `api.qq.manage.*` | `api.qq.manage.set_group_ban()` / `api.qq.manage.set_group_kick()` | 管理类插件 |
+| `api.qq.query.*` | `api.qq.query.get_group_list()` / `api.qq.query.get_login_info()` | 按需 |
+| `api.qq.file.*` | `api.qq.file.upload_group_file()` | 低频 |
 
-**兜底机制：**
-
-```python
-def __getattr__(self, name: str) -> Any:
-    return getattr(self._base, name)
-```
-
-未在 `BotAPIClient` 显式定义的方法自动代理到底层 `IBotAPI`，确保不遗漏任何 API。
+> **注意**：`BotAPIClient` 本身不持有业务方法，所有操作通过 `api.qq.*` 访问。
 
 ### 理由
 

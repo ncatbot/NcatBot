@@ -2,25 +2,25 @@
 
 > 通过 `ncatbot` 命令完成项目初始化、启动、插件管理、配置管理和 NapCat 诊断。
 
-## Quick Start
+## Quick Reference
 
-安装 NcatBot 后即可使用 `ncatbot` 命令：
+安装 NcatBot 后即可使用 `ncatbot` 命令。
 
-```bash
-# 初始化项目（生成 config.yaml + plugins/ + 模板插件）
-ncatbot init
+### 命令一览
 
-# 启动 Bot
-ncatbot run
+| 命令 | 参数 | 说明 |
+|------|------|------|
+| `ncatbot init` | `[--force]` | 初始化项目（生成 config.yaml + plugins/ + 模板插件） |
+| `ncatbot run` | `[--config PATH]` | 启动 Bot |
+| `ncatbot dev` | `[--config PATH]` | 开发模式启动（debug + 热重载） |
+| `ncatbot` | — | 进入交互模式（REPL） |
+| `ncatbot config get <key>` | | 读取配置值 |
+| `ncatbot config set <key> <value>` | | 设置配置值 |
+| `ncatbot plugin list` | | 列出已安装插件 |
+| `ncatbot plugin install <name>` | | 安装插件 |
+| `ncatbot plugin remove <name>` | | 卸载插件 |
 
-# 以开发模式启动（debug + 热重载）
-ncatbot dev
-
-# 进入交互模式（REPL）
-ncatbot
-```
-
-## 文档清单
+## 本目录索引
 
 | 文件 | 说明 | 难度 |
 |------|------|------|

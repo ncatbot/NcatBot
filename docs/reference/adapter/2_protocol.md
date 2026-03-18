@@ -137,11 +137,11 @@ class NapCatEventParser:
 
 ---
 
-## NapCatBotAPI — IBotAPI 实现
+## NapCatBotAPI — IQQAPIClient 实现
 
 **模块**: `ncatbot.adapter.napcat.api.bot_api`
 
-`NapCatBotAPI` 是 `IBotAPI` 的 NapCat 平台实现，通过 Mixin 模式组合多个功能模块：
+`NapCatBotAPI` 是 `IQQAPIClient` 的 NapCat 平台实现，通过 Mixin 模式组合多个功能模块：
 
 ```python
 class NapCatBotAPI(
@@ -150,7 +150,7 @@ class NapCatBotAPI(
     AccountAPIMixin,      # 账号操作
     QueryAPIMixin,        # 信息查询
     FileAPIMixin,         # 文件操作
-    IBotAPI,
+    IQQAPIClient,
 ):
     def __init__(self, protocol: OB11Protocol): ...
     async def _call(self, action: str, params: Optional[dict] = None) -> dict: ...

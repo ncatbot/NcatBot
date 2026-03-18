@@ -1,6 +1,6 @@
 # 消息段参考
 
-> 消息段的分类、构造方式和常用示例。完整字段表见 [reference/types/1_segments.md](../../reference/types/1_segments.md)。
+> 消息段的分类、构造方式和常用示例。完整字段表见 [通用消息段](../../../reference/types/1_common_segments.md) 和 [QQ 消息段](../../../reference/types/3_qq_segments.md)。
 
 ---
 
@@ -14,7 +14,7 @@ from ncatbot.types import PlainText, parse_segment
 seg = PlainText(text="Hello")
 seg.to_dict()  # {"type": "text", "data": {"text": "Hello"}}
 
-seg = parse_segment({"type": "at", "data": {"qq": "123456"}})  # → At(qq='123456')
+seg = parse_segment({"type": "at", "data": {"qq": "123456"}})  # → At(user_id='123456')
 ```
 
 ---
@@ -24,7 +24,7 @@ seg = parse_segment({"type": "at", "data": {"qq": "123456"}})  # → At(qq='1234
 | 类型 | 构造示例 | 关键字段 |
 |------|---------|---------|
 | `PlainText` | `PlainText(text="你好")` | `text: str` |
-| `At` | `At(qq="123456")` / `At(qq="all")` | `qq: str`（数字或 `"all"`） |
+| `At` | `At(user_id="123456")` / `At(user_id="all")` | `user_id: str`（数字或 `"all"`，别名 `qq` 兼容 OB11） |
 | `Face` | `Face(id=178)` | `id: str`（自动转换） |
 | `Reply` | `Reply(id=12345)` | `id: str`（自动转换） |
 
@@ -59,8 +59,9 @@ seg = parse_segment({"type": "at", "data": {"qq": "123456"}})  # → At(qq='1234
 
 ## 延伸阅读
 
-- [MessageArray 消息数组](3_array.md) — 消息段的容器与链式构造
-- [消息段完整字段表](../../reference/types/1_segments.md) — 所有字段、验证规则、序列化格式
+- [MessageArray 消息数组](2_array.md) — 消息段的容器与链式构造
+- [通用消息段](../../../reference/types/1_common_segments.md) — 通用段完整字段表
+- [QQ 消息段](../../../reference/types/3_qq_segments.md) — QQ 专属段完整字段表
 
 ```python
 seg = Music(type="qq", id="12345")        # QQ 音乐
@@ -99,4 +100,4 @@ seg = Markdown(content="# 标题\n**粗体**\n- 列表项")
 
 ---
 
-[← 上一篇：快速上手](README.md) | [返回目录](README.md) | [下一篇：MessageArray →](3_array.md)
+[← 上一篇：快速上手](README.md) | [返回目录](README.md) | [下一篇：MessageArray →](2_array.md)

@@ -1,162 +1,76 @@
 # 类型参考
 
-> 消息段、消息数组等数据类型完整参考。
+> NcatBot 类型系统完整参考。按 **通用层 → QQ 平台 → Bilibili 平台** 组织。
 
 ---
 
-## Quick Start
+## Quick Reference
 
-3 行代码构造一条包含文本、@、图片的消息：
+### 类型架构
 
-```python
-from ncatbot.types import MessageArray, PlainText, At, Image
-
-# 链式构造
-msg = MessageArray().add_text("你好 ").add_at(123456).add_image("https://example.com/img.png")
-
-# 等价写法：直接组合消息段
-msg = MessageArray([PlainText(text="你好 "), At(qq="123456"), Image(file="https://example.com/img.png")])
+```
+ncatbot.types                    # 通用层导出（平台无关）
+├── ncatbot.types.common         #   MessageSegment, MessageArray, PlainText, At, Image ...
+├── ncatbot.types.qq             # QQ 平台: Face, Forward, Music, 枚举, Sender ...
+├── ncatbot.types.napcat         # QQ 响应: NapCatModel, GroupInfo, SendMessageResult ...
+└── ncatbot.types.bilibili       # Bilibili 平台: BiliSender, 枚举, 事件数据模型 ...
 ```
 
-API 返回值使用 Pydantic 类型：
+### 消息段速查
 
-```python
-from ncatbot.types import SendMessageResult, LoginInfo, GroupInfo
+**通用段**（所有平台共享）— `from ncatbot.types import ...`
 
-result = await api.post_group_msg(group_id, text="hello")
-print(result.message_id)  # str
+| 类 | `_type` | 关键字段 |
+|----|---------|----------|
+| `PlainText` | `"text"` | `text: str` |
+| `At` | `"at"` | `user_id: str`（`"all"` = @全体） |
+| `Reply` | `"reply"` | `id: str` |
+| `Image` | `"image"` | `file`, `url?`, `file_id?` |
+| `Record` | `"record"` | `file`, `url?` |
+| `Video` | `"video"` | `file`, `url?` |
+| `File` | `"file"` | `file`, `url?` |
 
-info = await api.info.get_login_info()
-print(info.user_id, info.nickname)
-```
+**QQ 专属段** — `from ncatbot.types.qq import ...`
 
-在事件处理器中使用：
+| 类 | `_type` | 关键字段 |
+|----|---------|----------|
+| `Face` | `"face"` | `id: str` |
+| `Share` | `"share"` | `url`, `title` |
+| `Location` | `"location"` | `lat`, `lon` |
+| `Music` | `"music"` | `type`, `id?`, `url?` |
+| `Json` | `"json"` | `data: str` |
+| `Markdown` | `"markdown"` | `content: str` |
+| `Forward` | `"forward"` | `id?`, `content?` |
+| `QQImage` | `"image"` | `sub_type`, `type?` |
 
-```python
-@bot.on_message()
-async def handler(event):
-    # 提取纯文本
-    text = event.message.text
+### MessageArray 方法速查
 
-    # 过滤出所有图片
-    images = event.message.filter_image()
-
-    # 检查是否 @了 bot
-    if event.message.is_at(bot.self_id):
-        reply = MessageArray().add_text("收到！")
-        await bot.api.send_group_msg(group_id=event.group_id, message=reply)
-```
-
----
-
-## 消息段类型速查表
-
-所有消息段继承自 `MessageSegment`（位于 `ncatbot.types`），通过 `_type` 注册到 `SEGMENT_MAP`。
-
-### 文本类
-
-| 类名 | `_type` | 构造签名 | 说明 |
-|---|---|---|---|
-| `PlainText` | `"text"` | `PlainText(text="...")` | 纯文本 |
-| `Face` | `"face"` | `Face(id="123")` | QQ 表情 |
-| `At` | `"at"` | `At(qq="123456")` / `At(qq="all")` | @某人 / @全体 |
-| `Reply` | `"reply"` | `Reply(id="msg_id")` | 引用回复 |
-
-### 媒体类
-
-基类 `DownloadableSegment` 提供通用字段：`file`（必需）、`url`、`file_id`、`file_size`、`file_name`（均可选）。
-
-| 类名 | `_type` | 构造签名 | 说明 |
-|---|---|---|---|
-| `Image` | `"image"` | `Image(file="url_or_path")` | 图片 |
-| `Record` | `"record"` | `Record(file="url_or_path")` | 语音 |
-| `Video` | `"video"` | `Video(file="url_or_path")` | 视频 |
-| `File` | `"file"` | `File(file="url_or_path")` | 文件 |
-
-### 富文本类
-
-| 类名 | `_type` | 构造签名 | 说明 |
-|---|---|---|---|
-| `Share` | `"share"` | `Share(url="...", title="...")` | 链接分享 |
-| `Location` | `"location"` | `Location(lat=39.9, lon=116.3)` | 位置 |
-| `Music` | `"music"` | `Music(type="qq", id="123")` | 音乐 |
-| `Json` | `"json"` | `Json(data='{"key":"val"}')` | JSON 消息 |
-| `Markdown` | `"markdown"` | `Markdown(content="# 标题")` | Markdown 消息 |
-
-### 转发类
-
-| 类名 | `_type` | 构造签名 | 说明 |
-|---|---|---|---|
-| `Forward` | `"forward"` | `Forward(id="...")` / `Forward(content=[...])` | 合并转发 |
-| `ForwardNode` | — | `ForwardNode(user_id="...", nickname="...", content=[...])` | 转发节点 |
-| `ForwardConstructor` | — | `ForwardConstructor(user_id="...", nickname="...")` | 转发构造器 |
-
-> 完整属性表与构造示例见 [1_segments.md](1_segments.md)。
+| 方法 | 说明 |
+|------|------|
+| `MessageArray()` / `.from_list()` / `.from_any()` | 构造 |
+| `.add_text()` / `.add_at()` / `.add_image()` / `.add_video()` / `.add_reply()` | 链式添加 |
+| `.filter(cls)` / `.filter_text()` / `.filter_at()` / `.filter_image()` | 查询过滤 |
+| `.text` | 拼接所有纯文本 |
+| `.to_list()` | 序列化为 OB11 dict 列表 |
 
 ---
 
-## MessageArray 方法速查
+## 本目录索引
 
-`MessageArray` 是消息段数组的容器，支持链式构造、类型过滤和序列化。
-
-### 创建
-
-| 方法 | 签名 | 说明 |
-|---|---|---|
-| 构造函数 | `MessageArray(segments: List[MessageSegment] = None)` | 从消息段列表创建 |
-| `from_list` | `MessageArray.from_list(data: List[Dict]) -> MessageArray` | 从 OB11 字典列表创建 |
-| `from_any` | `MessageArray.from_any(data: Any) -> MessageArray` | 从任意输入创建（列表 / CQ 码 / 消息段） |
-
-### 链式构造
-
-| 方法 | 签名 | 说明 |
-|---|---|---|
-| `add_text` | `add_text(text: str) -> MessageArray` | 追加纯文本（支持 CQ 码自动解析） |
-| `add_image` | `add_image(image: str \| Image) -> MessageArray` | 追加图片 |
-| `add_video` | `add_video(video: str \| Video) -> MessageArray` | 追加视频 |
-| `add_at` | `add_at(user_id: str \| int) -> MessageArray` | 追加 @某人 |
-| `add_at_all` | `add_at_all() -> MessageArray` | 追加 @全体 |
-| `add_reply` | `add_reply(message_id: str \| int) -> MessageArray` | 追加引用回复 |
-| `add_segment` | `add_segment(segment: MessageSegment) -> MessageArray` | 追加任意消息段 |
-| `add_segments` | `add_segments(data: Any) -> MessageArray` | 追加任意输入 |
-
-### 查询与过滤
-
-| 方法 / 属性 | 签名 | 说明 |
-|---|---|---|
-| `text` | `@property text -> str` | 所有纯文本拼接 |
-| `filter` | `filter(cls: Type[T] = None) -> List[T]` | 按类型过滤消息段 |
-| `filter_text` | `filter_text() -> List[PlainText]` | 过滤纯文本段 |
-| `filter_at` | `filter_at() -> List[At]` | 过滤 @段 |
-| `filter_image` | `filter_image() -> List[Image]` | 过滤图片段 |
-| `filter_video` | `filter_video() -> List[Video]` | 过滤视频段 |
-| `filter_face` | `filter_face() -> List[Face]` | 过滤表情段 |
-| `is_at` | `is_at(user_id, all_except=False) -> bool` | 是否 @了指定用户 |
-| `is_forward_msg` | `is_forward_msg() -> bool` | 是否包含转发消息 |
-
-### 序列化与容器
-
-| 方法 | 签名 | 说明 |
-|---|---|---|
-| `to_list` | `to_list() -> List[Dict]` | 序列化为 OB11 字典列表 |
-| `__len__` | `len(msg)` | 消息段数量 |
-| `__iter__` | `for seg in msg` | 迭代消息段 |
-| `__add__` | `msg + other` | 拼接（返回新 MessageArray） |
-| `__radd__` | `other + msg` | 反向拼接 |
-
-> 完整方法详解与高级用法见 [2_message_array.md](2_message_array.md)。
+| 文件 | 层级 | 说明 |
+|------|------|------|
+| [1_common_segments.md](1_common_segments.md) | 通用 | 跨平台消息段基类与 7 种通用段 |
+| [2_message_array.md](2_message_array.md) | 通用 | MessageArray 容器完整方法详解 |
+| [3_qq_segments.md](3_qq_segments.md) | QQ | QQ 专属消息段（Face, Forward, Music 等） |
+| [4_qq_responses.md](4_qq_responses.md) | QQ | Bot API 响应类型（NapCat 协议） |
+| [5_bilibili_types.md](5_bilibili_types.md) | Bilibili | Bilibili 平台类型（Sender, 枚举, 事件数据） |
 
 ---
 
-## 深入阅读
+## 交叉引用
 
-| 文档 | 内容 |
-|---|---|
-| [消息段类型详解](1_segments.md) | 每个消息段的完整属性表、验证规则、构造示例 |
-| [MessageArray 详解](2_message_array.md) | MessageArray 完整方法详解、高级用法、Pydantic 集成 |
-| [API 响应类型](3_response_types.md) | Bot API 返回值的 Pydantic 类型定义 |
-
-**相关参考：**
-
-- 事件模型参考：[events/](../events/)
-- 插件开发指南：[guide/plugin/](../../guide/plugin/README.md)
+| 如果你在找… | 去这里 |
+|------------|--------|
+| 消息发送教程 | [guide/send_message/](../../guide/send_message/) |
+| 事件类型参考 | [events/](../events/) |
+| Bot API 方法签名 | [api/](../api/) |

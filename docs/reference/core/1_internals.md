@@ -199,7 +199,7 @@ class Hook(ABC):
 class HookContext:
     event: Event              # 当前事件
     handler: HandlerEntry     # 当前 handler 条目
-    api: Optional[IBotAPI]    # Bot API 实例
+    api: Optional[BotAPIClient]    # Bot API 实例
     service_manager: Optional[ServiceManager]
     kwargs: dict              # 额外参数，可被 Hook 修改
     error: Optional[Exception]  # 仅 ON_ERROR 阶段填充

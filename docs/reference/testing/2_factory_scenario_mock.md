@@ -192,7 +192,7 @@ class APICall:
 from ncatbot.adapter import MockBotAPI
 ```
 
-`IBotAPI` 的完整 Mock 实现。记录所有调用，返回可配置响应。
+`IAPIClient` 的完整 Mock 实现。记录所有调用，返回可配置响应。
 
 ### 调用记录方法
 
@@ -240,7 +240,7 @@ from ncatbot.adapter import MockAdapter
 | `connected` | `@property -> bool` | 是否已连接 |
 | `inject_event` | `async inject_event(data: BaseEventData) -> None` | 注入事件到 dispatcher |
 | `stop` | `stop() -> None` | 停止 listen 循环 |
-| `get_api` | `get_api() -> IBotAPI` | 返回 MockBotAPI |
+| `get_api` | `get_api() -> IAPIClient` | 返回 MockBotAPI |
 
 > 通常通过 `TestHarness.adapter` 访问，无需直接实例化。
 

@@ -4,7 +4,7 @@
 
 ---
 
-## Quick Start
+## Quick Reference
 
 NcatBot 采用 7 层分层架构，自底向上为：
 
@@ -20,7 +20,7 @@ graph TB
     Plugin["插件层<br/><small>NcatBotPlugin · Mixin</small>"]
     Service["服务层<br/><small>ServiceManager · RBAC · Schedule</small>"]
     Core["核心层<br/><small>Dispatcher · Registry</small>"]
-    API["API 层<br/><small>BotAPIClient · IBotAPI</small>"]
+    API["API 层<br/><small>BotAPIClient · IAPIClient</small>"]
     Event["事件层<br/><small>BaseEvent · EventEntity</small>"]
     Adapter["适配层<br/><small>NapCatAdapter · WebSocket</small>"]
     Types["类型层<br/><small>BaseEventData · Segment · Enums</small>"]
@@ -42,7 +42,7 @@ graph TB
 
 **关键设计模式：**
 
-- **依赖反转** — `IBotAPI` 接口定义在 API 层，Adapter 层去实现它（而非 API 层依赖 Adapter）
+- **依赖反转** — `IAPIClient` 接口定义在 API 层，Adapter 层去实现它（而非 API 层依赖 Adapter）
 - **纯广播事件分发** — `AsyncEventDispatcher` 不含业务逻辑，每个消费者独立 Queue
 - **ContextVar 注册隔离** — 插件加载时装饰器自动绑定正确的插件上下文
 - **Mixin 能力组合** — `NcatBotPlugin` 通过多继承获得事件、定时、RBAC、配置等能力
@@ -79,13 +79,13 @@ graph TB
 | 编号 | 标题 | 状态 | 结论 |
 |---|---|---|---|
 | ADR-001 | [分层架构](1_architecture.md#adr-001分层架构) | ✅ 已采纳 | 采用 7 层分层架构，各层单一职责、禁止跨层和反向依赖 |
-| ADR-002 | [适配器模式与依赖反转](1_architecture.md#adr-002适配器模式与依赖反转) | ✅ 已采纳 | API 层定义 `IBotAPI` 抽象接口，Adapter 层实现；依赖方向由上至下 |
+| ADR-002 | [适配器模式与依赖反转](1_architecture.md#adr-002适配器模式与依赖反转) | ✅ 已采纳 | API 层定义 `IAPIClient` 抽象接口，Adapter 层实现；依赖方向由上至下 |
 | ADR-003 | [AsyncEventDispatcher 纯广播设计](1_architecture.md#adr-003asynceventdispatcher-纯广播设计) | ✅ 已采纳 | 分发器是纯广播器，不含业务逻辑；每个消费者独立 Queue，互不阻塞 |
 | ADR-004 | [ContextVar 隔离注册上下文](1_architecture.md#adr-004contextvar-隔离注册上下文) | ✅ 已采纳 | 使用 `ContextVar` 在模块加载期隔离插件注册上下文，零侵入插件代码 |
 
 **ADR-001 分层架构** — NcatBot 需同时满足插件开发者（事件处理 + API 调用）、框架扩展者（替换适配器）与核心贡献者（修改分发引擎）三类用户。7 层架构通过严格的依赖规则，使各层可独立演化和测试。
 
-**ADR-002 适配器模式** — `IBotAPI` 定义在 API 层而非 Adapter 层，确保依赖方向正确。新增协议适配器只需实现接口，零修改已有代码。`MockBotAPI` 使测试完全脱离真实 QQ 连接。
+**ADR-002 适配器模式** — `IAPIClient` 定义在 API 层而非 Adapter 层，确保依赖方向正确。新增协议适配器只需实现接口，零修改已有代码。`MockBotAPI` 使测试完全脱离真实 QQ 连接。
 
 **ADR-003 纯广播设计** — `AsyncEventDispatcher` 只做事件广播（Queue per consumer），不含 Handler 匹配等业务逻辑。三类消费者（HandlerDispatcher / EventMixin / wait_event）共存互不干扰。
 
@@ -109,7 +109,7 @@ graph TB
 
 **ADR-007 遍历执行** — 同事件可匹配多个 handler（精确 + 前缀），按优先级降序遍历。日志插件监听 `"message"` 和业务插件监听 `"message.group"` 自然共存。
 
-**ADR-008 命名空间 API** — 60+ OneBot API 分为顶层高频（`api.send_group_msg()`）和命名空间低频（`api.manage.*`），`__getattr__` 兜底代理确保覆盖完整。
+**ADR-008 命名空间 API** — 90+ OneBot API 分为 Sugar 高频（`api.qq.post_group_msg()`）和命名空间低频（`api.qq.manage.*` / `api.qq.query.*` / `api.qq.file.*`），`BotAPIClient` 作为多平台路由组合器。
 
 **ADR-009 RBAC Trie** — 权限路径 `plugin.admin.kick` 用 Trie 前缀树存储，$O(k)$ 查询，支持 `*`/`**` 通配符。QQ 机器人权限天然具有层级结构（插件 → 功能 → 操作）。
 
@@ -136,7 +136,7 @@ Plugin ─────── Core ─────── Event ──────
 
 ### 2. 依赖反转
 
-稳定的抽象接口定义在高层（如 `IBotAPI` 在 API 层），具体实现在低层（如 `NapCatBotAPI` 在 Adapter 层）。替换具体实现不影响上层代码。
+稳定的抽象接口定义在高层（如 `IAPIClient` 在 API 层），具体实现在低层（如 `NapCatBotAPI` 在 Adapter 层）。替换具体实现不影响上层代码。
 
 > **实践指导：** 当需要引入外部依赖或可替换组件时，先在目标层定义接口，再在实现层编写具体代码。
 

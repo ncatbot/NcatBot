@@ -4,6 +4,38 @@
 
 ---
 
+## Quick Reference
+
+```python
+from ncatbot.testing import TestHarness, PluginTestHarness, group_message
+```
+
+### 核心组件
+
+| 组件 | 说明 |
+|------|------|
+| `TestHarness` | 轻量无插件测试 — 注册 handler 并注入事件 |
+| `PluginTestHarness` | 完整插件测试 — 加载真实插件目录并模拟事件流 |
+| `Scenario` | 链式构建器 — 编排多步交互场景 |
+| `MockAdapter` / `MockBotAPI` | 内存模拟 — 无需网络连接 |
+
+### 事件工厂函数（8 个）
+
+| 函数 | 说明 |
+|------|------|
+| `group_message(content, group_id=, user_id=)` | 群消息 |
+| `private_message(content, user_id=)` | 私聊消息 |
+| `friend_request(user_id=)` | 好友请求 |
+| `group_request(group_id=, user_id=)` | 加群请求 |
+| `group_increase(group_id=, user_id=)` | 群成员增加 |
+| `group_decrease(group_id=, user_id=)` | 群成员减少 |
+| `group_ban(group_id=, user_id=)` | 群禁言 |
+| `poke(group_id=, user_id=)` | 戳一戳 |
+
+典型用法：`PluginTestHarness` → `h.inject(group_message(...))` → `h.settle()` → `h.api_called("send_group_msg")`
+
+---
+
 ## 模块结构
 
 ```python
@@ -72,34 +104,9 @@ from ncatbot.testing import (
 
 ---
 
-## pytest 集成速查
+## 本目录索引
 
-### Fixtures
-
-| Fixture | 来源 | 说明 |
-|---------|------|------|
-| `harness` | `tests/conftest.py` | `TestHarness` async 上下文 |
-| `mock_adapter` | `tests/conftest.py` | 独立 `MockAdapter` 实例 |
-| `plugin_dir` | `conftest_plugin.py` | 从 `--plugin-dir` 获取路径 |
-
-### Markers
-
-| Marker | 说明 |
-|--------|------|
-| `@pytest.mark.plugin(name="xxx")` | 标记为特定插件的测试 |
-
-### CLI 选项
-
-| 选项 | 说明 |
+| 文件 | 说明 |
 |------|------|
-| `--plugin-dir=PATH` | 指定插件根目录（用于插件自动发现） |
-
----
-
-## 深入阅读
-
-| 文档 | 说明 |
-|------|------|
-| [TestHarness + PluginTestHarness](1_harness.md) | 编排器完整 API 签名 |
-| [Factory + Scenario + Mock](2_factory_scenario_mock.md) | 工厂函数、场景构建器、Mock API 签名 |
-| [测试使用指南](../../guide/testing/) | 教程风格的测试入门 |
+| [1_harness.md](1_harness.md) | TestHarness + PluginTestHarness 完整 API |
+| [2_factory_scenario_mock.md](2_factory_scenario_mock.md) | 工厂函数、Scenario 构建器、MockAdapter / MockBotAPI |

@@ -83,8 +83,8 @@ async def post_private_msg(
 **组装顺序：** `reply → at → text → image → video → rtf`
 
 ```python
-await self.api.post_group_msg(gid, text="你好！", at=uid, reply=mid)
-await self.api.post_private_msg(uid, text="Hi", image="a.png")
+await self.api.qq.post_group_msg(gid, text="你好！", at=uid, reply=mid)
+await self.api.qq.post_private_msg(uid, text="Hi", image="a.png")
 ```
 
 > 如果需要更复杂的组合，使用 `rtf` 参数传入完整的 `MessageArray`。
@@ -100,8 +100,8 @@ await self.api.post_private_msg(uid, text="Hi", image="a.png")
 
 ```python
 msg = MessageArray().add_text("Hello").add_image("a.png")
-await self.api.post_group_array_msg(group_id, msg)
-await self.api.post_private_array_msg(user_id, msg)
+await self.api.qq.post_group_array_msg(group_id, msg)
+await self.api.qq.post_private_array_msg(user_id, msg)
 ```
 
 ---
@@ -119,13 +119,13 @@ await self.api.post_private_array_msg(user_id, msg)
 | `send_group_sticker(group_id, image)` | `image: str \| Image` | 发送动画表情（sub_type=1） |
 
 ```python
-await self.api.send_group_text(gid, "Hello!")
-await self.api.send_group_plain_text(gid, "[CQ:at,qq=all] 这不会被解析")
-await self.api.send_group_image(gid, "https://example.com/img.png")
-await self.api.send_group_record(gid, "https://example.com/voice.silk")
-await self.api.send_group_video(gid, str(video_path))
-await self.api.send_group_file(gid, "https://example.com/doc.pdf", name="文档.pdf")
-await self.api.send_group_sticker(gid, str(image_path))
+await self.api.qq.send_group_text(gid, "Hello!")
+await self.api.qq.send_group_plain_text(gid, "[CQ:at,qq=all] 这不会被解析")
+await self.api.qq.send_group_image(gid, "https://example.com/img.png")
+await self.api.qq.send_group_record(gid, "https://example.com/voice.silk")
+await self.api.qq.send_group_video(gid, str(video_path))
+await self.api.qq.send_group_file(gid, "https://example.com/doc.pdf", name="文档.pdf")
+await self.api.qq.send_group_sticker(gid, str(image_path))
 ```
 
 ---
@@ -145,13 +145,13 @@ await self.api.send_group_sticker(gid, str(image_path))
 | `send_private_rps(user_id, value?)` | `value: int = 1` | 发送猜拳 |
 
 ```python
-await self.api.send_private_text(uid, "你好")
-await self.api.send_private_image(uid, "a.png")
-await self.api.send_private_video(uid, "video.mp4")
-await self.api.send_private_file(uid, "doc.pdf", name="文档.pdf")
-await self.api.send_private_sticker(uid, "sticker.gif")
-await self.api.send_private_dice(uid, value=3)
-await self.api.send_private_rps(uid, value=2)
+await self.api.qq.send_private_text(uid, "你好")
+await self.api.qq.send_private_image(uid, "a.png")
+await self.api.qq.send_private_video(uid, "video.mp4")
+await self.api.qq.send_private_file(uid, "doc.pdf", name="文档.pdf")
+await self.api.qq.send_private_sticker(uid, "sticker.gif")
+await self.api.qq.send_private_dice(uid, value=3)
+await self.api.qq.send_private_rps(uid, value=2)
 ```
 
 ---
@@ -165,7 +165,7 @@ await self.api.send_private_rps(uid, value=2)
 | `send_group_forward_msg_by_id(group_id, message_ids)` | `message_ids: List[str \| int]` | 通过消息 ID 逐条转发到群 |
 | `send_private_forward_msg_by_id(user_id, message_ids)` | `message_ids: List[str \| int]` | 通过消息 ID 逐条转发到私聊 |
 
-> 详见 [4_forward.md](4_forward.md)
+> 详见 [2_forward.md](2_forward.md)
 
 ---
 
@@ -178,9 +178,9 @@ async def send_poke(self, group_id: str | int, user_id: str | int) -> None
 在群内戳指定用户：
 
 ```python
-await self.api.send_poke(event.group_id, event.user_id)
+await self.api.qq.send_poke(event.group_id, event.user_id)
 ```
 
 ---
 
-[← 上一篇：合并转发](4_forward.md) | [返回目录](README.md) | [下一篇：实战示例 →](6_examples.md)
+[← 上一篇：合并转发](2_forward.md) | [返回目录](../README.md) | [下一篇：实战示例 →](3_examples.md)

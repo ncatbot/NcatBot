@@ -1,6 +1,6 @@
 # MessageArray 消息数组
 
-> 消息段的容器，链式构造、查询过滤。完整方法列表见 [reference/types/2_message_array.md](../../reference/types/2_message_array.md)。
+> 消息段的容器，链式构造、查询过滤。完整方法列表见 [reference/types/2_message_array.md](../../../reference/types/2_message_array.md)。
 
 ---
 
@@ -10,7 +10,7 @@
 from ncatbot.types import MessageArray, PlainText, At
 
 msg = MessageArray()                                   # 空数组
-msg = MessageArray([PlainText(text="Hello"), At(qq="123456")])  # 传入列表
+msg = MessageArray([PlainText(text="Hello"), At(user_id="123456")])  # 传入列表
 msg = MessageArray.from_list([...])                    # 从 OB11 字典列表
 msg = MessageArray.from_any("[CQ:at,qq=123456]Hello")  # 自动解析
 ```
@@ -44,7 +44,6 @@ msg.filter_text()            # [PlainText, ...]
 msg.filter_image()           # [Image, ...]
 msg.filter(Record)           # 按类型泛型过滤
 msg.is_at(123456)            # 是否 @了指定用户
-msg.is_forward_msg()         # 是否包含合并转发
 ```
 
 ---
@@ -60,4 +59,4 @@ msg2 = MessageArray.from_list(data)
 
 ---
 
-[← 上一篇：消息段参考](2_segments.md) | [返回目录](README.md) | [下一篇：合并转发 →](4_forward.md)
+[← 上一篇：消息段参考](1_segments.md) | [返回目录](README.md) | [下一篇：QQ 合并转发 →](../qq/2_forward.md)
