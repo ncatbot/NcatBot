@@ -24,7 +24,7 @@ class TestHarness:
     __test__ = False  # 告知 pytest 这不是测试类
 
     def __init__(self) -> None:
-        self._adapter = MockAdapter()
+        self._adapter = MockAdapter(platform="qq")
         self._bot = BotClient(adapter=self._adapter)
 
     @property

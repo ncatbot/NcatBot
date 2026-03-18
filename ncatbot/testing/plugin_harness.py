@@ -45,7 +45,7 @@ class PluginTestHarness(TestHarness):
         skip_pip: bool = True,
     ) -> None:
         # 不调用 super().__init__()，自行构建 bot
-        self._adapter = MockAdapter()
+        self._adapter = MockAdapter(platform="qq")
         self._bot = BotClient(adapter=self._adapter)
         self._plugin_names = plugin_names
         self._plugin_dir = Path(plugin_dir)

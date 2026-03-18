@@ -11,7 +11,7 @@ import time
 from itertools import count
 from typing import Any, Dict, List, Optional
 
-from ncatbot.types import (
+from ncatbot.types.qq import (
     GroupMessageEventData,
     PrivateMessageEventData,
     FriendRequestEventData,
@@ -55,6 +55,7 @@ def group_message(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "message",
         "message_type": "group",
         "sub_type": sub_type,
@@ -91,6 +92,7 @@ def private_message(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "message",
         "message_type": "private",
         "sub_type": sub_type,
@@ -120,6 +122,7 @@ def friend_request(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "request",
         "request_type": "friend",
         "user_id": user_id,
@@ -144,6 +147,7 @@ def group_request(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "request",
         "request_type": "group",
         "sub_type": sub_type,
@@ -169,6 +173,7 @@ def group_increase(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "notice",
         "notice_type": "group_increase",
         "sub_type": sub_type,
@@ -193,6 +198,7 @@ def group_decrease(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "notice",
         "notice_type": "group_decrease",
         "sub_type": sub_type,
@@ -218,6 +224,7 @@ def group_ban(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "notice",
         "notice_type": "group_ban",
         "sub_type": sub_type,
@@ -242,6 +249,7 @@ def poke(
     data = {
         "time": _now(),
         "self_id": self_id,
+        "platform": "qq",
         "post_type": "notice",
         "notice_type": "notify",
         "sub_type": "poke",
