@@ -123,6 +123,19 @@ app.run()
 - 把事件分发给匹配的 handler
 - 暴露 `wait_event()` 等高层能力
 
+如果你在读源码，可以把它理解成一个很薄的总控层。当前内部大致拆成 3 个私有组件：
+
+- `HandlerRegistry`: 负责 `@app.on_event(...)` 注册和 handler 解析
+- `EventBroadcaster`: 负责 `events()`/`wait_event()` 背后的广播流
+- `AdapterRuntime`: 负责 adapter 任务、重启策略和运行中动态添加 adapter
+
+推荐阅读顺序：
+
+1. 先看 `src/ncatbot/app.py`，理解总流程
+2. 再看 `src/ncatbot/_handler_registry.py`，理解 handler 是怎么登记和匹配的
+3. 再看 `src/ncatbot/_event_broadcaster.py`，理解 `events()` / `wait_event()` 为什么能工作
+4. 最后看 `src/ncatbot/_adapter_runtime.py`，理解 adapter 生命周期和重启逻辑
+
 ### 2. `Adapter`
 
 adapter 是平台接入层，也是这个框架最核心的扩展点。一个 adapter 需要实现：
@@ -306,6 +319,8 @@ app.add_adapter(MyAdapter())
 ```bash
 uv run pytest
 ```
+
+说明：这里会同时跑单元测试、`ruff` 和 `pyright`。静态检查被写成了 pytest 测试文件，所以执行这一条命令就会把三类检查都覆盖到。
 
 ## 当前状态
 
