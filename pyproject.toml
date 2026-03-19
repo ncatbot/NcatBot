@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ncatbot5"
-version = "5.2.1"
+version = "5.2.2"
 description = "NcatBot, NapCat Python SDK"
 readme = "README.md"
 license = { text = "MIT" }
