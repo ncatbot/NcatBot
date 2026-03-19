@@ -129,7 +129,9 @@ class NapCatConfig(BaseConfig):
 class LoggingConfig(BaseConfig):
     """日志相关配置。"""
 
-    event_log_levels: Dict[str, str] = Field(default_factory=dict)
+    event_log_levels: Dict[str, str] = Field(
+        default_factory=lambda: {"meta_event": "NONE"}
+    )
     """事件日志级别覆盖。
 
     键为事件类型前缀（如 ``"meta_event.heartbeat"``、``"meta_event"``），
