@@ -1,5 +1,6 @@
 import asyncio
 import inspect
+import logging
 from collections import defaultdict
 from collections.abc import AsyncIterator, Callable, Coroutine
 from itertools import count
@@ -28,6 +29,8 @@ from .events import (
     WaitRegistered,
     WaitTimedOut,
 )
+
+logger = logging.getLogger(__name__)
 
 type HandlerReturn = Coroutine[Any, Any, None]
 type EventHandler[T] = Callable[[T], HandlerReturn]
@@ -364,7 +367,11 @@ class NcatBotApp:
                         exception=exc,
                     )
                 )
-            print(f"Handler {handler_name} 处理 {event_type} 发生错误: {exc}")
+            logger.exception(
+                "Handler %s 处理 %s 时发生错误",
+                handler_name,
+                event_type,
+            )
             return
 
         if observe:
@@ -449,7 +456,7 @@ class NcatBotApp:
                             exception=e,
                         )
                     )
-                print(f"Adapter {adapter.adapter_name} 发生错误: {e}")
+                logger.exception("Adapter %s 发生错误", adapter.adapter_name)
 
             if self._is_stop_requested():
                 exit_reason = "stopped"
@@ -474,9 +481,10 @@ class NcatBotApp:
                         delay=self._adapter_restart_delay,
                     )
                 )
-            print(
-                f"Adapter {adapter.adapter_name} 已退出，"
-                f"{self._adapter_restart_delay} 秒后重试"
+            logger.warning(
+                "Adapter %s 已退出，%.2f 秒后重试",
+                adapter.adapter_name,
+                self._adapter_restart_delay,
             )
             await asyncio.sleep(self._adapter_restart_delay, result=None)
 
@@ -518,5 +526,9 @@ class NcatBotApp:
         if self._stop_event is not None:
             self._stop_event.set()
 
-    def run(self):
-        asyncio.run(self.start())
+    def run(self) -> None:
+        """Run the app in a fresh event loop."""
+        try:
+            asyncio.run(self.start())
+        except KeyboardInterrupt:
+            logger.info("收到 KeyboardInterrupt，正在停止应用")

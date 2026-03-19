@@ -172,6 +172,24 @@ class IdleAdapter(BaseAdapter):
         return iterator()
 
 
+class SyncApiTests(unittest.TestCase):
+    def test_run_executes_until_handler_stops_app(self) -> None:
+        app = NcatBotApp()
+        seen: list[str] = []
+
+        @app.on_event
+        async def handle(event: SmokeEvent) -> None:
+            seen.append(event.value)
+            app.stop()
+
+        app.add_adapter(FakeAdapter([SmokeEvent("payload")], delay=0.01))
+
+        app.run()
+
+        self.assertEqual(seen, ["payload"])
+        self.assertFalse(app.is_running)
+
+
 class SmokeTests(unittest.IsolatedAsyncioTestCase):
     def test_public_exports_are_available(self) -> None:
         adapter = NapCatAdapter()
