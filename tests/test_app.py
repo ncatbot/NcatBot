@@ -241,6 +241,35 @@ def test_events_subscriber_started_before_run_receives_events_and_closes() -> No
     run_async(scenario())
 
 
+def test_app_async_iterator_receives_events_and_closes() -> None:
+    async def scenario() -> None:
+        app = NcatBotApp()
+        adapter = QueueAdapter()
+        app.add_adapter(adapter)
+
+        seen: list[object] = []
+
+        async def consume() -> None:
+            async for event in app:
+                seen.append(event)
+
+        consumer = asyncio.create_task(consume())
+        start_task = asyncio.create_task(app.start())
+        await asyncio.sleep(0.05)
+
+        event = DummyEvent()
+        await adapter.queue.put(event)
+        await asyncio.sleep(0.05)
+
+        app.stop()
+        await start_task
+        await consumer
+
+        assert any(item is event for item in seen)
+
+    run_async(scenario())
+
+
 def test_events_after_stop_are_immediately_closed() -> None:
     async def scenario() -> None:
         app = NcatBotApp()

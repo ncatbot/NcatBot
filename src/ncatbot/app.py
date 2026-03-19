@@ -39,8 +39,6 @@ class NcatBotApp:
     """Public facade that wires adapters, handlers, waits, and observability together."""
 
     def __init__(self, adapter_restart_delay: float = 5.0):
-        # Keep the public API on this class while delegating the noisy internals
-        # to small private components that each own one concern.
         self._handler_registry = HandlerRegistry()
         self.handlers = self._handler_registry.handlers
         self._event_broadcaster = EventBroadcaster[object]()
@@ -62,6 +60,10 @@ class NcatBotApp:
     def events(self) -> AsyncIterator[object]:
         """返回广播所有 adapter 事件的异步迭代器。"""
         return self._event_broadcaster.subscribe()
+
+    def __aiter__(self) -> AsyncIterator[object]:
+        """Allow `async for event in app` as shorthand for `app.events()`."""
+        return self.events()
 
     @property
     def is_running(self) -> bool:
