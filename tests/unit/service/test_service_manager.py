@@ -17,8 +17,6 @@ import pytest
 from ncatbot.service.base import BaseService
 from ncatbot.service.manager import ServiceManager
 
-pytestmark = pytest.mark.asyncio
-
 
 # ---- 测试用服务 ----
 

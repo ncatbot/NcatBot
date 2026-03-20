@@ -16,8 +16,6 @@ from ncatbot.core.dispatcher import AsyncEventDispatcher
 from ncatbot.plugin.mixin.event_mixin import EventMixin
 from ncatbot.testing import factory
 
-pytestmark = pytest.mark.asyncio
-
 
 class FakePlugin(EventMixin):
     """最小 EventMixin 实例"""

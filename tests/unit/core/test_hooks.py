@@ -10,8 +10,6 @@ Hook 系统规范测试
   K-05: 内置 SelfFilter 过滤自身消息
 """
 
-import pytest
-
 from ncatbot.core.registry.hook import (
     Hook,
     HookAction,
@@ -26,7 +24,6 @@ from ncatbot.core.registry.dispatcher import HandlerEntry
 from ncatbot.testing import factory
 from unittest.mock import MagicMock
 
-pytestmark = pytest.mark.asyncio
 
 _mock_api = MagicMock()
 

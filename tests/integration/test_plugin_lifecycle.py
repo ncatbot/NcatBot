@@ -23,8 +23,6 @@ from ncatbot.core.registry.registrar import (
 from ncatbot.core.registry.context import set_current_plugin, _current_plugin_ctx
 from ncatbot.testing import factory
 
-pytestmark = pytest.mark.asyncio
-
 
 @pytest.fixture(autouse=True)
 def clean_pending():

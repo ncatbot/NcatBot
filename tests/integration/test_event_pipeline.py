@@ -9,7 +9,6 @@
 
 import asyncio
 
-import pytest
 
 from ncatbot.adapter.mock.api import MockBotAPI
 from ncatbot.core.dispatcher import AsyncEventDispatcher
@@ -18,8 +17,6 @@ from ncatbot.core.registry.builtin_hooks import MessageTypeFilter
 from ncatbot.core.registry.hook import add_hooks
 from ncatbot.event.qq.message import GroupMessageEvent
 from ncatbot.testing import factory
-
-pytestmark = pytest.mark.asyncio
 
 
 # ---- I-01: 全链路 ----

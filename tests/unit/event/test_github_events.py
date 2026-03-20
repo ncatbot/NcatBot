@@ -47,8 +47,6 @@ from ncatbot.types.github.sender import GitHubSender
 from ncatbot.types.common.attachment import Attachment
 from ncatbot.types.common.attachment_list import AttachmentList
 
-pytestmark = pytest.mark.asyncio
-
 
 # ---- Helpers ----
 

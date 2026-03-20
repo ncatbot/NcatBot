@@ -21,7 +21,6 @@
 
 import re
 
-import pytest
 
 from ncatbot.core.registry.hook import HookAction, HookContext
 from ncatbot.core.registry.builtin_hooks import (
@@ -40,8 +39,6 @@ from ncatbot.core.dispatcher.event import Event
 from ncatbot.core.registry.dispatcher import HandlerEntry
 from ncatbot.testing import factory
 from ncatbot.types import At
-
-pytestmark = pytest.mark.asyncio
 
 
 def _make_ctx(event, func=None):

@@ -12,7 +12,6 @@ import pytest
 
 from ncatbot.testing import PluginTestHarness, group_message
 
-pytestmark = pytest.mark.asyncio
 
 PLUGIN_NAME = "rbac"
 

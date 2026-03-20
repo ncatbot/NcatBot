@@ -9,7 +9,6 @@ QQ 消息事件 HasAttachments 测试
 
 from __future__ import annotations
 
-import pytest
 
 from ncatbot.adapter.mock.api import MockBotAPI
 from ncatbot.event.common.factory import create_entity
@@ -19,8 +18,6 @@ from ncatbot.testing import factory
 from ncatbot.types.common.attachment import ImageAttachment, VideoAttachment
 from ncatbot.types.common.attachment_list import AttachmentList
 from ncatbot.types.common.segment.media import Image, Video
-
-pytestmark = pytest.mark.asyncio
 
 
 class TestQQMessageAttachments:

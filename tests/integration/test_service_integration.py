@@ -11,8 +11,6 @@ import pytest
 from ncatbot.service.base import BaseService
 from ncatbot.service.manager import ServiceManager
 
-pytestmark = pytest.mark.asyncio
-
 
 class TrackedService(BaseService):
     """记录生命周期调用顺序的服务"""
