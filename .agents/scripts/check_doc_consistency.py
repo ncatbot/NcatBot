@@ -10,7 +10,7 @@
 7. Skill 完整：Skill 目录缺少 SKILL.md
 
 用法：
-    python .agents/skills/consistency-check/scripts/check_doc_consistency.py [--json]
+    python .agents/scripts/check_doc_consistency.py [--json]
 
 退出码：
     0 — 无阻断问题（LOC 超限只报告，不影响退出码）
@@ -22,6 +22,11 @@ import json
 import re
 import sys
 from pathlib import Path
+
+# Windows 默认 GBK 编码无法输出 emoji，强制 UTF-8
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
 
 
 def _find_root() -> Path:
@@ -37,7 +42,6 @@ PROJECT_ROOT = _find_root()
 
 SCAN_DIRS = [
     PROJECT_ROOT / "docs",
-    PROJECT_ROOT / "examples",
     PROJECT_ROOT / ".agents" / "skills",
 ]
 
@@ -63,13 +67,18 @@ SKILLS_REF_DIR = PROJECT_ROOT / ".agents" / "skills"
 # LOC 超限是警告，不阻断（不计入退出码）
 LOC_WARN_ONLY = True
 
+# 跳过的目录名
+SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".vuepress"}
+
 
 def collect_md_files() -> list[Path]:
     """收集所有需要扫描的 Markdown 文件。"""
     files = []
     for d in SCAN_DIRS:
         if d.exists():
-            files.extend(d.rglob("*.md"))
+            for md in d.rglob("*.md"):
+                if not any(part in SKIP_DIRS for part in md.relative_to(d).parts):
+                    files.append(md)
     return sorted(files)
 
 
@@ -90,6 +99,8 @@ def collect_dirs_needing_readme() -> list[Path]:
     if not docs_dir.exists():
         return []
     for md in docs_dir.rglob("*.md"):
+        if any(part in SKIP_DIRS for part in md.relative_to(docs_dir).parts):
+            continue
         parent = md.parent
         if parent != docs_dir:
             dirs.add(parent)
@@ -224,23 +235,30 @@ def check_missing_readme(dirs: list[Path]) -> list[dict]:
 
 
 def check_example_structure() -> list[dict]:
-    """检查示例插件的结构完整性（manifest.toml + main.py）。"""
+    """检查示例插件的结构完整性（manifest.toml + main.py）。
+
+    示例按平台子目录组织：common/qq/bilibili/github/cross_platform，
+    每个平台目录下是编号的示例目录（如 01_hello_world/）。
+    """
     issues = []
-    examples_dir = PROJECT_ROOT / "examples"
+    examples_dir = PROJECT_ROOT / "docs" / "docs" / "examples"
     if not examples_dir.exists():
         return issues
-    for child in sorted(examples_dir.iterdir()):
-        if not child.is_dir() or child.name.startswith("."):
+    for platform_dir in sorted(examples_dir.iterdir()):
+        if not platform_dir.is_dir() or platform_dir.name.startswith("."):
             continue
-        for required in ("manifest.toml", "main.py"):
-            if not (child / required).exists():
-                issues.append(
-                    {
-                        "type": "example_missing_file",
-                        "directory": str(child.relative_to(PROJECT_ROOT)),
-                        "missing": required,
-                    }
-                )
+        for example_dir in sorted(platform_dir.iterdir()):
+            if not example_dir.is_dir() or example_dir.name.startswith("."):
+                continue
+            for required in ("manifest.toml", "main.py"):
+                if not (example_dir / required).exists():
+                    issues.append(
+                        {
+                            "type": "example_missing_file",
+                            "directory": str(example_dir.relative_to(PROJECT_ROOT)),
+                            "missing": required,
+                        }
+                    )
     return issues
 
 

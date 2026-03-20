@@ -6,7 +6,7 @@ license: MIT
 
 # 技能指令
 
-你是 NcatBot 插件迁移助手。帮助用户将 4.4/4.5 版本的插件迁移到 5.0 版本。
+你是 NcatBot 插件迁移助手。帮助用户将 4.4/4.5 版本的插件迁移到 5.2.0+ 版本。
 
 ## 协作技能
 
@@ -14,7 +14,7 @@ license: MIT
 |-----------|--------|
 | 理解 5.0 框架用法、API | **framework-usage** |
 | 定位框架内部实现细节 | **codebase-nav** |
-| 验证迁移后的插件 | **testing** |
+| 验证迁移后的插件 | **testing-framework** |
 | 修改框架本体（如发现兼容问题） | **framework-dev** |
 
 ---
@@ -72,8 +72,9 @@ license: MIT
 4. **迁移 Config API**（→ [api-mapping.md](./references/api-mapping.md) § Config）
 5. **更新消息构造**（→ [api-mapping.md](./references/api-mapping.md) § 消息段）
 6. **细化事件类型与类型判断**（→ [api-mapping.md](./references/api-mapping.md) § 事件类型）
-7. **清理废弃代码**（dependencies 类属性、未使用导入、print → LOG）
-8. **更新 `__init__.py`**
+7. **迁移 BotAPI 调用**（`self.api.xxx()` → `self.api.qq.xxx()` → [api-mapping.md](./references/api-mapping.md) § BotAPI）
+8. **清理废弃代码**（dependencies 类属性、未使用导入、print → LOG）
+9. **更新 `__init__.py`**
 
 ### Step 4：清单验证
 
@@ -82,7 +83,7 @@ license: MIT
 **验证手段**：
 1. `get_errors` 检查语法/类型错误
 2. 编写验证脚本确认 manifest 可解析、入口类可导入、handler 已注册
-3. 如有测试环境，使用 **testing** 技能运行冒烟测试
+3. 如有测试环境，使用 **testing-framework** 技能运行冒烟测试
 
 ---
 
@@ -93,21 +94,22 @@ license: MIT
 ### 易错点
 
 1. **`Image(path)` → `Image(file=path)`**：5.0 的 Image 是 Pydantic model，不接受位置参数，必须用关键字参数 `file=`。
-2. **方法名隐式注册在 5.0 中不存在**：4.5 中方法名自动注册为命令的约定被完全移除，必须为每个命令方法添加 `@registrar` 装饰器。
-3. **`self.data['config']['key']` ≠ `self.get_config('key')`**：4.5 中 data 结构嵌套了 config，5.0 中 config 和 data 完全分离。
-4. **`on_change_xxx` 配置回调不存在于 5.0**：5.0 ConfigMixin 没有配置变更回调机制，需自行处理。
-5. **`dependencies = {}` 类属性需移除**：依赖声明移至 manifest.toml 的 `[dependencies]`。
-6. **name/version 类属性须与 manifest.toml 一致**：两处都要声明，且值必须相同。
-7. **事件参数命名惯例**：4.5 常用 `msg`，5.0 推荐 `event`。
-8. **类型判断改用 isinstance**：`hasattr(msg, "group_id")` → `isinstance(event, GroupMessageEvent)`。
+2. **`self.data['config']['key']` ≠ `self.get_config('key')`**：4.5 中 data 结构嵌套了 config，5.0 中 config 和 data 完全分离。
+3. **`on_change_xxx` 配置回调不存在于 5.0**：5.0 ConfigMixin 没有配置变更回调机制，需自行处理。
+4. **`dependencies = {}` 类属性需移除**：依赖声明移至 manifest.toml 的 `[dependencies]`。
+5. **name/version 类属性须与 manifest.toml 一致**：两处都要声明，且值必须相同。
+6. **事件参数命名惯例**：4.5 常用 `msg`，5.0 推荐 `event`。
+7. **类型判断改用 isinstance**：`hasattr(msg, "group_id")` → `isinstance(event, GroupMessageEvent)`。
+8. **`self.api.xxx()` → `self.api.qq.xxx()`**：5.2.0+ 采用多平台架构，`BotAPIClient` 是纯路由器，QQ API 必须通过 `self.api.qq` 访问（如 `self.api.qq.post_group_msg(...)`）。直接调用 `self.api.post_group_msg(...)` 会 `AttributeError`。
+9. **`registrar.on_command()` vs `registrar.qq.on_group_command()`**：前者是跨平台装饰器（群+私聊均触发），后者仅限 QQ 群消息。QQ 专用插件推荐使用 `registrar.qq.*` 系列。
 
 ### 不需要改的
 
-1. **`self.api.qq.post_group_forward_msg()`** — 5.2 多平台架构下需通过 `api.qq` 访问
-2. **`ForwardConstructor` 的 `attach_image()`/`attach_text()`/`to_forward()`** — 接口未变，仅导入路径变更
+1. **`self.api.qq.post_group_forward_msg()`** — 5.2 多平台架构下**必须**通过 `api.qq` 访问（注意：旧代码中的 `self.api.post_group_forward_msg()` **需要改**为 `self.api.qq.post_group_forward_msg()`）
+2. **`ForwardConstructor` 的 `attach_image()`/`attach_text()`/`attach_message()`** — 接口未变，仅导入路径变更。`.to_forward()` 和 `.build()` 均可用（互为别名），5.2.0+ 示例中多使用 `.build()`
 3. **`MessageArray` 的生成器构造** — `MessageArray(Image(file=x) for x in imgs)` 仍有效
-4. **`event.reply()` 方法** — 签名基本一致
-5. **`self.api` 的使用方式** — 注入机制变化但使用方式不变
+4. **`event.reply()` 方法** — 签名基本一致（5.2.0+ 新增 `video` 和 `at_sender` 参数）
+5. **`self.api` 的注入** — 框架自动注入 `BotAPIClient` 实例，但 5.2.0+ 使用方式变为 `self.api.qq.xxx()` 而非直接 `self.api.xxx()`
 
 ---
 
@@ -119,28 +121,14 @@ license: MIT
 | [api-mapping.md](./references/api-mapping.md) | 注册方式、Config、消息构造、BotAPI、事件类型的全面映射 |
 | [checklist.md](./references/checklist.md) | 迁移完成后的逐项验证清单 |
 
+### 可参考的实际插件
+
+| 路径 | 说明 |
+|------|------|
+| `docs/docs/examples/qq/09_full_featured_bot/main.py` | 全功能示例：registrar、ConfigMixin、DataMixin、RBAC、定时任务 |
+| `docs/docs/examples/qq/01_hello_world/main.py` | 最简插件：`registrar.qq.on_group_command()` + `self.api.qq` 用法 |
+| `docs/docs/examples/qq/02_event_handling/main.py` | 事件流(`self.events()`)、`wait_event()`、优先级 |
+| `plugins/version_notifier/` | 实际运行的跨平台插件，含 manifest.toml |
+| `plugins/Lolicon/` | 从 4.5 迁移而来的实际插件 |
+
 ---
-
-## 5.1 → 5.2 迁移
-
-5.2 引入多平台架构，**完全向后兼容**。无需强制迁移，但可选择性使用新特性。
-
-### 新增导入路径
-
-| 5.1 路径 | 5.2 新路径（可选） | 说明 |
-|---|---|---|
-| `ncatbot.types.MessageArray` | `ncatbot.types.common.segment.MessageArray` | 通用消息段 |
-| `ncatbot.event.GroupMessageEvent` | `ncatbot.event.qq.GroupMessageEvent` | QQ 专用事件 |
-| — | `ncatbot.api.traits.IMessaging` | API Trait 协议（新） |
-| — | `ncatbot.event.common.mixins.Replyable` | 事件 Trait 协议（新） |
-| — | `ncatbot.api.qq.IQQAPIClient` | QQ 平台 API 接口（新） |
-
-> 旧导入路径通过 re-export 保持兼容。
-
-### 新增功能
-
-1. **`platform` 装饰器参数**：`@registrar.on_group_message(platform="qq")` — 限定平台
-2. **`event.platform` 属性**：获取事件来源平台标识
-3. **`api.qq.xxx()`**：显式平台 API 访问
-4. **`api.platforms`**：查看所有已注册平台
-5. **Trait 协议**：使用 `isinstance(event, Replyable)` 编写跨平台逻辑

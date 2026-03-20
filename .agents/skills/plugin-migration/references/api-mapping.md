@@ -21,7 +21,7 @@
 | `@filter_registry.private_filter` | `@registrar.on_private_message()` 或 `@registrar.on_private_command()` | |
 | `@admin_filter` | Handler 内使用 `self.check_permission(event.user_id, "path")` | RBAC 替代 |
 | `@group_filter` | `@registrar.on_group_command()` / `@registrar.on_group_message()` | |
-| `@CustomFilter(lambda e: ...)` | `@add_hooks(hook)` 或 handler 内 if 判断 | Hook 系统替代 |
+| `@CustomFilter(lambda e: ...)` | `@add_hooks(hook)` 或 handler 内 if 判断 | Hook 系统替代；`from ncatbot.core import add_hooks` |
 | `@option(short_name="v", long_name="verbose")` | 5.0 通过函数签名自动解析参数 | 类型注解替代显式声明 |
 
 ### 4.5 → 5.0
@@ -32,29 +32,68 @@
 
 ### 5.0 registrar 装饰器速查
 
+**装饰器通用参数**：
+
+| 参数 | 类型 | 默认 | 说明 |
+|------|------|------|------|
+| `*names` | `str` | — | 命令名（仅 `on_command` 系列） |
+| `priority` | `int` | `0` | 执行优先级，数值越大越先执行 |
+| `ignore_case` | `bool` | `False` | 命令名是否忽略大小写（仅 `on_command` 系列） |
+| `platform` | `str|None` | `None` | 限制特定平台（仅跨平台装饰器） |
+| `**metadata` | `Any` | — | 附加元数据，透传给 Hook |
+
 ```python
 from ncatbot.core import registrar
 
 # 命令（最常用）
 @registrar.on_command("cmd")                    # 所有消息类型
 @registrar.on_command("cmd1", "cmd2")           # 多个命令名
+@registrar.on_command("hi", ignore_case=True)   # 忽略大小写
 @registrar.on_group_command("cmd")              # 仅群消息
 @registrar.on_private_command("cmd")            # 仅私聊
 
 # 消息（无命令匹配，接收所有消息）
 @registrar.on_message()                         # 所有消息
 @registrar.on_group_message()                   # 仅群消息
+@registrar.on_group_message(priority=200)       # 高优先级（用于统计等场景）
 @registrar.on_private_message()                 # 仅私聊
 
 # 通知/请求
 @registrar.on_notice()                          # 所有通知
 @registrar.on_request()                         # 所有请求
-@registrar.qq.on_group_increase()               # 群成员增加
-@registrar.qq.on_friend_request()               # 好友请求
 
 # 通用
 @registrar.on(event_type, priority=0)           # 监听任意事件类型
+
+# QQ 平台子注册器（完整列表）
+@registrar.qq.on_command("cmd")                 # QQ 平台命令（群+私聊）
+@registrar.qq.on_group_command("cmd")           # QQ 群命令
+@registrar.qq.on_private_command("cmd")         # QQ 私聊命令
+@registrar.qq.on_group_message()                # QQ 群消息
+@registrar.qq.on_private_message()              # QQ 私聊消息
+@registrar.qq.on_group_increase()               # 群成员增加
+@registrar.qq.on_group_decrease()               # 群成员减少
+@registrar.qq.on_group_recall()                 # 群消息撤回
+@registrar.qq.on_group_admin()                  # 群管理员变动
+@registrar.qq.on_group_ban()                    # 群禁言
+@registrar.qq.on_friend_add()                   # 好友添加
+@registrar.qq.on_poke()                         # 戳一戳
+@registrar.qq.on_friend_request()               # 好友请求
+@registrar.qq.on_group_request()                # 加群请求
+@registrar.qq.on_meta()                         # 元事件
+@registrar.qq.on_message_sent()                 # 消息发送（自身消息）
 ```
+
+### `registrar.*` vs `registrar.qq.*` 选择指南
+
+| 场景 | 使用 | 示例 |
+|------|------|------|
+| 插件仅针对 QQ 平台 | `registrar.qq.*` | `@registrar.qq.on_group_command("hello")` |
+| 插件跨平台（QQ + Bilibili 等） | `registrar.*` | `@registrar.on_command("help")` |
+| QQ 特有事件（戳一戳、群成员增加等） | `registrar.qq.*` | `@registrar.qq.on_poke()` |
+| 既要群又要私聊响应 | `registrar.on_command()` 或分别注册 | `@registrar.on_command("status")` |
+
+> **迁移建议**：4.4/4.5 插件默认都是 QQ 平台，迁移时推荐用 `registrar.qq.*` 系列，语义更明确。
 
 ---
 
@@ -120,7 +159,8 @@ self._save_data()                         # 手动持久化（通常不需要，
 | `At("123")` | `At(user_id="123")` | 必须关键字参数；`qq` 也可作为别名 |
 | `Record(file="path")` | `Record(file="path")` | 不变 |
 | `Video(file="path")` | `Video(file="path")` | 不变 |
-| `Node(user_id, nickname, content)` | `ForwardNode(...)` | 类名变更 |
+| `Node(user_id, nickname, content)` | `ForwardNode(...)` | 类名变更；从 `ncatbot.types.qq` 导入 |
+| `ForwardConstructor.to_forward()` | `ForwardConstructor.build()` 或 `.to_forward()` | `.build()` 是新别名，两者等价 |
 | `Message().append(segment)` | `MessageArray().add_text(...)` 链式构造 | Message → MessageArray |
 | `MessageArray(seg1, seg2, ...)` | `MessageArray(seg1, seg2, ...)` | 不变 |
 | `MessageArray(generator)` | `MessageArray(generator)` | 不变 |
@@ -168,31 +208,86 @@ event.self_id       # Bot QQ
 
 # GroupMessageEvent
 event.group_id      # str
+```
 
-# reply 方法
+### event.reply() 完整签名（5.2.0+）
+
+```python
+await event.reply(
+    text: Optional[str] = None,
+    *,
+    at: Optional[Union[str, int]] = None,       # @某人
+    image: Optional[Union[str, Image]] = None,  # 图片
+    video: Optional[Union[str, Video]] = None,  # 视频（5.2.0+ 新增）
+    rtf: Optional[MessageArray] = None,         # 富文本消息
+    at_sender: bool = True,                     # 自动 @ 发送者（5.2.0+ 新增）
+)
+
+# 示例
 await event.reply(text="Hello")
 await event.reply(rtf=msg_array)
 await event.reply(text="看图", image="url")
+await event.reply(text="看视频", video="path.mp4")
 ```
 
 ---
 
 ## 6. BotAPI 方法
 
-大部分 BotAPI 方法名称不变：
+### 5.2.0+ API 访问架构
+
+5.2.0+ 采用多平台架构，`self.api` 是 `BotAPIClient`（纯路由器），QQ API 必须通过 `self.api.qq` 访问：
 
 ```python
-# 以下方法在 4.4/4.5 和 5.0 中签名一致（5.2 起需通过 api.qq 访问）
-await self.api.qq.post_group_msg(group_id, text=..., at=..., reply=..., image=..., rtf=...)
-await self.api.qq.post_private_msg(user_id, text=..., image=...)
-await self.api.qq.post_group_forward_msg(group_id=..., forward=...)
-await self.api.qq.post_private_forward_msg(user_id=..., forward=...)
-await self.api.qq.post_group_array_msg(group_id, msg_array)
-await self.api.qq.send_group_text(group_id, text)
-await self.api.qq.send_group_image(group_id, image)
+# ❗ 4.4/4.5 旧用法（不再有效）
+await self.api.post_group_msg(...)       # ❌ AttributeError
+
+# ✅ 5.2.0+ 新用法
+await self.api.qq.post_group_msg(...)    # 通过 QQ 平台子对象
 ```
 
-### ForwardConstructor（不变）
+### QQ API 子对象结构
+
+| 子对象 | 职责 | 示例 |
+|---------|------|------|
+| `self.api.qq` | Sugar 方法（便捷消息发送） | `post_group_msg()`, `post_group_forward_msg()` |
+| `self.api.qq.manage` | 群管理 | `set_group_ban()`, `set_group_kick()` |
+| `self.api.qq.query` | 信息查询 | `get_group_member_info()`, `get_group_list()` |
+| `self.api.qq.file` | 文件上传 | `upload_attachment()` |
+| `self.api.qq.messaging` | 底层消息发送 | `send_group_msg()` |
+
+### Sugar 方法（最常用）
+
+```python
+# 发送消息（关键字参数自动组装 MessageArray）
+await self.api.qq.post_group_msg(group_id, text=..., at=..., reply=..., image=..., video=..., rtf=...)
+await self.api.qq.post_private_msg(user_id, text=..., image=...)
+
+# 发送已构造的 MessageArray（不再自动组装）
+await self.api.qq.post_group_array_msg(group_id, msg_array)
+await self.api.qq.post_private_array_msg(user_id, msg_array)
+
+# 转发消息
+await self.api.qq.post_group_forward_msg(group_id=..., forward=...)
+await self.api.qq.post_private_forward_msg(user_id=..., forward=...)
+```
+
+### 管理/查询/文件 API 示例
+
+```python
+# 群管理
+await self.api.qq.manage.set_group_ban(group_id, user_id, duration=60)
+await self.api.qq.manage.set_group_kick(group_id, user_id)
+
+# 信息查询
+info = await self.api.qq.query.get_group_member_info(group_id, user_id)
+groups = await self.api.qq.query.get_group_list()
+
+# 文件上传
+await self.api.qq.file.upload_attachment(group_id, attachment, folder=folder_name)
+```
+
+### ForwardConstructor（仅导入路径变更）
 
 ```python
 from ncatbot.types.qq import ForwardConstructor  # 仅导入路径变更
@@ -200,24 +295,116 @@ from ncatbot.types.qq import ForwardConstructor  # 仅导入路径变更
 fcr = ForwardConstructor(self_id, "昵称")
 fcr.attach_image(image_path)
 fcr.attach_text("文本")
-forward = fcr.to_forward()
+fcr.attach_message(msg_array)       # 附加 MessageArray
+fcr.attach_file(file_path)          # 附加文件
+fcr.attach_video(video_path)        # 附加视频
+forward = fcr.build()               # 推荐用 .build()（.to_forward() 亦可，互为别名）
 await self.api.qq.post_group_forward_msg(group_id=gid, forward=forward)
+```
+
+完整方法列表：`attach_image()`, `attach_text()`, `attach_file()`, `attach_video()`, `attach_forward()`, `attach_message()`, `attach()`, `set_author()`, `to_forward()` / `build()`
+
+---
+
+## 7. 参数绑定（5.0+ 新增）
+
+5.0+ 命令 handler 支持通过**类型注解**自动提取消息中的参数：
+
+| 类型注解 | 提取方式 | 说明 |
+|---------|---------|------|
+| `target: At` | 从消息中的 @mention 按顺序提取 | 多个 At 参数按出现顺序绑定 |
+| `count: int` | 从文本 token 中解析整数 | `float` 同理 |
+| `name: str` | 单个文本 token（最后一个 `str` 参数获取剩余文本） | |
+| 有默认值的参数 | 可选，缺失时用默认值 | 必填参数缺失则 handler **不触发** |
+
+### 4.4/4.5 → 5.0 迁移
+
+```python
+# 4.4：显式解析
+@command_registry.command("kick")
+@option(short_name="t", long_name="target")
+@option(short_name="d", long_name="duration", default=60)
+async def kick(self, msg, target, duration):
+    ...
+
+# 5.0：类型注解自动绑定
+@registrar.qq.on_group_command("kick")
+async def kick(self, event: GroupMessageEvent, target: At, duration: int = 60):
+    await self.api.qq.manage.set_group_ban(event.group_id, target.user_id, duration)
 ```
 
 ---
 
-## 7. 定时任务
+## 8. 事件流与 wait_event（5.0+ 新增）
+
+替代旧版 `event_bus.publish_async()` 和手动状态管理的多步对话方案。
+
+### wait_event（单次等待）
+
+```python
+@registrar.qq.on_group_command("确认测试")
+async def on_confirm(self, event: GroupMessageEvent):
+    await event.reply(text="请在 15 秒内回复「确认」...")
+    try:
+        confirm_event = await self.wait_event(
+            predicate=lambda e: (
+                str(e.data.user_id) == str(event.user_id)
+                and e.data.raw_message.strip() == "确认"
+            ),
+            timeout=15.0,
+        )
+        await event.reply(text="操作已确认 ✅")
+    except asyncio.TimeoutError:
+        await event.reply(text="操作超时 ⏰")
+```
+
+### 事件流（持续监听）
+
+```python
+async def _stream_listener(self):
+    async with self.events("message") as stream:
+        async for event in stream:
+            if event.data.message_type.value == "private":
+                LOG.info("[Event Stream] %s", event.data.raw_message)
+```
+
+### 4.4 → 5.0 迁移
+
+| 4.4 方式 | 5.0 等价 | 说明 |
+|---------|---------|------|
+| `self.event_bus.publish_async(Event("type", data))` | 无直接等价，可用 service 层 | 跨插件通信 |
+| 手动状态机 + `register_handler` | `self.wait_event(predicate, timeout)` | 多步对话 |
+| 轮询检查 + 状态变量 | `async with self.events("type") as stream` | 持续监听 |
+
+---
+
+## 9. 定时任务
 
 | 4.4/4.5 | 5.0 | 说明 |
 |---------|-----|------|
-| `self.add_scheduled_task(job_func, name, interval, ...)` | `self.add_scheduled_task(job_func, name, interval, ...)` | 接口基本一致 |
+| `self.add_scheduled_task(job_func, name, interval, ...)` | `self.add_scheduled_task(name, interval, ..., callback=fn)` | **参数顺序变更**，见下 |
 | `conditions=[fn]` | `conditions=[fn]` | 不变 |
 | `max_runs=N` | `max_runs=N` | 不变 |
 | 时间格式 `"1h"` / `"09:30"` / `"2025-12-31"` | 同上 | 不变 |
 
+### 5.0 签名变更重点
+
+```python
+# 4.x 签名
+self.add_scheduled_task(job_func, name, interval, conditions=None, max_runs=None)
+
+# 5.0 签名
+self.add_scheduled_task(name, interval, conditions=None, max_runs=None, callback=None)
+#                       ^^^^ ^^^^^^^^                                  ^^^^^^^^
+#                       1st   2nd（原 job_func 移到末尾并改名 callback）
+```
+
+- `callback` 可省略：省略时自动查找 `self.{name}()` 方法作为回调
+- 因此可以直接定义 `async def my_task(self)` 然后 `self.add_scheduled_task("my_task", "1h")`
+
 ---
 
-## 8. RBAC 权限
+## 10. RBAC 权限
 
 | 4.4/4.5 | 5.0 | 说明 |
 |---------|-----|------|
@@ -227,7 +414,7 @@ await self.api.qq.post_group_forward_msg(group_id=gid, forward=forward)
 
 ---
 
-## 9. 其它变更
+## 11. 其它变更
 
 | 项目 | 4.4/4.5 | 5.0 |
 |------|---------|-----|

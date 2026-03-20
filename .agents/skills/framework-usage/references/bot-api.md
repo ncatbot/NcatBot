@@ -1,6 +1,6 @@
 # Bot API 完整参考
 
-> 参考文档：[guide/5. API 使用/](docs/guide/5. API 使用/), [reference/1. Bot API/](docs/reference/1. Bot API/), [reference/3. 数据类型/4. QQ 响应.md](docs/reference/3. 数据类型/4. QQ 响应.md)
+> 参考文档：`guide/5. API 使用/`、`reference/1. Bot API/`、`reference/3. 数据类型/4. QQ 响应.md`
 
 ## 响应类型与错误处理
 
@@ -106,7 +106,7 @@ await self.api.qq.send_private_forward_msg_by_id(user_id, [msg_id1, msg_id2])
 
 ## 群管理 API
 
-> 参考文档：[reference/1. Bot API/2. QQ/2. 管理 API.md](docs/reference/1. Bot API/2. QQ/2. 管理 API.md)
+> 参考文档：`reference/1. Bot API/2. QQ/2. 管理 API.md`
 
 通过 `self.api.qq.manage.*` 访问：
 
@@ -147,7 +147,7 @@ await self.api.qq.manage.set_online_status(status, ext_status=0, custom_status="
 
 ## 信息查询 API
 
-> 参考文档：[reference/1. Bot API/2. QQ/3. 信息支持 API.md](docs/reference/1. Bot API/2. QQ/3. 信息支持 API.md)
+> 参考文档：`reference/1. Bot API/2. QQ/3. 信息支持 API.md`
 
 通过 `self.api.qq.query.*` 访问：
 
@@ -216,7 +216,7 @@ result = await self.api.qq.file.download_file(url="", file="", headers="")
 
 ## GitHub 平台 API
 
-> 参考文档：[guide/5. API 使用/4. GitHub/](docs/guide/5. API 使用/4. GitHub/), [reference/1. Bot API/4. GitHub/1. API.md](docs/reference/1. Bot API/4. GitHub/1. API.md)
+> 参考文档：`guide/5. API 使用/4. GitHub/`、`reference/1. Bot API/4. GitHub/1. API.md`
 
 通过 `self.api.github.*` 访问：
 

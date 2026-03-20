@@ -10,7 +10,7 @@
 - [ ] `main` 字段指向存在的入口文件（通常 `main.py`）
 - [ ] `entry_class` 字段与入口文件中的类名一致（可省略，自动发现）
 - [ ] `[dependencies]` section 替代了原 `dependencies = {}` 类属性
-- [ ] `[pip_dependencies]` section 列出了所需的 PyPI 包
+- [ ] `pip_dependencies` 字段列出了所需的 PyPI 包（支持两种格式：数组 `pip_dependencies = ["requests"]` 或 TOML 表 `[pip_dependencies]`；推荐后者）
 
 ## 2. 导入路径
 
@@ -64,7 +64,14 @@
 - [ ] 日志使用 `LOG.info()` 而非 `print()`（推荐）
 - [ ] `__init__.py` 导出正确的类名
 
-## 8. 功能验证
+## 8. BotAPI 访问（5.2.0+ 多平台架构）
+
+- [ ] 无 `self.api.post_group_msg(...)` 等直接调用（→ `self.api.qq.post_group_msg(...)`）
+- [ ] 无 `self.api.post_private_msg(...)` 等直接调用（→ `self.api.qq.post_private_msg(...)`）
+- [ ] 无 `self.api.post_group_forward_msg(...)` 等直接调用（→ `self.api.qq.post_group_forward_msg(...)`）
+- [ ] 所有 `self.api.xxx()` 均已改为 `self.api.qq.xxx()`
+
+## 9. 功能验证
 
 - [ ] `get_errors` 无语法/类型错误
 - [ ] manifest.toml 可被 `PluginManifest.from_toml()` 正确解析
@@ -75,7 +82,7 @@
 ## 快速验证脚本
 
 ```python
-# 验证 manifest 解析 + 类导入 + handler 注册
+# 验证 manifest 解析 + 类导入
 import sys, importlib
 sys.path.insert(0, "plugins/YOUR_PLUGIN")
 
@@ -87,9 +94,11 @@ mod = importlib.import_module(manifest.main.replace(".py", ""))
 cls = getattr(mod, manifest.entry_class)
 print(f"Class: {cls.__name__}, MRO: {[c.__name__ for c in cls.__mro__]}")
 
-from ncatbot.core.registry.registrar import _pending_handlers
-for plugin_name, entries in _pending_handlers.items():
-    print(f"\nPlugin: {plugin_name}")
+# 验证 handler 注册（通过 flush_pending 公开 API）
+from ncatbot.core import flush_pending
+handlers = flush_pending()
+for name, entries in handlers.items():
+    print(f"\nPlugin: {name}")
     for entry in entries:
-        print(f"  {entry.method_name if hasattr(entry, 'method_name') else entry}")
+        print(f"  {entry}")
 ```

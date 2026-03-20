@@ -8,13 +8,19 @@
 - 其他 → text
 
 用法：
-    python .agents/skills/consistency-check/scripts/fix_code_blocks.py          # 预览模式
-    python .agents/skills/consistency-check/scripts/fix_code_blocks.py --apply  # 实际修改文件
+    python .agents/scripts/fix_code_blocks.py          # 预览模式
+    python .agents/scripts/fix_code_blocks.py --apply  # 实际修改文件
 """
 
 import argparse
 import re
+import sys
 from pathlib import Path
+
+# Windows 默认 GBK 编码无法输出 emoji，强制 UTF-8
+if sys.stdout.encoding != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
 
 
 def _find_root() -> Path:
@@ -30,11 +36,13 @@ PROJECT_ROOT = _find_root()
 
 SCAN_DIRS = [
     PROJECT_ROOT / "docs",
-    PROJECT_ROOT / "examples",
     PROJECT_ROOT / ".agents" / "skills",
 ]
 
 CODE_BLOCK_START = re.compile(r"^(\s*)```(\w*)(.*)$")
+
+# 跳过的目录名
+SKIP_DIRS = {"node_modules", ".git", "__pycache__", ".vuepress"}
 
 
 def guess_language(lines: list[str]) -> str:
@@ -161,7 +169,9 @@ def main():
     md_files = []
     for d in SCAN_DIRS:
         if d.exists():
-            md_files.extend(d.rglob("*.md"))
+            for md in d.rglob("*.md"):
+                if not any(part in SKIP_DIRS for part in md.relative_to(d).parts):
+                    md_files.append(md)
 
     total_changes = []
     for md in sorted(md_files):

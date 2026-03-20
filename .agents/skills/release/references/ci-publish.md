@@ -2,38 +2,31 @@
 
 ## 本地预检（推送前必做）
 
-在创建 tag 之前模拟 CI 的 lint + test，避免浪费 CI 资源：
+在创建 tag 之前模拟 CI 的 lint + test，避免浪费 CI 资源。
 
-```powershell
-. .venv\Scripts\activate.ps1
+运行预检脚本（自动修复 lint/format 并生成报告）：
 
-# Ruff lint
-uv run ruff check .
-
-# Ruff 格式
-uv run ruff format --check .
-
-# 测试（无覆盖率，与 CI 一致）
-uv run pytest --no-cov
+```bash
+uv run python .agents/skills/release/scripts/precheck.py
 ```
 
-全部 exit code 0 才能继续。若失败：
-- lint/format 问题：`uv run ruff check --fix .` + `uv run ruff format .`，修复后提交
-- 测试失败：修复代码或测试，重新运行预检
+> 脚本源码：[scripts/precheck.py](../scripts/precheck.py)
+
+全部 exit code 0 才能继续。若 lint/format 已自动修复，提交修复后重新运行；测试失败则修复代码或测试。
 
 ## 分步推送
 
 **必须分步**，避免 branch push 和 tag push 同时触发重复 CI 运行：
 
-```powershell
-$ver = "X.Y.Z"  # 替换为实际版本号
+```bash
+VER="X.Y.Z"  # 替换为实际版本号
 
 # 步骤 1：推送 commits 到 main
 git push origin main
 
 # 步骤 2：创建并推送 tag（触发完整 CI test + publish）
-git tag "v$ver"
-git push origin "v$ver"
+git tag "v$VER"
+git push origin "v$VER"
 ```
 
 > `ci.yml` 使用 `concurrency: group: ci-${{ github.sha }}` + `cancel-in-progress: true`。
@@ -48,12 +41,3 @@ git push origin "v$ver"
 5. **Publish to PyPI** — 使用 `PYPI_TOKEN` secret
 6. **Package user-reference** — 打包 examples / docs / skills 为 zip
 7. **Create GitHub Release** — 附带 whl、tar.gz、user-reference.zip
-
-## 验证发布结果
-
-```powershell
-gh run list --workflow=ci.yml --limit=1
-gh release view "v$ver" --repo ncatbot/NcatBot
-```
-
-若 CI 失败，查看 Actions 日志排查。必要时回退到 [local-publish.md](local-publish.md)。

@@ -1,8 +1,50 @@
-# 文档-模块映射表
+# 模块 → 代码位置完整映射表
 
-> 从文档路径到代码位置的完整对照，用于快速定位。
+从模块名到代码目录和核心类的完整对照。
 
-## guide/ → 代码模块
+## 全量模块速查表
+
+| 模块 | 代码位置 | 核心类/文件 |
+|------|---------|------------|
+| 应用编排 | `ncatbot/app/` | `BotClient` |
+| 事件分发 | `ncatbot/core/dispatcher/` | `AsyncEventDispatcher` |
+| Handler 注册 | `ncatbot/core/registry/` | `HandlerDispatcher`, `Registrar` |
+| Hook 机制 | `ncatbot/core/registry/` | Hook 相关 |
+| 插件基类 | `ncatbot/plugin/` | `NcatBotPlugin`, `BasePlugin` |
+| 插件加载 | `ncatbot/plugin/loader/` | `PluginLoader`, `PluginIndexer` |
+| Mixin 扩展 | `ncatbot/plugin/mixin/` | Event / TimeTask / RBAC / Config / Data |
+| Bot API | `ncatbot/api/` | `BotAPIClient`, `IAPIClient` |
+| API 语法糖 | `ncatbot/api/qq/sugar.py` | `QQMessageSugarMixin` |
+| NapCat 适配 | `ncatbot/adapter/napcat/` | `NapCatAdapter` |
+| WebSocket | `ncatbot/adapter/napcat/connection/` | WebSocket + OB11Protocol |
+| 事件解析 | `ncatbot/adapter/napcat/` | `NapCatEventParser` |
+| 事件模型 | `ncatbot/event/` | `MessageEvent`, `NoticeEvent`, `RequestEvent` |
+| 事件通用层 | `ncatbot/event/common/` | `BaseEvent`, `create_entity()`, `register_platform_factory()` |
+| 事件 QQ 层 | `ncatbot/event/qq/` | `GroupMessageEvent`, `FriendRequestEvent` |
+| 事件 Trait | `ncatbot/event/common/mixins.py` | `Replyable`, `GroupScoped`, `Deletable` |
+| 类型定义 | `ncatbot/types/` | Pydantic 数据模型 |
+| 类型通用层 | `ncatbot/types/common/` | `BaseEventData`, `BaseSender`, `MessageSegment` |
+| 类型 QQ 层 | `ncatbot/types/qq/` | `GroupSender`, `Face`, `Forward` |
+| API Trait | `ncatbot/api/traits/` | `IMessaging`, `IGroupManage`, `IQuery`, `IFileTransfer` |
+| 平台 API | `ncatbot/api/qq/`, `ncatbot/api/bilibili/` | `QQAPIClient`, `IQQAPIClient` |
+| Bilibili 认证 | `ncatbot/adapter/bilibili/auth.py` | `qrcode_login()` 扫码登录 |
+| Bilibili 凭据持久化 | `ncatbot/adapter/bilibili/credential_store.py` | `save_credential_to_config()` |
+| 消息段 | `ncatbot/types/common/segment/` | text / media / array |
+| API 响应类型 | `ncatbot/types/napcat/` | SendMessageResult, GroupInfo, LoginInfo 等 |
+| API 错误 | `ncatbot/api/errors.py` | APIError, APIRequestError 等 |
+| 服务管理 | `ncatbot/service/` | `ServiceManager` |
+| RBAC 服务 | `ncatbot/service/builtin/` | RBAC 相关 |
+| 定时任务 | `ncatbot/service/builtin/` | Schedule 相关 |
+| 配置管理 | `ncatbot/utils/config/` | `ConfigManager` |
+| 日志 | `ncatbot/utils/logger/` | Logger 相关 |
+| CLI | `ncatbot/cli/` | `main.py`, `commands/` |
+| 测试框架 | `ncatbot/testing/` | `TestHarness` |
+
+---
+
+## 文档路径 → 代码模块
+
+### guide/ → 代码
 
 | 文档路径 | 对应代码模块 | 核心类/文件 |
 |----------|-------------|------------|
@@ -26,7 +68,7 @@
 | `guide/9. 测试指南/` | `ncatbot/testing/` | `TestHarness` |
 | `guide/10. 多平台开发/` | `ncatbot/api/`, `ncatbot/event/`, `ncatbot/app/` | `BotAPIClient`, `BaseEvent`, `BotClient` |
 
-## reference/ → 代码模块
+### reference/ → 代码
 
 | 文档路径 | 对应代码模块 | 核心类/文件 |
 |----------|-------------|------------|
@@ -53,7 +95,7 @@
 | `reference/9. 测试框架/1. 测试工具.md` | `ncatbot/testing/harness.py` | TestHarness |
 | `reference/9. 测试框架/2. 工厂场景与 Mock.md` | `ncatbot/testing/factory.py` | 工厂, Scenario |
 
-## contributing/ → 代码模块
+### contributing/ → 代码
 
 | 文档路径 | 覆盖的代码范围 |
 |----------|--------------|
@@ -61,33 +103,3 @@
 | `contributing/3. 模块内部实现/2. 插件服务模块.md` | `ncatbot/plugin/`, `ncatbot/service/` |
 | `contributing/2. 设计决策/1. 架构决策.md` | 跨模块架构决策 |
 | `contributing/2. 设计决策/2. 实现决策.md` | Dispatcher / Hook / 热重载实现决策 |
-
-## 关键词 → 文档快速跳转
-
-| 关键词 | 直达文档 |
-|--------|---------|
-| 插件、Plugin、BasePlugin | `guide/3. 插件开发/README.md` |
-| 事件、Event、handler、on_message | `guide/3. 插件开发/4. 事件注册.md` |
-| Hook、Filter、中间件 | `guide/3. 插件开发/9. Hooks.md` |
-| 消息、发送、图片、语音 | `guide/4. 消息发送/README.md` |
-| 消息段、Segment、MessageArray | `reference/3. 数据类型/1. 通用消息段.md` |
-| 合并转发、Forward | `guide/4. 消息发送/2. QQ/2. 合并转发.md` |
-| API、BotAPIClient | `guide/5. API 使用/README.md` |
-| 群管理、禁言、踢人 | `guide/5. API 使用/2. QQ/2. 群管理.md` |
-| 配置、Config、yaml | `guide/6. 配置管理/README.md` |
-| RBAC、权限、角色 | `guide/7. RBAC 权限/README.md` |
-| CLI、命令行、ncatbot | `guide/8. 命令行工具/README.md` |
-| 定时任务、Schedule | `reference/6. 服务层/2. 配置任务服务.md` |
-| 测试、Test、Harness | `guide/9. 测试指南/README.md` |
-| 多平台、跨平台、适配器、platform | `guide/10. 多平台开发/README.md` |
-| GitHub、Webhook、Polling、Issue、PR | `guide/5. API 使用/4. GitHub/README.md` |
-| GitHub 事件、GitHubIssueEvent、GitHubPREvent | `reference/2. 事件类型/4. GitHub 事件.md` |
-| GitHub API、GitHubBotAPI | `reference/1. Bot API/4. GitHub/1. API.md` |
-| GitHub 类型、GitHubAction、GitHubRepo | `reference/3. 数据类型/6. GitHub 类型.md` |
-| API Trait、IMessaging、IGroupManage | `reference/1. Bot API/README.md` |
-| event Trait、Replyable、GroupScoped | `reference/2. 事件类型/README.md` |
-| WebSocket、连接、断线 | `reference/7. 适配器/1. 连接.md` |
-| 配置、Config、ConfigManager | `reference/8. 工具模块/1. 配置.md` |
-| Dispatcher、分发 | `reference/4. 核心模块/1. 内部实现.md` |
-| Registry、注册 | `reference/4. 核心模块/1. 内部实现.md` |
-| 生命周期、启动、关闭 | `docs/guide/11. 架构与概念/1. 架构总览.md`（§5 生命周期） |

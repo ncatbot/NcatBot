@@ -14,10 +14,9 @@ license: MIT
 
 | 核心路径 | `ncatbot/` · `pyproject.toml` · `main.py` |
 |---------|------------------------------------------|
-| **发布模式** | 上述路径有变更 → 需要发新版本 |
-| **推送模式** | 仅 docs/examples/skills/tests 等 → 仅推送 |
+| **发布模式** | 检测到重大变动时或用户明确要求发布时 |
+| **推送模式** | 用户明确要求推送时 |
 
-拿不准时用 `vscode_askQuestions` 询问用户。
 
 > docs 是 Git submodule，其指针变更在 `git diff` 中显示为 `docs`（无斜杠），不触发发布模式。
 
@@ -44,7 +43,7 @@ license: MIT
 1. **同步远端** — `git pull --rebase origin main`
 2. **Commit 编排** — 同发布模式步骤 2 → 参见 [commit-workflow.md](references/commit-workflow.md)
 3. **推送** — `git push origin main`
-4. **（按需）更新 Release Asset** — 若 commit 涉及 docs/examples/skills → 参见 [asset-update.md](references/asset-update.md)
+4. **（按需）更新 Release Asset** — 若 commit 涉及 docs/skills → 参见 [asset-update.md](references/asset-update.md)
 
 ---
 
@@ -68,6 +67,4 @@ license: MIT
 | 触发条件 | 询问内容 |
 |---------|---------|
 | 模式无法自动判断 | 发布 or 推送 |
-| 工作区有未提交变更 | 哪些纳入、如何分组为 commits |
-| 历史 commits 分类不明 | 哪些进 release notes |
-| 变更类型无法归类（仅 refactor/docs 等） | 版本号策略 |
+| 未明确且无法自动推断版号 | 版本号策略 |

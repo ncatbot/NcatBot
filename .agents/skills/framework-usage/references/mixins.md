@@ -1,6 +1,6 @@
 # Mixin 详解参考
 
-> 参考文档：[reference/5. 插件系统/2. Mixins.md](docs/reference/5. 插件系统/2. Mixins.md)
+> 参考文档：`reference/5. 插件系统/2. Mixins.md`
 
 `NcatBotPlugin` 已包含全部 5 个 Mixin，按需使用。
 

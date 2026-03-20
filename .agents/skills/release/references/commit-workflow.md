@@ -33,20 +33,18 @@ git add docs
 
 > docs 指针更新可合并到其他 commit 中，不需单独一个 commit。
 
-## 步骤 2：ASK — 确认纳入范围
+## 步骤 2：确认纳入范围
 
-使用 `vscode_askQuestions` 展示变更文件列表，让用户确认：
+除非用户要求，否则全部工作区变动均需要纳入范围。
 
-- 哪些文件/改动纳入本次提交
-- 哪些暂不提交（留到下次）
+用户有要求时，如果不明确，应该使用 `vscode_askQuestions` 确认。
 
-## 步骤 3：ASK — 确认 Commit 分组方案
+## 步骤 3：规划 Commit 分组方案
 
-按模块/功能建议分组，使用 `vscode_askQuestions` 确认：
+按模块/功能建议分组：
 
 - 遵循 conventional-commits 格式：`type(scope): description`
 - 标题和描述写中文，约定式前缀、常用术语保持英文（如 `fix: 修复 xxx 导致的 yyy Bug`）
-- 用户可合并、拆分、调整分组
 
 示例建议：
 
@@ -60,7 +58,13 @@ git add docs
   - ncatbot/plugin/watcher.py
 ```
 
-## 步骤 4：执行 Commit
+## 步骤 4：运行 ruff 自动修复
+
+```bash
+pre-commit run --files $(git ls-files --modified --others --exclude-standard)
+```
+
+## 步骤 5：执行 Commit
 
 ```powershell
 git add <files>

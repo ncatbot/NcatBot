@@ -28,6 +28,7 @@
 | `plugin_names` | `list[str]` | 构造参数：要加载的插件名 |
 | `plugin_dir` | `Path` | 构造参数：插件目录 |
 | `skip_builtin` | `bool = True` | 构造参数：是否跳过内置插件 |
+| `skip_pip` | `bool = True` | 构造参数：是否跳过 pip 依赖安装 |
 | `loaded_plugins` | `list[str]` | 已加载插件名列表 |
 | `get_plugin(name)` | `NcatBotPlugin` | 获取插件实例 |
 | `plugin_config(name)` | `dict` | 获取插件配置 |
@@ -94,12 +95,34 @@ class APICall:
 
 ## Scenario 链式构建器
 
+`Scenario` 是链式步骤构建器，调用 `await scenario.run(harness)` 执行全部步骤。
+
+| 方法 | 返回 | 说明 |
+|------|------|------|
+| `Scenario(name="")` | `Scenario` | 构造，name 用于报错时定位步骤 |
+| `.inject(event_data)` | `Scenario` | 注入单个事件 |
+| `.inject_many(events)` | `Scenario` | 注入多个事件 |
+| `.settle(delay=0.05)` | `Scenario` | 等待 handler 处理完成 |
+| `.assert_api_called(action, **match)` | `Scenario` | 断言 API 被调用（可选 kwargs 参数匹配） |
+| `.assert_api_not_called(action)` | `Scenario` | 断言 API 未被调用 |
+| `.assert_api_count(action, count)` | `Scenario` | 断言 API 调用次数 |
+| `.assert_that(predicate, desc="")` | `Scenario` | 自定义断言（predicate 接收 harness，可抛 AssertionError） |
+| `.reset_api()` | `Scenario` | 清空 API 调用记录 |
+| `await .run(harness)` | `None` | 执行全部步骤（async，必须传入 harness） |
+
 ```python
-scenario = Scenario("test_name")
-scenario.inject(event_data)          # 注入事件
-scenario.settle(delay=0.05)          # 等待处理
-scenario.assert_api_called(action)   # 断言调用
-await scenario.run(harness)           # 执行链（async，传入 harness）
+# 示例
+scenario = (
+    Scenario("login_flow")
+    .inject(group_message("注册"))
+    .settle()
+    .assert_api_called("send_group_msg")
+    .reset_api()
+    .inject(group_message("张三"))
+    .settle()
+    .assert_api_called("send_group_msg")
+)
+await scenario.run(harness)  # 必须传入 harness 实例
 ```
 
 ## pytest Fixtures（conftest.py 提供）
@@ -113,3 +136,20 @@ await scenario.run(harness)           # 执行链（async，传入 harness）
 | `handler_dispatcher` | function | HandlerDispatcher（注入 mock_api） |
 | `fresh_registrar` | function | 清理全局 pending 后的 Registrar |
 | `tmp_plugin_workspace` | function | 临时插件工作目录（tmp_path） |
+
+---
+
+## 常见失败扩展
+
+| 症状 | 可能原因 | 排查 / 修复 |
+|------|---------|------------|
+| handler 没被调用 | 事件类型字符串不匹配 / Hook 拦截 | 检查注册的事件类型；打印 `h.api_calls` 确认 |
+| `api_called` 返回 False | handler 未执行 / `settle` 时间不足 | 改为 `await h.settle(0.1)`；加 `print` 确认 handler 执行 |
+| `asyncio` 警告/报错 | 缺少 `asyncio_mode` 标记 | 文件顶部加 `pytestmark = pytest.mark.asyncio(mode="strict")` |
+| `ImportError` | 测试依赖未安装 | `uv pip install -e ".[test]"` |
+| 插件加载失败 | `plugin_dir` 路径错误 / 缺少 `__init__.py` | 用 `Path(__file__).resolve().parents[N] / "..."` 确保绝对路径 |
+| flaky（偶发失败） | 异步竞态 / settle 时间不稳定 | 用 `wait_event(predicate, timeout=2.0)` 替代固定 delay |
+| Mock 返回值不对 | 未预设 response | `harness.mock_api.set_response("action", {...})` |
+| `platform` 过滤不生效 | 事件 data 与 adapter platform 不一致 | 工厂函数默认 `platform="qq"`；检查自定义事件数据 |
+| `'BotAPIClient' has no attr 'post_group_msg'` | 插件直接调 `self.api.xxx` | QQ sugar 方法在 `self.api.qq` 上；`self.api` 是多平台路由器 |
+| `'BaseEvent' has no attr 'reply'` | 事件数据缺少 `platform="qq"` | QQ 数据模型已内置 `platform: str = "qq"` 默认值；检查自定义数据 |

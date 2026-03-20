@@ -4,55 +4,36 @@
 
 ## 步骤 1：判断是否需要更新
 
-```powershell
-$lastTag = git describe --tags --abbrev=0 2>$null
+```bash
+LAST_TAG=$(git describe --tags --abbrev=0)
 # docs 是 submodule，指针变更显示为 "docs"（无尾部斜杠）
-git diff --name-only "$lastTag..HEAD" | Select-String "^(docs$|docs/|examples/|\.agents/skills/)"
+git diff --name-only "$LAST_TAG..HEAD" | grep -E '^(docs$|docs/|\.agents/skills/)'
 ```
 
 有匹配 → 执行后续步骤；无匹配 → 流程结束。
 
-## 步骤 2：获取版本号
+## 步骤 2：打包用户参考资料
 
-```powershell
-$latestTag = git describe --tags --abbrev=0
-$ver = $latestTag -replace '^v', ''
+运行打包脚本（自动从 git tag 推导版本号）：
+
+```bash
+uv run python .agents/skills/release/scripts/pack_user_ref.py
+# 或手动指定版本号
+uv run python .agents/skills/release/scripts/pack_user_ref.py --version X.Y.Z
 ```
 
-## 步骤 3：打包用户参考资料
+> 脚本源码：[scripts/pack_user_ref.py](../scripts/pack_user_ref.py)
 
-```powershell
-git submodule update --init
+## 步骤 3：替换 Release Asset
 
-$zipPath = "dist\ncatbot5-$ver-user-reference.zip"
-$tempDir = "dist\_pack_temp"
-
-if (Test-Path dist) { Remove-Item dist -Recurse -Force }
-
-$files = Get-ChildItem -Recurse examples, .agents\skills, docs -File |
-    Where-Object { $_.FullName -notmatch '__pycache__' }
-
-New-Item -ItemType Directory -Path $tempDir -Force | Out-Null
-foreach ($f in $files) {
-    $rel = $f.FullName.Replace((Get-Location).Path + '\', '')
-    $dest = Join-Path $tempDir $rel
-    $destDir = Split-Path $dest
-    if (!(Test-Path $destDir)) { New-Item -ItemType Directory -Path $destDir -Force | Out-Null }
-    Copy-Item $f.FullName $dest
-}
-Compress-Archive -Path "$tempDir\*" -DestinationPath $zipPath
-Remove-Item $tempDir -Recurse -Force
+```bash
+VER=$(git describe --tags --abbrev=0 | sed 's/^v//')
+gh release delete-asset "v$VER" "ncatbot5-$VER-user-reference.zip" --repo ncatbot/NcatBot --yes
+gh release upload "v$VER" "dist/ncatbot5-$VER-user-reference.zip" --repo ncatbot/NcatBot
 ```
 
-## 步骤 4：替换 Release Asset
+## 步骤 4：清理
 
-```powershell
-gh release delete-asset "v$ver" "ncatbot5-$ver-user-reference.zip" --repo ncatbot/NcatBot --yes
-gh release upload "v$ver" $zipPath --repo ncatbot/NcatBot
-```
-
-## 步骤 5：清理
-
-```powershell
-if (Test-Path dist) { Remove-Item dist -Recurse -Force }
+```bash
+rm -rf dist
 ```

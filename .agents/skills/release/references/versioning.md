@@ -19,13 +19,13 @@ git log "$lastTag..HEAD" --oneline --no-merges
 | `refactor` | 重构 | ♻️ | ✅ |
 | `perf` | 性能优化 | ⚡ | ✅ |
 | 含 `BREAKING CHANGE` 或 `!` | 破坏性变更 | 💥 | ✅ |
-| `docs` | 文档 | 📝 | ❌ |
-| `test` | 测试 | ✅ | ❌ |
-| `chore` / `build` / `ci` | 构建/维护 | 🔧 | ❌ |
+| `docs` | 文档 | 📝 | ✅ |
+| `test` | 测试 | ✅ | ✅ |
+| `chore` / `build` / `ci` | 构建/维护 | 🔧 | ✅ |
 
-## 3. ASK — 确认纳入范围
+## 3. 确认纳入范围
 
-用 `vscode_askQuestions` 让用户确认默认分类是否需要调整（排除某些 commit，或额外纳入默认跳过的类别）。
+除非明确要求，否则全部纳入
 
 ## 4. 版本号递增规则
 
@@ -35,10 +35,14 @@ git log "$lastTag..HEAD" --oneline --no-merges
 |------|------|------|---------|
 | 仅 1 个 `fix`（紧急热修复） | **post** | 5.1.0 → 5.1.0.post1 | 自动 |
 | 多个 `fix` 或小 `feat` | **patch** | 5.1.0 → 5.1.1 | 自动 |
-| 大型 `feat` 或 `BREAKING CHANGE` | **minor** | 5.1.0 → 5.2.0 | 自动 |
+| 大型 `feat` 或 `BREAKING CHANGE` | **minor** | 5.1.0 → 5.2.0 | **必须 ASK** |
 | 无法归类（仅 refactor/docs 等） | — | — | **必须 ASK** |
 
 优先级：自上向下，第一条匹配则停止。
+
+提示：绝大部分情况，只需要改 post 或者 patch；post 和 patch 不需要用户确认。
+
+提示：需要 minor 时用户会提出，如果 AI 认为有必要 minor（情况极少），必须要使用 `ASK` 询问用户确认，不能直接建议或执行。
 
 **major 不在 AI 决策范围内**，由人类主动发起，AI 不主动提及或建议。
 
