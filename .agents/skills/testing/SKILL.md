@@ -279,12 +279,12 @@ async with TestHarness(adapter=adapter) as h:
 
 | 文档 | 路径 | 说明 |
 |------|------|------|
-| 快速入门 | `docs/guide/testing/1.quick-start.md` | 第一个测试的完整流程 |
-| TestHarness 深入 | `docs/guide/testing/2.harness.md` | 编排器详细用法 |
-| 工厂与场景 | `docs/guide/testing/3.factory-scenario.md` | 事件构造 + Scenario |
-| API 参考 | `docs/reference/testing/README.md` | 完整 API 签名索引 |
-| Harness API | `docs/reference/testing/1_harness.md` | TestHarness / PluginTestHarness 详细 API |
-| 工厂/Mock API | `docs/reference/testing/2_factory_scenario_mock.md` | 事件工厂 + MockBotAPI 详细 API |
+| 快速入门 | `docs/guide/9. 测试指南/1. 快速开始.md` | 第一个测试的完整流程 |
+| TestHarness 深入 | `docs/guide/9. 测试指南/2. 测试工具.md` | 编排器详细用法 |
+| 工厂与场景 | `docs/guide/9. 测试指南/3. 工厂与场景.md` | 事件构造 + Scenario |
+| API 参考 | `docs/reference/9. 测试框架/README.md` | 完整 API 签名索引 |
+| Harness API | `docs/reference/9. 测试框架/1. 测试工具.md` | TestHarness / PluginTestHarness 详细 API |
+| 工厂/Mock API | `docs/reference/9. 测试框架/2. 工厂场景与 Mock.md` | 事件工厂 + MockBotAPI 详细 API |
 | 测试套件说明 | `tests/README.md` | 现有测试的目录结构和规范编号 |
 
 ---

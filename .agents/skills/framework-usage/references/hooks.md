@@ -1,6 +1,6 @@
 # Hook 系统参考
 
-> 参考文档：[guide/plugin/6.hooks.md](docs/guide/plugin/6.hooks.md), [reference/core/1_internals.md](docs/reference/core/1_internals.md)
+> 参考文档：[guide/3. 插件开发/9. Hooks.md](docs/guide/3. 插件开发/9. Hooks.md), [reference/4. 核心模块/1. 内部实现.md](docs/reference/4. 核心模块/1. 内部实现.md)
 
 ## Hook 三阶段
 

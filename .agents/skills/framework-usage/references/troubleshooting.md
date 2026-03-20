@@ -1,6 +1,6 @@
 # 调试排错参考
 
-> 参考文档：[guide/configuration/](docs/guide/configuration/), [reference/utils/1a_config.md](docs/reference/utils/1a_config.md)
+> 参考文档：[guide/6. 配置管理/](docs/guide/6. 配置管理/), [reference/8. 工具模块/1. 配置.md](docs/reference/8. 工具模块/1. 配置.md)
 
 ## 快速诊断
 

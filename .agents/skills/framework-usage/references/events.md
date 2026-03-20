@@ -1,6 +1,6 @@
 # 事件系统参考
 
-> 参考文档：[guide/plugin/4a.event-registration.md](docs/guide/plugin/4a.event-registration.md), [reference/core/1_internals.md](docs/reference/core/1_internals.md)
+> 参考文档：[guide/3. 插件开发/4. 事件注册.md](docs/guide/3. 插件开发/4. 事件注册.md), [reference/4. 核心模块/1. 内部实现.md](docs/reference/4. 核心模块/1. 内部实现.md)
 
 ## 装饰器注册（最常用）
 
@@ -357,4 +357,4 @@ for t in pending:
 | `meta_event.heartbeat_timeout` | 断线检测 |
 | `meta_event.lifecycle` | 监控连接状态 |
 
-> 完整模式（插件并发编排、工作流清理）→ [事件驱动工作流编排](docs/guide/plugin/7a.patterns.md#事件驱动工作流编排)
+> 完整模式（插件并发编排、工作流清理）→ [事件驱动工作流编排](docs/guide/3. 插件开发/10. 模式.md#事件驱动工作流编排)

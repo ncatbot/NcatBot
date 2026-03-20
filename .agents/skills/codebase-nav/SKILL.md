@@ -25,35 +25,35 @@ description: '导航 NcatBot 代码库：定位代码、理解模块、查阅文
 
 | 症状 / 关键词 | 涉及模块 | 首先查阅的文档 |
 |---|---|---|
-| Bot 启动失败 / 连接不上 | adapter, app | `contributing/module_internals/1.core_modules.md` |
-| 消息不响应 / handler 不触发 | core/registry, core/dispatcher | `guide/plugin/4a.event-registration.md` |
-| API 调用报错 / 返回异常 | api, adapter/napcat/api | `reference/api/README.md` → 对应方法 |
-| 插件加载失败 / 找不到插件 | plugin/loader | `guide/plugin/3.lifecycle.md` |
-| 插件卸载/热重载异常 | plugin/loader | `guide/plugin/3.lifecycle.md` |
-| Hook/Filter 不生效 | core/registry/hook | `guide/plugin/6.hooks.md` |
-| 权限/RBAC 不工作 | service/builtin/rbac | `guide/rbac/1_model.md` |
-| 定时任务不执行 | plugin/mixin/time_task_mixin, service/builtin/schedule | `reference/services/2_config_task_service.md`。检查插件是否有与 task name 同名的方法，或是否显式传入了 callback |
-| 配置读取错误 | utils/config | `guide/configuration/1.config-security.md` |
-| 消息构造/消息段问题 | types/common/segment | `guide/send_message/common/1_segments.md` |
-| 合并转发失败 | types/helper, api | `guide/send_message/qq/2_forward.md` |
-| 事件字段缺失/解析错误 | event, types | `reference/events/1_common.md` |
-| CLI 命令报错 | cli | `reference/cli.md` |
+| Bot 启动失败 / 连接不上 | adapter, app | `contributing/3. 模块内部实现/1. 核心模块.md` |
+| 消息不响应 / handler 不触发 | core/registry, core/dispatcher | `guide/3. 插件开发/4. 事件注册.md` |
+| API 调用报错 / 返回异常 | api, adapter/napcat/api | `reference/1. Bot API/README.md` → 对应方法 |
+| 插件加载失败 / 找不到插件 | plugin/loader | `guide/3. 插件开发/3. 生命周期.md` |
+| 插件卸载/热重载异常 | plugin/loader | `guide/3. 插件开发/3. 生命周期.md` |
+| Hook/Filter 不生效 | core/registry/hook | `guide/3. 插件开发/9. Hooks.md` |
+| 权限/RBAC 不工作 | service/builtin/rbac | `guide/7. RBAC 权限/1. RBAC 模型.md` |
+| 定时任务不执行 | plugin/mixin/time_task_mixin, service/builtin/schedule | `reference/6. 服务层/2. 配置任务服务.md`。检查插件是否有与 task name 同名的方法，或是否显式传入了 callback |
+| 配置读取错误 | utils/config | `guide/6. 配置管理/1. 配置安全.md` |
+| 消息构造/消息段问题 | types/common/segment | `guide/4. 消息发送/1. 通用/1. 消息段.md` |
+| 合并转发失败 | types/helper, api | `guide/4. 消息发送/2. QQ/2. 合并转发.md` |
+| 事件字段缺失/解析错误 | event, types | `reference/2. 事件类型/1. 通用事件.md` |
+| CLI 命令报错 | cli | `reference/10. CLI/1. 命令参考.md` |
 | 非插件模式不工作 | app/client, core/registry | `guide/README.md`（非插件模式章节） |
-| 日志/输出异常 | utils/logger | `reference/utils/1a_config.md` |
-| 测试框架问题 | testing | `guide/testing/README.md` |
-| 平台适配器找不到/不工作 | adapter | `guide/adapter/README.md` → 对应平台指南 |
-| QQ 登录失败 / WebUI 连接不上 | adapter/napcat/setup | `guide/adapter/1_napcat_qq.md` |
-| Bilibili 扫码登录失败 / 凭据失效 | adapter/bilibili/auth | `guide/adapter/2_bilibili.md` |
-| GitHub Token 验证失败 / Webhook 不触发 | adapter/github | `guide/adapter/3_github.md` |
-| QQ 专用类型/段错误 | types/qq | `reference/types/README.md` |
-| 跨平台事件路由问题 | event/common/factory, core/registry | `guide/multi_platform/README.md` |
-| 多适配器/多平台配置 | app/client, api/client | `guide/multi_platform/README.md` |
+| 日志/输出异常 | utils/logger | `reference/8. 工具模块/1. 配置.md` |
+| 测试框架问题 | testing | `guide/9. 测试指南/README.md` |
+| 平台适配器找不到/不工作 | adapter | `guide/2. 适配器/README.md` → 对应平台指南 |
+| QQ 登录失败 / WebUI 连接不上 | adapter/napcat/setup | `guide/2. 适配器/1. NapCat QQ.md` |
+| Bilibili 扫码登录失败 / 凭据失效 | adapter/bilibili/auth | `guide/2. 适配器/2. Bilibili.md` |
+| GitHub Token 验证失败 / Webhook 不触发 | adapter/github | `guide/2. 适配器/3. GitHub.md` |
+| QQ 专用类型/段错误 | types/qq | `reference/3. 数据类型/README.md` |
+| 跨平台事件路由问题 | event/common/factory, core/registry | `guide/10. 多平台开发/README.md` |
+| 多适配器/多平台配置 | app/client, api/client | `guide/10. 多平台开发/README.md` |
 
 > **多症状并发时**：按事件处理链路（adapter → event → dispatcher → registry → handler）逐步排查，找到第一个偏离预期的环节。
 
 ### 无法直接分类时
 
-1. 读 `docs/architecture.md` 的分层架构图，理解各层职责
+1. 读 `docs/guide/11. 架构与概念/1. 架构总览.md` 的分层架构图，理解各层职责
 2. 根据问题涉及的数据流方向（入站 vs 出站）缩小范围
 3. 入站（收消息）：adapter → event → core → plugin
 4. 出站（发消息/调API）：plugin → api → adapter
@@ -70,8 +70,8 @@ description: '导航 NcatBot 代码库：定位代码、理解模块、查阅文
 |--------|---------|------|-----------|
 | 1 | 使用指南 | `docs/guide/<模块>/` | 预期行为、使用方式、常见模式 |
 | 2 | API 参考 | `docs/reference/<模块>/` | 类签名、方法参数、返回值 |
-| 3 | 模块内部实现 | `docs/contributing/module_internals/` | 内部结构、调用链、设计约束 |
-| 4 | 设计决策 | `docs/contributing/design_decisions/` | 为何如此设计、已知权衡 |
+| 3 | 模块内部实现 | `docs/contributing/3. 模块内部实现/` | 内部结构、调用链、设计约束 |
+| 4 | 设计决策 | `docs/contributing/2. 设计决策/` | 为何如此设计、已知权衡 |
 
 ### 文档导航
 
@@ -83,9 +83,9 @@ description: '导航 NcatBot 代码库：定位代码、理解模块、查阅文
 |---|---|
 | 某功能怎么用 | `docs/guide/` → 对应子目录 |
 | 某类/方法的签名 | `docs/reference/` → 对应子目录 |
-| 某模块内部如何实现 | `docs/contributing/module_internals/` |
-| 某设计为何如此 | `docs/contributing/design_decisions/` |
-| 整体架构 | `docs/architecture.md` |
+| 某模块内部如何实现 | `docs/contributing/3. 模块内部实现/` |
+| 某设计为何如此 | `docs/contributing/2. 设计决策/` |
+| 整体架构 | `docs/guide/11. 架构与概念/1. 架构总览.md` |
 
 ---
 

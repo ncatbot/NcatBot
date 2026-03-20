@@ -116,7 +116,7 @@ python .agents/skills/consistency-check/scripts/fix_code_blocks.py --apply
 | `guide/` | 任务导向 "如何做 X" | 出现大量 API 签名表格、缺少可运行示例 |
 | `reference/` | 参考导向 API 详解 | 出现大段教程叙述、缺少签名/参数表 |
 | `contributing/` | 面向贡献者的内部实现 | 出现用户教程内容 |
-| `architecture.md` | 全局视图 | 深入单模块实现细节 |
+| `guide/11. 架构与概念/1. 架构总览.md` | 全局视图 | 深入单模块实现细节 |
 
 #### Skill 设计定位
 
