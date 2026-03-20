@@ -58,27 +58,17 @@ license: MIT
 
 ### docs 变更的提交流程
 
-当 docs 内容有修改时，需要两步提交：
+当 docs 内容有修改时，在阶段 1.1.8 中自动处理。流程概要：
 
-```powershell
-# 步骤 1：在 docs 子仓库中提交并推送
-cd docs
-git add .
-git commit -m "docs: 变更描述"
-git push origin master
-cd ..
+1. **在 docs 子仓库中**提交并推送到 `master` 分支
+2. **在主仓库中**暂存 submodule 指针更新（`git add docs`），后续合并到其他 commit 中
 
-# 步骤 2：在主仓库中更新 submodule 指针
-git add docs
-git commit -m "docs: 更新文档子模块"
-```
-
-> 如果工作区同时有 docs 变更和其他代码变更，docs 的 submodule 指针更新可合并到其他 commit 中，不必单独一个 commit。
+> 详见阶段 1.1.8 的完整步骤。如果工作区同时有 docs 变更和其他代码变更，docs 的 submodule 指针更新可合并到其他 commit 中，不必单独一个 commit。
 
 ## 发布模式：CI/CD 全链路流程总览
 
 ```text
-工作区变更审查 → Commit 编排 → 已有 Commit 审查 → 版本号确定 → Tag → Push（CI 自动: Lint → Test → Build → PyPI → user-ref 打包 → GitHub Release）
+同步远端 → docs 子模块处理 → 工作区变更审查 → Commit 编排 → 已有 Commit 审查 → 版本号确定 → 本地预检 → Tag → Push（CI 自动: Lint → Test → Build → PyPI → user-ref 打包 → GitHub Release）
 ```
 
 ---
@@ -93,6 +83,41 @@ git commit -m "docs: 更新文档子模块"
 git status --short
 git diff --stat
 ```
+
+#### 1.1.5 同步远端
+
+在开始编排 commit 之前，先拉取远端最新变更，避免后续 push 冲突：
+
+```powershell
+git pull --rebase origin main
+```
+
+> 如果 pull 产生冲突，先解决冲突并提交后再继续。
+
+#### 1.1.8 docs 子模块处理（前置）
+
+检查 `docs/` 子模块是否有未提交的变更：
+
+```powershell
+git -C docs status --short
+```
+
+**如果 docs 子模块有变更（输出非空）**，必须先在 docs 子仓库中完成提交并推送，再继续主仓库流程：
+
+```powershell
+# 步骤 1：在 docs 子仓库中提交并推送
+cd docs
+git add .
+git commit -m "docs: 变更描述"
+git push origin master
+cd ..
+
+# 步骤 2：在主仓库中暂存 submodule 指针更新（后续 1.4 一起提交）
+git add docs
+```
+
+> docs 的 submodule 指针更新可合并到其他 commit 中，不必单独一个 commit。
+> 如果 docs 子模块无变更，跳过此步骤。
 
 #### 1.2 ASK：哪些变更纳入本次发布
 
@@ -366,12 +391,12 @@ Remove-Item release-notes.md -ErrorAction SilentlyContinue
 ### 流程
 
 ```text
-工作区变更审查 → Commit 编排 → Push → （可选）更新 Release Asset
+同步远端 → docs 子模块处理 → 工作区变更审查 → Commit 编排 → Push → （可选）更新 Release Asset
 ```
 
 ### P1：工作区变更审查与 Commit 编排
 
-与发布模式的阶段 1 **完全相同**（1.1 ~ 1.4），参照上文。
+与发布模式的阶段 1 **完全相同**（1.1 ~ 1.4，含 1.1.5 同步远端 和 1.1.8 docs 子模块处理），参照上文。
 
 ### P2：推送到 main
 
@@ -467,6 +492,9 @@ if (Test-Path dist) { Remove-Item dist -Recurse -Force }
 
 | 场景 | 自动行为 |
 |------|---------|
+| 流程开始 | 自动执行 `git pull --rebase origin main` 同步远端 |
+| docs 子模块有变更 | 自动在 docs 子仓库中提交推送，再更新主仓库 submodule 指针 |
+| docs 子模块无变更 | 跳过 docs 处理 |
 | 工作区无未提交变更 | 跳过 Commit 编排 |
 | 变更仅涉及非核心文件 | 自动进入推送模式 |
 | 推送后 commit 涉及 docs/examples/skills | 自动更新 Release Asset |
