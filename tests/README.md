@@ -7,13 +7,13 @@
 ```
 tests/
 ├── unit/              # 单元测试 — 按模块组织
-│   ├── types/         # 类型系统 (T-01 ~ T-05, S-01 ~ S-10, CQ-01 ~ CQ-08, N-01 ~ N-05, MA-01 ~ MA-04, FW-01 ~ FW-03, SEG-01)
+│   ├── types/         # 类型系统 (T-01 ~ T-05, S-01 ~ S-10, CQ-01 ~ CQ-08, N-01 ~ N-05, MA-01 ~ MA-04, FW-01 ~ FW-03, SEG-01, LR-01 ~ LR-03)
 │   ├── event/         # 事件工厂 (E-01 ~ E-04, GHE-01 ~ GHE-04, QMA-01 ~ QMA-03)
 │   ├── api/           # API 客户端 + 错误层级 + Sugar (A-01 ~ A-02, AE-01 ~ AE-07, SG-01 ~ SG-06, FL-01 ~ FL-06)
-│   ├── core/          # 核心分发与注册 + 谓词 (D-01 ~ D-09, K-01 ~ K-21, H-01 ~ H-11, R-01 ~ R-07, PR-01 ~ PR-06)
+│   ├── core/          # 核心分发与注册 + 谓词 (D-01 ~ D-09, K-01 ~ K-21, H-01 ~ H-11, R-01 ~ R-09, PR-01 ~ PR-06)
 │   ├── service/       # 服务管理 + RBAC + 调度 (SM-01 ~ SM-08, SC-01 ~ SC-12, TS-01 ~ TS-06)
 │   ├── plugin/        # 插件 Mixin + 导入去重 + Loader (M-01 ~ M-41, ID-01 ~ ID-02, LD-01 ~ LD-05)
-│   ├── adapter/       # 适配器解析 + 注册表 + 真实数据 (P-01 ~ P-07, RF-01 ~ RF-08, AR-01 ~ AR-05, GM-01 ~ GM-05, BL-01 ~ BL-14, GH-01 ~ GH-11)
+│   ├── adapter/       # 适配器解析 + 注册表 + 真实数据 (P-01 ~ P-07, RF-01 ~ RF-08, AR-01 ~ AR-05, GM-01 ~ GM-05, BL-01 ~ BL-17, GH-01 ~ GH-11)
 │   └── config/        # 配置迁移 + 安全 (CF-01 ~ CF-05, CS-01 ~ CS-05)
 ├── integration/       # 集成测试 (I-01 ~ I-21)
 ├── e2e/               # 端到端测试
@@ -70,7 +70,7 @@ python tests/e2e/napcat/run.py
 | D | AsyncEventDispatcher | D-01 ~ D-09 |
 | K | Hook System | K-01 ~ K-21 |
 | H | HandlerDispatcher | H-01 ~ H-11 |
-| R | Registrar | R-01 ~ R-07 |
+| R | Registrar | R-01 ~ R-09 |
 | ID | Import Dedup (插件导入去重) | ID-01 ~ ID-02 |
 | SM | ServiceManager | SM-01 ~ SM-08 |
 | M | Plugin Mixin | M-01 ~ M-41 |
@@ -88,7 +88,8 @@ python tests/e2e/napcat/run.py
 | FW | Forward 转发消息 | FW-01 ~ FW-03 |
 | RF | 真实日志夹具事件解析 | RF-01 ~ RF-08 |
 | GM | 群消息批量真实数据 | GM-01 ~ GM-05 |
-| BL | Bilibili 事件解析 | BL-01 ~ BL-14 |
+| BL | Bilibili 事件解析 | BL-01 ~ BL-17 |
+| LR | Bilibili 数据模型 (LiveRoomInfo) | LR-01 ~ LR-03 |
 | GH | GitHub 事件解析 | GH-01 ~ GH-11 |
 | SEG | 消息段附件桥接 | SEG-01 |
 | GHE | GitHub 事件实体 | GHE-01 ~ GHE-04 |

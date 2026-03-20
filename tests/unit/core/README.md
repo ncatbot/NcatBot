@@ -68,6 +68,8 @@
 | R-02 | ContextVar 隔离 | 不同 `plugin_name` 的 handler 分开收集 |
 | R-03 | `fork()` | 创建独立 Registrar 实例 |
 | R-04 | `clear_pending()` | 清理残留的 pending handler |
+| R-08 | `bilibili.on_live_start()` 路由 | 路由到 `live.live` 事件类型 |
+| R-09 | `bilibili.on_live_end()` 路由 | 路由到 `live.preparing` 事件类型 |
 
 ### Registrar 堆叠装饰器去重 (`test_duplicate_handler.py`)
 
