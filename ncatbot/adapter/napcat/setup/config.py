@@ -181,6 +181,7 @@ class NapCatConfigManager:
     # ==================== 主配置方法 ====================
 
     def configure_all(self) -> None:
+        self._config_dir.mkdir(parents=True, exist_ok=True)
         self.configure_onebot()
         self.configure_quick_login()
         self.configure_webui()
