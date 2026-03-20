@@ -6,7 +6,6 @@
 """
 
 import json
-import os
 import platform
 import subprocess
 import sys
@@ -233,16 +232,24 @@ class LinuxOps(PlatformOps):
         return Path.home() / "Napcat/opt/QQ/resources/app/app_launcher/napcat"
 
     def is_napcat_running(self, uin: Optional[str] = None) -> bool:
-        process = subprocess.Popen(["bash", "napcat", "status"], stdout=subprocess.PIPE)
-        process.wait()
-        stdout = process.stdout
-        if stdout is None:
-            return False
-        output = stdout.read().decode(encoding="utf-8")
+        try:
+            process = subprocess.Popen(
+                ["napcat", "status"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+            )
+            process.wait()
+            stdout = process.stdout
+            if stdout is None:
+                return False
+            output = stdout.read().decode(encoding="utf-8")
 
-        if uin is None:
-            return "PID" in output
-        return str(uin) in output
+            if uin is None:
+                return "PID" in output
+            return str(uin) in output
+        except FileNotFoundError:
+            LOG.warning("napcat CLI 未安装或不在 PATH 中")
+            return False
 
     def start_napcat(self, uin: str) -> None:
         if self.is_napcat_running(uin):
@@ -256,20 +263,17 @@ class LinuxOps(PlatformOps):
             else:
                 raise RuntimeError("NapCat 正在运行, 但运行的不是该 QQ 号")
 
-        if os.path.exists("napcat"):
-            LOG.error("工作目录下存在 napcat 目录")
-            raise FileExistsError("工作目录下存在 napcat 目录")
-
         LOG.info("正在启动 NapCat 服务")
         process = subprocess.Popen(
-            ["sudo", "bash", "napcat", "start", uin],
+            ["napcat", "start", uin],
             stdout=subprocess.PIPE,
         )
         process.wait()
 
         if process.returncode != 0:
-            LOG.error(f"启动失败，请检查目录 {LINUX_NAPCAT_DIR}")
-            raise FileNotFoundError("napcat cli 可能没有被正确安装")
+            raise FileNotFoundError(
+                "napcat CLI 启动失败, 请确认 napcat CLI 已正确安装到 /usr/local/bin/napcat"
+            )
 
         if not self.is_napcat_running(uin):
             raise RuntimeError("napcat 启动失败")
@@ -280,25 +284,17 @@ class LinuxOps(PlatformOps):
     def stop_napcat(self) -> None:
         try:
             process = subprocess.Popen(
-                ["bash", "napcat", "stop"], stdout=subprocess.PIPE
+                ["napcat", "stop"],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
             process.wait()
             if process.returncode != 0:
                 raise RuntimeError("停止 napcat 失败")
             LOG.info("已成功停止 napcat")
+        except FileNotFoundError:
+            LOG.error("napcat CLI 未安装, 无法停止 NapCat")
+            raise
         except Exception as e:
             LOG.error(f"停止 napcat 失败: {e}")
             raise
-
-    @staticmethod
-    def _check_root() -> bool:
-        try:
-            result = subprocess.run(
-                ["sudo", "whoami"],
-                check=True,
-                text=True,
-                capture_output=True,
-            )
-            return result.stdout.strip() == "root"
-        except (subprocess.CalledProcessError, FileNotFoundError):
-            return False
