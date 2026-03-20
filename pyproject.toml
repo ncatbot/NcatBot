@@ -63,7 +63,7 @@ where = ["."]
 include = ["ncatbot", "ncatbot.*"]
 
 [tool.pytest.ini_options]
-asyncio_mode = "strict"
+asyncio_mode = "auto"
 testpaths = ["tests"]
 # 只收集 Test 开头的类作为测试类，排除 E2ETestSuite 等工具类
 python_classes = ["Test*"]

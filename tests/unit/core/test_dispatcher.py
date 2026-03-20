@@ -20,8 +20,6 @@ import pytest
 from ncatbot.core.dispatcher import AsyncEventDispatcher
 from ncatbot.testing import factory
 
-pytestmark = pytest.mark.asyncio
-
 
 # ---- D-01: 类型推导 ----
 

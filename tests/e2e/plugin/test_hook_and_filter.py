@@ -12,7 +12,6 @@ import pytest
 
 from ncatbot.testing import PluginTestHarness, group_message, private_message
 
-pytestmark = pytest.mark.asyncio
 
 PLUGIN_NAME = "hook_and_filter"
 

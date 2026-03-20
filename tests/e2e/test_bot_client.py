@@ -11,13 +11,10 @@ BotClient E2E 测试
 
 import asyncio
 
-import pytest
 
 from ncatbot.testing.harness import TestHarness
 from ncatbot.event.qq.message import GroupMessageEvent
 from ncatbot.testing import factory
-
-pytestmark = pytest.mark.asyncio
 
 
 # ---- B-01: 启动/停止 ----
