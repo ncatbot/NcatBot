@@ -126,6 +126,7 @@ def get_early_logger(name: str) -> logging.Logger:
         handler.setLevel(logging.DEBUG)
         handler.setFormatter(logging.Formatter("[%(name)s] %(levelname)s: %(message)s"))
         logger.addHandler(handler)
+        logger.propagate = False
         _early_handlers.append((logger, handler))
     return logger
 
@@ -134,4 +135,5 @@ def cleanup_early_handlers() -> None:
     """清理所有 early handler（由 setup_logging 调用）。"""
     for logger, handler in _early_handlers:
         logger.removeHandler(handler)
+        logger.propagate = True
     _early_handlers.clear()

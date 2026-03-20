@@ -4,17 +4,18 @@
 负责 NapCat WebUI 认证和 QQ 登录管理。
 """
 
-import hashlib
 import time
-import traceback
 from enum import IntEnum
 from typing import Optional, TYPE_CHECKING
 
 import qrcode
 
-from ncatbot.utils import get_log, post_json
-from ncatbot.utils.config.models import DEFAULT_BOT_UIN
-from ..constants import NAPCAT_WEBUI_SALT
+from ncatbot.utils import get_log
+from .webui_client import (
+    WebUIClient,
+    WebUIAuthError,
+    WebUIConnectionError as _WebUIConnectionError,
+)
 
 if TYPE_CHECKING:
     from ncatbot.utils.config.models import NapCatConfig
@@ -45,10 +46,6 @@ class LoginTimeoutError(AuthError):
     pass
 
 
-class RateLimitError(AuthError):
-    pass
-
-
 class AuthHandler:
     """登录认证处理器
 
@@ -60,93 +57,28 @@ class AuthHandler:
         目标 QQ 号。
     """
 
-    WEBUI_CONNECT_TIMEOUT = 90
     QRCODE_LOGIN_TIMEOUT = 60
     QRCODE_FETCH_TIMEOUT = 15
-    WEBUI_RETRY_INTERVAL = 2
 
     def __init__(
         self,
         napcat_config: "NapCatConfig",
         bot_uin: str = "",
+        webui_client: Optional[WebUIClient] = None,
     ):
         self._napcat_config = napcat_config
         self._bot_uin = bot_uin
-        self._base_uri = f"http://{napcat_config.webui_host}:{napcat_config.webui_port}"
-        self._header: Optional[dict] = None
-        self._connect_webui()
 
-    def _connect_webui(self) -> None:
-        expire_time = time.time() + self.WEBUI_CONNECT_TIMEOUT
-        last_error: Optional[Exception] = None
-        attempt = 0
-
-        while time.time() < expire_time:
-            if attempt > 0:
-                time.sleep(self.WEBUI_RETRY_INTERVAL)
-            attempt += 1
+        if webui_client is not None and webui_client.is_connected:
+            self._client = webui_client
+        else:
+            self._client = WebUIClient(napcat_config)
             try:
-                credential = self._try_auth()
-                if credential:
-                    self._header = {"Authorization": f"Bearer {credential}"}
-                    LOG.debug("成功连接到 WebUI")
-                    return
-            except RateLimitError as e:
-                last_error = e
-                LOG.warning(f"WebUI 速率限制, 等待冷却后重试 (第{attempt}次)")
-                time.sleep(5)  # 额外等待
-                continue
-            except AuthError:
-                # 认证失败(非连接问题), 无需重试
-                raise
-            except Exception as e:
-                last_error = e
-                remaining = int(expire_time - time.time())
-                LOG.debug(f"连接 WebUI 失败 (第{attempt}次, 剩余{remaining}s): {e}")
-                continue
-
-        detail = f": {last_error}" if last_error else ""
-        raise WebUIConnectionError(
-            f"连接 WebUI 超时 (已重试{attempt}次, 超时{self.WEBUI_CONNECT_TIMEOUT}s){detail}"
-        )
-
-    def _try_auth(self) -> Optional[str]:
-        hashed_token = hashlib.sha256(
-            f"{self._napcat_config.webui_token}.{NAPCAT_WEBUI_SALT}".encode()
-        ).hexdigest()
-
-        try:
-            content = post_json(
-                f"{self._base_uri}/api/auth/login",
-                payload={"hash": hashed_token},
-                timeout=5,
-            )
-        except TimeoutError:
-            raise  # 连接超时, 交给 _connect_webui 重试
-        except Exception as e:
-            raise ConnectionError(f"无法连接 WebUI ({self._base_uri}): {e}") from e
-
-        code = content.get("code")
-        message = content.get("message", "")
-
-        if code == 0:
-            credential = content.get("data", {}).get("Credential")
-            if credential:
-                return credential
-            raise AuthError("认证响应异常: 缺少 Credential 字段")
-
-        if "rate limit" in message.lower():
-            raise RateLimitError(f"WebUI 登录速率限制: {message}")
-
-        raise AuthError(
-            f"WebUI 认证失败 (code={code}): {message}. 请检查 webui_token 配置是否正确"
-        )
-
-    def _handle_connection_error(self, error: Exception) -> None:
-        LOG.error("连接 WebUI 失败")
-        LOG.info("建议: 使用 bot.run(enable_webui=False) 跳过鉴权")
-        LOG.info(traceback.format_exc())
-        raise WebUIConnectionError(f"连接 WebUI 失败: {error}")
+                self._client.connect()
+            except _WebUIConnectionError as e:
+                raise WebUIConnectionError(str(e)) from e
+            except WebUIAuthError as e:
+                raise AuthError(str(e)) from e
 
     def _api_call(
         self,
@@ -154,12 +86,7 @@ class AuthHandler:
         payload: Optional[dict] = None,
         timeout: int = 5,
     ) -> dict:
-        return post_json(
-            f"{self._base_uri}{endpoint}",
-            headers=self._header,
-            payload=payload,
-            timeout=timeout,
-        )
+        return self._client.api_call(endpoint, payload, timeout)
 
     # ==================== 登录状态检查 ====================
 
@@ -265,10 +192,10 @@ class AuthHandler:
                 qrcode_url = self.get_qrcode_url()
                 self.show_qrcode(qrcode_url)
             except QQLoginedError:
-                if self.report_status() == LoginStatus.OK:
-                    LOG.info("QQ 已登录")
+                if self.check_login_status():
+                    LOG.info("QQ 已登录（账号验证由 launcher 处理）")
                     return
-                LOG.error("登录状态异常, 请物理重启本机")
+                LOG.error("NapCat 报告 QQ 已登录但状态检查不一致, 请物理重启本机")
                 raise AuthError("登录状态异常")
 
             expire_time = time.time() + self.QRCODE_LOGIN_TIMEOUT
@@ -284,19 +211,6 @@ class AuthHandler:
 
             LOG.info("扫码登录成功")
 
-            # 登录后立即检查账号是否匹配
-            if self._bot_uin and self._bot_uin != DEFAULT_BOT_UIN:
-                status = self.report_status()
-                if status == LoginStatus.UIN_MISMATCH:
-                    info = self.get_login_info()
-                    actual_uin = info.get("uin", "未知") if info else "未知"
-                    LOG.error(
-                        f"扫码登录的 QQ ({actual_uin}) 与配置的 bot_uin ({self._bot_uin}) 不一致, "
-                        f"请使用正确的 QQ 扫码, 或修改 config.yaml 中的 bot_uin"
-                    )
-                    raise AuthError(
-                        f"登录账号不匹配: 扫码 QQ {actual_uin} ≠ 配置 bot_uin {self._bot_uin}"
-                    )
         except (QQLoginedError, LoginTimeoutError, AuthError):
             raise
         except Exception as e:
