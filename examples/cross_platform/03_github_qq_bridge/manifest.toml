@@ -1,6 +1,0 @@
-name = "github_qq_bridge"
-version = "1.0.0"
-main = "main.py"
-entry_class = "GitHubQQBridgePlugin"
-author = "NcatBot"
-description = "GitHub ↔ QQ 双向桥接机器人（⚠️ 依赖开发中的 GitHub Adapter）"

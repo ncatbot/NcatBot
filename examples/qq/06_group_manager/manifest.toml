@@ -1,6 +1,0 @@
-name = "group_manager_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "GroupManagerPlugin"
-author = "NcatBot"
-description = "QQ 群管理机器人"

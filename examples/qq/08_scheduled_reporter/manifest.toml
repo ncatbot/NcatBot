@@ -1,6 +1,0 @@
-name = "scheduled_reporter_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "ScheduledReporterPlugin"
-author = "NcatBot"
-description = "QQ 定时报告与统计"

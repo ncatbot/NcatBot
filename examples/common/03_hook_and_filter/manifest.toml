@@ -1,6 +1,0 @@
-name = "hook_and_filter"
-version = "1.0.0"
-main = "main.py"
-entry_class = "HookAndFilterPlugin"
-author = "NcatBot"
-description = "Hook 系统与过滤器演示（跨平台）"

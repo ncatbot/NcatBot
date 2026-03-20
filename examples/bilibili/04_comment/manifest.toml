@@ -1,6 +1,0 @@
-name = "comment_bilibili"
-version = "1.0.0"
-main = "main.py"
-entry_class = "BiliCommentPlugin"
-author = "NcatBot"
-description = "Bilibili 评论操作"

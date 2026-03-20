@@ -1,6 +1,0 @@
-name = "config_and_data"
-version = "1.0.0"
-main = "main.py"
-entry_class = "ConfigAndDataPlugin"
-author = "NcatBot"
-description = "配置与数据持久化演示（跨平台）"

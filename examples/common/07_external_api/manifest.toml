@@ -1,6 +1,0 @@
-name = "external_api"
-version = "1.0.0"
-main = "main.py"
-entry_class = "ExternalAPIPlugin"
-author = "NcatBot"
-description = "外部 API 集成演示（跨平台）"

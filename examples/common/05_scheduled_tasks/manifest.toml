@@ -1,6 +1,0 @@
-name = "scheduled_tasks"
-version = "1.0.0"
-main = "main.py"
-entry_class = "ScheduledTasksPlugin"
-author = "NcatBot"
-description = "定时任务演示（跨平台）"

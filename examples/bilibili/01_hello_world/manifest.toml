@@ -1,6 +1,0 @@
-name = "hello_world_bilibili"
-version = "1.0.0"
-main = "main.py"
-entry_class = "BiliHelloWorldPlugin"
-author = "NcatBot"
-description = "Bilibili 平台最小可运行插件"

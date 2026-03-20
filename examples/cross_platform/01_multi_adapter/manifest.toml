@@ -1,6 +1,0 @@
-name = "multi_adapter"
-version = "1.0.0"
-main = "main.py"
-entry_class = "MultiAdapterPlugin"
-author = "NcatBot"
-description = "跨平台双适配器启动演示"

@@ -1,6 +1,0 @@
-name = "message_types_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "MessageTypesPlugin"
-author = "NcatBot"
-description = "QQ 消息构造与解析演示"

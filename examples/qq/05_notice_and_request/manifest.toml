@@ -1,6 +1,0 @@
-name = "notice_and_request_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "NoticeAndRequestPlugin"
-author = "NcatBot"
-description = "QQ 通知与请求事件处理演示"

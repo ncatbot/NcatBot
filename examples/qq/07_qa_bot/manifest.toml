@@ -1,6 +1,0 @@
-name = "qa_bot_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "QABotPlugin"
-author = "NcatBot"
-description = "QQ 问答机器人"

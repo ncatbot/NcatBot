@@ -1,6 +1,0 @@
-name = "bot_api_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "BotAPIPlugin"
-author = "NcatBot"
-description = "QQ Bot API 使用大全"

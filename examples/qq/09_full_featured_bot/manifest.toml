@@ -1,6 +1,0 @@
-name = "full_featured_bot_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "FullFeaturedBotPlugin"
-author = "NcatBot"
-description = "QQ 全功能群助手"

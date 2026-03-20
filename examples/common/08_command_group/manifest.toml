@@ -1,5 +1,0 @@
-name = "command_group_common"
-version = "1.0.0"
-main = "main.py"
-author = "NcatBot"
-description = "命令组分层路由示例 — CommandGroup + CommandGroupHook"

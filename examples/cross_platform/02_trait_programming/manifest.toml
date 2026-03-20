@@ -1,6 +1,0 @@
-name = "trait_programming"
-version = "1.0.0"
-main = "main.py"
-entry_class = "TraitProgrammingPlugin"
-author = "NcatBot"
-description = "跨平台 Trait 编程演示"

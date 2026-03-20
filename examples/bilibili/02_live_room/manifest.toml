@@ -1,6 +1,0 @@
-name = "live_room_bilibili"
-version = "1.0.0"
-main = "main.py"
-entry_class = "LiveRoomPlugin"
-author = "NcatBot"
-description = "Bilibili 直播间全事件处理"

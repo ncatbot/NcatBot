@@ -1,6 +1,0 @@
-name = "event_handling_qq"
-version = "1.0.0"
-main = "main.py"
-entry_class = "EventHandlingPlugin"
-author = "NcatBot"
-description = "QQ 事件处理三模式演示"

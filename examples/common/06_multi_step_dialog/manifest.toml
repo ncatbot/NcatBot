@@ -1,6 +1,0 @@
-name = "multi_step_dialog"
-version = "1.0.0"
-main = "main.py"
-entry_class = "MultiStepDialogPlugin"
-author = "NcatBot"
-description = "多步对话演示（跨平台）"

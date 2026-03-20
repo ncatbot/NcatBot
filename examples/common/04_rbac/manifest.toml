@@ -1,6 +1,0 @@
-name = "rbac"
-version = "1.0.0"
-main = "main.py"
-entry_class = "RBACPlugin"
-author = "NcatBot"
-description = "权限管理系统演示（跨平台）"

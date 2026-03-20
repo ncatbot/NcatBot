@@ -1,6 +1,0 @@
-name = "live_manager_bilibili"
-version = "1.0.0"
-main = "main.py"
-entry_class = "BiliLiveManagerPlugin"
-author = "NcatBot"
-description = "Bilibili 直播间管理"

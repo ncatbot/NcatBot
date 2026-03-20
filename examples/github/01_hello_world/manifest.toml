@@ -1,6 +1,0 @@
-name = "hello_world_github"
-version = "1.0.0"
-main = "main.py"
-entry_class = "GitHubHelloWorldPlugin"
-author = "NcatBot"
-description = "GitHub 平台基础事件处理（开发中）"

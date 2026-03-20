@@ -1,6 +1,0 @@
-name = "issue_bot_github"
-version = "1.0.0"
-main = "main.py"
-entry_class = "GitHubIssueBotPlugin"
-author = "NcatBot"
-description = "GitHub Issue 自动回复机器人（开发中）"
