@@ -40,8 +40,7 @@ pip install ncatbot5
 ```
 your-project/
 ├── .agents/skills/   ← AI Agent 技能文件
-├── docs/             ← 框架文档
-├── examples/         ← 示例代码
+├── docs/             ← 框架文档（含示例代码 docs/docs/examples/）
 ├── config.yaml
 └── plugins/
 ```

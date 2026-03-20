@@ -1,32 +1,67 @@
-NcatBot Non-Commercial License
+NcatBot Non-Commercial License (NcatBot 非商业许可证)
 
-Copyright (c) 2025 NcatBot开发项目组
+Copyright (c) 2024-2026 NcatBot开发项目组 (NcatBot Project Team)
 
-在遵守以下条款的前提下，特此免费授予任何获得本软件及相关文档文件（以下简称“软件”）的人员不受限制地处置本软件的权利，包括但不限于使用、复制、修改、合并、发布、分发、再许可的权利：
+## [中文版本]
 
-一、约束条款
-1. 未经授权，禁止商业用途
-   - 不得直接或间接通过本软件获利，包括但不限于：
-     * 售卖软件副本或衍生作品
-     * 作为商业产品或服务组成部分
-     * 用于广告推广或流量变现
-     * 其他以营利为目的的使用场景
+在遵守以下条款的前提下，特此免费授予任何获得本软件及相关文档文件（以下简称“本软件”）副本的人员不受限制地处置本软件的权利，包括但不限于使用、复制、修改、合并、发布、分发和/或再许可的权利：
 
-2. 二次开发授权
-   - 修改后的衍生作品需满足：
-     * 必须保留原始版权声明
-     * 需通过邮件(lyh_02@foxmail.com)提交授权申请
-     * 获得书面授权后方可分发
+**一、约束条款**
+1. **禁止商业用途**
+   任何人或实体均不得直接或间接通过本软件或其任何衍生作品获利，包括但不限于：
+   * 售卖软件副本或其衍生作品。
+   * 将其作为商业产品或商业服务的组成部分。
+   * 用于广告推广、流量变现、企业内部运营等任何商业化或营利为目的的使用场景。
 
-二、违约处理
-1. 违反上述条款自动终止授权
-2. 需承担因此造成的所有法律责任
-3. 侵权方需承担维权产生的合理费用
+2. **衍生作品的非商业性限制**
+   任何受本软件启发或基于本软件代码修改、二次开发、二次分发及多次分发所产生的衍生作品，均**必须严格继承并遵守本许可证中的“禁止商业用途”条款**。但本条款不强制要求上述衍生作品及其修改后的代码必须开源。
 
-三、免责声明
-本软件按"原样"提供，不做任何明示或暗示的担保，包括但不限于对适销性、特定用途适用性的担保。在任何情况下，作者或版权持有人均不对任何索赔、损害或其他责任负责。
+3. **版权声明与修改标注**
+   在修改或分发本软件副本（含任何形式的衍生作品）时，必须在显著位置保留原始作者的版权声明，并清晰地标明对原始文件进行了修改，同时添加对本仓库的原作者引用声明。
 
-四、管辖法律
-本协议适用中华人民共和国法律，任何争议应提交厦门仲裁委员会仲裁解决。
+**二、违约处理**
+1. 任何违反上述条款的行为，将导致本授权自动且立即彻底终止。
+2. 违约方必须承担因此造成的所有法律责任。
+3. 侵权方需全额承担维权方因保护合法权益而产生的任何及一切合理费用（包括但不限于律师费、公证费、诉讼费和保全费等）。
 
-本协议最终解释权归NcatBot开发项目组所有。
+**三、免责声明**
+本软件按"原样"提供，不做任何明示或暗示的担保，包括但不限于对适销性、特定用途适用性以及不侵权的担保。在任何情况下，作者或版权持有人均不对因软件或软件的使用及其他交易而产生的任何索赔、损害或其他责任负责，无论是在合同诉讼、侵权诉讼或其他诉讼中。
+
+**四、管辖法律**
+本协议的订立、执行和解释及争议的解决均应适用中华人民共和国法律。
+
+**五、最终解释权**
+本协议的最终解释权归 NcatBot 开发项目组所有。
+
+---
+
+## [English Version]
+
+Subject to compliance with the following conditions, permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, and/or sublicense:
+
+**I. Restrictions**
+1. **No Commercial Use**
+   No person or entity may directly or indirectly profit from the Software or any of its derivative works, including but not limited to:
+   * Selling copies of the Software or its derivative works.
+   * Incorporating it as a component of commercial products or commercial services.
+   * Using it for advertising promotion, traffic monetization, corporate internal operations, or any other commercial or profit-oriented use cases.
+
+2. **Non-Commercial Restrictions for Derivative Works**
+   Any derivative works inspired by this Software or created through modification, secondary development, secondary distribution, and multiple distributions of its code, **must strictly inherit and comply with the "No Commercial Use" clause** in this license. However, this clause does not mandate that the source code of the aforementioned derivative works and their modifications be made open-source.
+
+3. **Copyright Notice and Modification Attribution**
+   When modifying or distributing copies of the Software (including derivative works in any form), the original author's copyright notice must be retained in a conspicuous location, and it must be clearly stated that modifications were made to the original files, alongside a reference declaration to the original author of this repository.
+
+**II. Breach Handling**
+1. Any violation of the above terms will result in automatic, immediate, and complete termination of this authorization.
+2. The breaching party must bear all legal responsibilities arising therefrom.
+3. The infringing party must fully bear any and all reasonable expenses (including but not limited to attorney fees, notarization fees, litigation costs, and preservation fees, etc.) incurred by the rights defender to protect their legitimate rights and interests.
+
+**III. Disclaimer**
+The Software is provided "as is", without warranty of any kind, express or implied, including but not limited to the warranties of merchantability, fitness for a particular purpose and noninfringement. In no event shall the authors or copyright holders be liable for any claim, damages or other liability, whether in an action of contract, tort or otherwise, arising from, out of or in connection with the Software or the use or other dealings in the Software.
+
+**IV. Governing Law**
+The formulation, execution, interpretation of this agreement and the resolution of disputes shall be governed by the laws of the People's Republic of China.
+
+**V. Final Interpretation**
+The NcatBot Project Team reserves the right of final interpretation of this agreement.

@@ -67,8 +67,6 @@ asyncio_mode = "strict"
 testpaths = ["tests"]
 # 只收集 Test 开头的类作为测试类，排除 E2ETestSuite 等工具类
 python_classes = ["Test*"]
-# 忽略 examples 目录
-addopts = "--ignore=examples"
 markers = []
 
 [tool.coverage.run]
@@ -110,7 +108,7 @@ skip_covered = false
 directory = "htmlcov"
 
 [tool.codespell]
-ignore-words-list = "ans,fo"
+ignore-words-list = "ans,fo,therefrom"
 
 [tool.ruff]
 # docs/ 是 Git submodule，不进行 lint
@@ -120,4 +118,4 @@ extend-exclude = ["docs"]
 # legacy 代码正在重构替换，不再维护 lint
 "ncatbot_legacy/**" = ["F401", "F405", "F841", "E402"]
 # 示例代码允许未使用的 import（教学用途）
-"examples/**" = ["F401"]
+"docs/docs/examples/**" = ["F401"]
