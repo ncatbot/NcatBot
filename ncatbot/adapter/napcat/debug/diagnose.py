@@ -40,7 +40,11 @@ def post(url, payload=None, headers=None, timeout=5.0):
 
 
 async def check_ws(uri: str, token: str = "") -> dict:
-    ws_uri = f"{uri}?access_token={token}" if token else uri
+    import urllib.parse
+
+    ws_uri = (
+        f"{uri}?access_token={urllib.parse.quote(token, safe='')}" if token else uri
+    )
     result = {"reachable": False, "status": None, "retcode": None, "error": None}
     try:
         async with websockets.connect(ws_uri, open_timeout=5) as ws:

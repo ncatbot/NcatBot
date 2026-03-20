@@ -22,7 +22,11 @@ except ImportError:
 
 
 async def check_ws(uri: str, token: str = "") -> None:
-    ws_uri = f"{uri}?access_token={token}" if token else uri
+    import urllib.parse
+
+    ws_uri = (
+        f"{uri}?access_token={urllib.parse.quote(token, safe='')}" if token else uri
+    )
     print(f"[INFO] 正在连接: {uri}")
     if token:
         print(f"[INFO] Token: {token[:4]}***")

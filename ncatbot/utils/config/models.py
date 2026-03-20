@@ -120,7 +120,10 @@ class NapCatConfig(BaseConfig):
 
     def get_uri_with_token(self) -> str:
         """返回带 access_token 的 WebSocket URI。"""
-        return f"{self.ws_uri}?access_token={self.ws_token}"
+        import urllib.parse
+
+        encoded_token = urllib.parse.quote(self.ws_token, safe="")
+        return f"{self.ws_uri}?access_token={encoded_token}"
 
 
 # ==================== 日志配置 ====================
