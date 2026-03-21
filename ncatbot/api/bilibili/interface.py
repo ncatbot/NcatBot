@@ -131,6 +131,20 @@ class IBiliAPIClient(IAPIClient):
     async def remove_dynamic_watch(self, uid: int) -> None:
         """移除动态监听"""
 
+    @abstractmethod
+    async def add_dynamic_page_watch(self, uid: int) -> None:
+        """添加动态页监听（通过动态主页轮询，可同时监听多个 UP 主）"""
+
+    @abstractmethod
+    async def remove_dynamic_page_watch(self, uid: int) -> None:
+        """移除动态页监听"""
+
+    # ---- 用户关系 ----
+
+    @abstractmethod
+    async def follow_user(self, uid: int) -> Any:
+        """关注用户"""
+
     # ---- 用户查询 ----
 
     @abstractmethod

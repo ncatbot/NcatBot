@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Optional
+from typing import Any, Optional
 
 
 class DynamicAPIMixin:
@@ -33,3 +33,26 @@ class DynamicAPIMixin:
     async def remove_dynamic_watch(self, uid: int) -> None:
         """移除动态监听"""
         await self._source_manager.remove_dynamic_watch(uid)
+
+    async def add_dynamic_page_watch(self, uid: int) -> None:
+        """添加动态页监听（先关注再加入轮询）"""
+        await self.follow_user(uid)
+        await self._source_manager.add_dynamic_page_watch(uid, self._credential)
+
+    async def remove_dynamic_page_watch(self, uid: int) -> None:
+        """移除动态页监听"""
+        await self._source_manager.remove_dynamic_page_watch(uid)
+
+    async def follow_user(self, uid: int) -> Any:
+        """关注用户（已关注或关注自己时静默跳过）"""
+        from bilibili_api.user import User, RelationType
+        from bilibili_api.exceptions import ResponseCodeException
+
+        user = User(uid=uid, credential=self._credential)
+        try:
+            return await user.modify_relation(RelationType.SUBSCRIBE)
+        except ResponseCodeException as e:
+            # 22001: 不能关注自己  22014: 已经关注
+            if e.code in (22001, 22014):
+                return None
+            raise

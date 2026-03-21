@@ -96,6 +96,7 @@ class BilibiliAdapter(BaseAdapter):
             session_poll_interval=self._config.session_poll_interval,
             comment_poll_interval=self._config.comment_poll_interval,
             dynamic_poll_interval=self._config.dynamic_poll_interval,
+            dynamic_page_poll_interval=self._config.dynamic_page_poll_interval,
         )
 
         self._api = BiliBotAPI(self._credential, self._source_manager)
@@ -115,13 +116,17 @@ class BilibiliAdapter(BaseAdapter):
         for watch in self._config.dynamic_watches:
             await self._source_manager.add_dynamic_watch(watch.uid, self._credential)
 
+        for watch in self._config.dynamic_page_watches:
+            await self._api.add_dynamic_page_watch(watch.uid)
+
         self._connected = True
         LOG.info(
-            "Bilibili 适配器已连接 (直播间: %d, 私信: %s, 评论: %d, 动态: %d)",
+            "Bilibili 适配器已连接 (直播间: %d, 私信: %s, 评论: %d, 动态: %d, 动态页: %d)",
             len(self._config.live_rooms),
             self._config.enable_session,
             len(self._config.comment_watches),
             len(self._config.dynamic_watches),
+            len(self._config.dynamic_page_watches),
         )
 
     async def listen(self) -> None:

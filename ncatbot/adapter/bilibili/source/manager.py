@@ -16,6 +16,7 @@ from .live_source import LiveSource
 from .session_source import SessionSource
 from .comment_source import CommentSource
 from .dynamic_source import DynamicSource
+from .dynamic_page_source import DynamicPageSource
 
 LOG = get_log("SourceManager")
 
@@ -32,6 +33,7 @@ class SourceManager:
         session_poll_interval: float = 6.0,
         comment_poll_interval: float = 30.0,
         dynamic_poll_interval: float = 600.0,
+        dynamic_page_poll_interval: float = 180.0,
     ) -> None:
         self._callback = callback
         self._sources: Dict[str, BaseSource] = {}
@@ -40,6 +42,7 @@ class SourceManager:
         self._session_poll_interval = session_poll_interval
         self._comment_poll_interval = comment_poll_interval
         self._dynamic_poll_interval = dynamic_poll_interval
+        self._dynamic_page_poll_interval = dynamic_page_poll_interval
         self._stop_event = asyncio.Event()
 
     # ---- 直播间 ----
@@ -106,6 +109,40 @@ class SourceManager:
         source = self._sources.pop(key, None)
         if source is not None:
             await source.stop()
+
+    # ---- 动态页（多 UP 主合并轮询） ----
+
+    def _get_dynamic_page_source(self, credential: Any) -> DynamicPageSource:
+        """获取或创建全局唯一的 DynamicPageSource"""
+        key = "dynamic_page"
+        if key not in self._sources:
+            source = DynamicPageSource(
+                credential=credential,
+                callback=self._callback,
+                poll_interval=self._dynamic_page_poll_interval,
+            )
+            self._sources[key] = source
+        return self._sources[key]  # type: ignore[return-value]
+
+    async def add_dynamic_page_watch(self, uid: int, credential: Any) -> None:
+        source = self._get_dynamic_page_source(credential)
+        if source.has_uid(uid):
+            LOG.warning("动态页源 UID %s 已存在，跳过", uid)
+            return
+        source.add_uid(uid)
+        if not source.running:
+            await source.start()
+        LOG.info("动态页源新增监听 UID: %s", uid)
+
+    async def remove_dynamic_page_watch(self, uid: int) -> None:
+        key = "dynamic_page"
+        source = self._sources.get(key)
+        if source is None or not isinstance(source, DynamicPageSource):
+            return
+        source.remove_uid(uid)
+        if source.empty:
+            await source.stop()
+            self._sources.pop(key, None)
 
     # ---- 评论 ----
 
