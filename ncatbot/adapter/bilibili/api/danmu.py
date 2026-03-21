@@ -7,8 +7,10 @@ from typing import Any
 
 class DanmuAPIMixin:
     async def send_danmu(self, room_id: int, text: str) -> Any:
+        from bilibili_api.utils.danmaku import Danmaku
+
         room = self._get_room(room_id)
-        return await room.send_danmaku(text)
+        return await room.send_danmaku(Danmaku(text=text))
 
     def _get_room(self, room_id: int) -> Any:
         """获取或创建 LiveRoom 实例（带缓存）"""

@@ -3,11 +3,14 @@
 from __future__ import annotations
 
 
+from typing import Optional
+
 from pydantic import Field
 
 from ncatbot.types.common.base import BaseEventData
 from ncatbot.types.common.segment.array import MessageArray
 from .enums import BiliPostType, BiliLiveEventType, BiliCommentEventType
+from .models import LiveRoomInfo
 from .sender import BiliSender
 
 __all__ = [
@@ -130,6 +133,7 @@ class LiveStatusEventData(BiliLiveEventData):
     """开播/下播"""
 
     status: str = ""
+    room_info: Optional[LiveRoomInfo] = None
 
 
 class RoomChangeEventData(BiliLiveEventData):

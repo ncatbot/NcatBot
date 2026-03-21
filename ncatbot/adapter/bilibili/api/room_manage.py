@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
+
+from ncatbot.types.bilibili.models import LiveRoomInfo
 
 
 class RoomManageAPIMixin:
@@ -23,6 +25,7 @@ class RoomManageAPIMixin:
             )
         return await room.del_room_silent()
 
-    async def get_room_info(self, room_id: int) -> dict:
+    async def get_room_info(self, room_id: int) -> Optional[LiveRoomInfo]:
         room = self._get_room(room_id)
-        return await room.get_room_info()
+        raw = await room.get_room_info()
+        return LiveRoomInfo.from_raw(raw)

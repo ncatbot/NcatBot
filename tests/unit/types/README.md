@@ -85,3 +85,11 @@
 | 规范 ID | 说明 | 验证点 |
 |---------|------|--------|
 | SEG-01 | 纯文本消息返回空 | `get_attachments()` 返回空 `AttachmentList` |
+
+### Bilibili 数据模型 (`test_bilibili_models.py`)
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| LR-01 | `LiveRoomInfo.from_raw()` 完整解析 | 全字段正确映射 |
+| LR-02 | `from_raw()` 空/缺失字段 | 回退默认值 |
+| LR-03 | `from_raw()` 异常数据 | 返回 None |

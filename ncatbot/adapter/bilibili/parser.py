@@ -34,6 +34,7 @@ from ncatbot.types.bilibili.events import (
     WatchedChangeEventData,
 )
 from ncatbot.types.bilibili.enums import BiliLiveEventType, BiliSessionEventType
+from ncatbot.types.bilibili.models import LiveRoomInfo
 from ncatbot.types.bilibili.sender import BiliSender
 from ncatbot.types.common.base import BaseEventData
 from ncatbot.types.common.segment.array import MessageArray
@@ -84,7 +85,13 @@ class BiliEventParser:
 
         parser = _LIVE_PARSERS.get(cmd)
         if parser is not None:
-            return parser(data, common)
+            result = parser(data, common)
+            # 开播事件：附加直播间信息
+            if isinstance(result, LiveStatusEventData) and result.status == "live":
+                raw_room_info = callback_info.get("room_info")
+                if raw_room_info is not None:
+                    result.room_info = LiveRoomInfo.from_raw(raw_room_info)
+            return result
 
         # 系统事件
         if cmd in ("VERIFICATION_SUCCESSFUL", "DISCONNECT", "TIMEOUT"):
@@ -302,7 +309,10 @@ def _parse_view(data: Any, common: dict) -> ViewEventData:
 
 
 def _parse_live_status(data: dict, common: dict, status: str) -> LiveStatusEventData:
-    return LiveStatusEventData(**common, status=status)
+    live_event_type = (
+        BiliLiveEventType.LIVE if status == "live" else BiliLiveEventType.PREPARING
+    )
+    return LiveStatusEventData(**common, live_event_type=live_event_type, status=status)
 
 
 def _parse_room_change(data: dict, common: dict) -> RoomChangeEventData:

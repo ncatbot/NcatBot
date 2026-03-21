@@ -6,6 +6,8 @@ Registrar 规范测试
   R-02: ContextVar 隔离不同 plugin_name
   R-03: fork() 创建独立 Registrar
   R-04: clear_pending() 清理残留
+  R-08: registrar.bilibili.on_live_start() 路由到 live.live
+  R-09: registrar.bilibili.on_live_end() 路由到 live.preparing
 """
 
 import pytest
@@ -135,3 +137,40 @@ def test_clear_pending():
     # 再次 flush 应返回 0
     hd = HandlerDispatcher(api=MockBotAPI())
     assert flush_pending(hd, "cleanup_test") == 0
+
+
+# ---- R-08 / R-09: BilibiliRegistrar 平台装饰器路由 ----
+
+
+def test_bilibili_on_live_start_routes_to_live_live():
+    """R-08: registrar.bilibili.on_live_start() 路由到 live.live"""
+    reg = Registrar()
+    hd = HandlerDispatcher(api=MockBotAPI())
+
+    @reg.bilibili.on_live_start()
+    async def handle_start(event):
+        pass
+
+    count = flush_pending(hd, "__global__")
+    assert count == 1
+
+    handlers = hd.get_handlers("live.live")
+    funcs = [h.func for h in handlers]
+    assert handle_start in funcs
+
+
+def test_bilibili_on_live_end_routes_to_live_preparing():
+    """R-09: registrar.bilibili.on_live_end() 路由到 live.preparing"""
+    reg = Registrar()
+    hd = HandlerDispatcher(api=MockBotAPI())
+
+    @reg.bilibili.on_live_end()
+    async def handle_end(event):
+        pass
+
+    count = flush_pending(hd, "__global__")
+    assert count == 1
+
+    handlers = hd.get_handlers("live.preparing")
+    funcs = [h.func for h in handlers]
+    assert handle_end in funcs

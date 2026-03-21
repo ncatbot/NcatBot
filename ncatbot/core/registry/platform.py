@@ -239,6 +239,14 @@ class BilibiliRegistrar(PlatformRegistrar):
         """注册点赞事件 handler"""
         return self.on("live.like_info_v3_click", priority=priority, **metadata)
 
+    def on_live_start(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册开播事件 handler"""
+        return self.on("live.live", priority=priority, **metadata)
+
+    def on_live_end(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册下播事件 handler"""
+        return self.on("live.preparing", priority=priority, **metadata)
+
     # ---- 评论事件 ----
 
     def on_comment(self, priority: int = 0, **metadata: Any) -> Callable:

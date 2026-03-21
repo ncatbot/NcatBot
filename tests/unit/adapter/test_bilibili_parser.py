@@ -18,6 +18,9 @@ Bilibili 事件解析器测试
   BL-12: 私信撤回解析
   BL-13: 评论解析
   BL-14: 全量夹具一致性 — 全部事件可解析且非 None
+  BL-15: LIVE 事件 live_event_type 设置为 LIVE
+  BL-16: PREPARING 事件 live_event_type 设置为 PREPARING
+  BL-17: LIVE 事件携带 room_info 时附加 LiveRoomInfo
 """
 
 import json
@@ -287,3 +290,79 @@ class TestBulkConsistency:
                 cmd = fix["raw_data"].get("type", fix["source_type"])
                 failed.append((i, cmd))
         assert not failed, f"解析返回 None: {failed}"
+
+
+class TestLiveEventType:
+    """BL-15 / BL-16: live_event_type 正确设置"""
+
+    def test_bl15_live_event_type_is_live(self, parser, fixtures):
+        """BL-15: LIVE 事件的 live_event_type 为 BiliLiveEventType.LIVE"""
+        from ncatbot.types.bilibili.enums import BiliLiveEventType
+
+        fix = _get(fixtures, "live", "LIVE")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, LiveStatusEventData)
+        assert result.live_event_type == BiliLiveEventType.LIVE
+
+    def test_bl16_preparing_event_type_is_preparing(self, parser, fixtures):
+        """BL-16: PREPARING 事件的 live_event_type 为 BiliLiveEventType.PREPARING"""
+        from ncatbot.types.bilibili.enums import BiliLiveEventType
+
+        fix = _get(fixtures, "live", "PREPARING")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, LiveStatusEventData)
+        assert result.live_event_type == BiliLiveEventType.PREPARING
+
+
+class TestLiveRoomInfoAttach:
+    """BL-17: LIVE 事件携带 room_info 时附加 LiveRoomInfo"""
+
+    def test_bl17_live_with_room_info(self, parser):
+        """BL-17: callback_info 中携带 room_info 时，解析结果附带 LiveRoomInfo"""
+        from ncatbot.types.bilibili.models import LiveRoomInfo
+
+        raw = {
+            "type": "LIVE",
+            "room_real_id": "12345",
+            "room_display_id": "12345",
+            "data": {},
+            "room_info": {
+                "room_info": {
+                    "uid": 100,
+                    "room_id": 12345,
+                    "title": "测试开播",
+                    "area_name": "聊天",
+                    "live_status": 1,
+                    "online": 999,
+                },
+                "anchor_info": {
+                    "base_info": {"uname": "TestStreamer", "face": ""},
+                },
+                "watched_show": {
+                    "num": 500,
+                    "text_small": "500",
+                    "text_large": "500人看过",
+                },
+            },
+        }
+        result = parser.parse("live", raw)
+        assert isinstance(result, LiveStatusEventData)
+        assert result.room_info is not None
+        assert isinstance(result.room_info, LiveRoomInfo)
+        assert result.room_info.room_info.title == "测试开播"
+        assert result.room_info.anchor_info.name == "TestStreamer"
+        assert result.room_info.watched_show.num == 500
+
+    def test_bl17_live_without_room_info(self, parser, fixtures):
+        """BL-17: 不携带 room_info 时，字段为 None"""
+        fix = _get(fixtures, "live", "LIVE")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, LiveStatusEventData)
+        assert result.room_info is None
+
+    def test_bl17_preparing_no_room_info(self, parser, fixtures):
+        """BL-17: PREPARING 事件不附加 room_info"""
+        fix = _get(fixtures, "live", "PREPARING")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, LiveStatusEventData)
+        assert result.room_info is None

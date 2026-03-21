@@ -7,9 +7,10 @@
 from __future__ import annotations
 
 from abc import abstractmethod
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from ncatbot.api.base import IAPIClient
+from ncatbot.types.bilibili.models import LiveRoomInfo
 
 
 class IBiliAPIClient(IAPIClient):
@@ -58,7 +59,7 @@ class IBiliAPIClient(IAPIClient):
         """全员禁言"""
 
     @abstractmethod
-    async def get_room_info(self, room_id: int) -> dict:
+    async def get_room_info(self, room_id: int) -> Optional[LiveRoomInfo]:
         """获取直播间信息"""
 
     # ---- 私信 ----

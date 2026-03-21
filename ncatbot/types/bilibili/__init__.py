@@ -7,6 +7,7 @@ from .enums import (
     BiliSessionEventType,
 )
 from .sender import BiliSender
+from .models import LiveRoomInfo
 from .events import (
     BiliCommentEventData,
     BiliConnectionEventData,
@@ -54,4 +55,6 @@ __all__ = [
     "BiliCommentEventData",
     # system events
     "BiliConnectionEventData",
+    # models
+    "LiveRoomInfo",
 ]
