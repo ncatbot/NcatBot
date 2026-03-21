@@ -10,7 +10,7 @@ from typing import Any, Optional, Union, TYPE_CHECKING
 
 from ncatbot.api.qq import IQQAPIClient
 from ncatbot.api.errors import raise_for_retcode
-from ncatbot.types.napcat import SendMessageResult
+from ncatbot.types.napcat import OcrResult, SendMessageResult
 from ncatbot.utils import get_log
 
 from .message import MessageAPIMixin
@@ -101,6 +101,49 @@ class NapCatBotAPI(
         return await super().send_forward_msg(
             message_type, target_id, messages, **kwargs
         )
+
+    # ---- 重写文件类接口，接入预上传 ----
+
+    async def upload_group_file(
+        self,
+        group_id: Union[str, int],
+        file: str,
+        name: str,
+        folder_id: str = "",
+    ) -> None:
+        file = await self._preupload.preupload_file_if_needed(file, "file")
+        return await super().upload_group_file(group_id, file, name, folder_id)
+
+    async def upload_private_file(
+        self,
+        user_id: Union[str, int],
+        file: str,
+        name: str,
+    ) -> None:
+        file = await self._preupload.preupload_file_if_needed(file, "file")
+        return await super().upload_private_file(user_id, file, name)
+
+    async def set_qq_avatar(self, file: str) -> None:
+        file = await self._preupload.preupload_file_if_needed(file, "image")
+        return await super().set_qq_avatar(file)
+
+    async def ocr_image(self, image: str) -> OcrResult:
+        image = await self._preupload.preupload_file_if_needed(image, "image")
+        return await super().ocr_image(image)
+
+    async def send_group_notice(
+        self,
+        group_id: Union[str, int],
+        content: str,
+        image: str = "",
+    ) -> None:
+        if image:
+            image = await self._preupload.preupload_file_if_needed(image, "image")
+        return await super().send_group_notice(group_id, content, image)
+
+    async def set_group_portrait(self, group_id: Union[str, int], file: str) -> None:
+        file = await self._preupload.preupload_file_if_needed(file, "image")
+        return await super().set_group_portrait(group_id, file)
 
     # ---- 辅助功能 ----
 
