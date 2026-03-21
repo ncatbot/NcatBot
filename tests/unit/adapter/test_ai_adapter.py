@@ -12,6 +12,11 @@ AI 适配器单元测试
   AI-08: AIAdapter 未 connect 时 get_api 抛出 RuntimeError
   AI-09: chat_text() 直接返回文本字符串
   AI-10: generate_image() 返回 Image 消息段
+  AI-11: MessageArray 纯文本转换
+  AI-12: MessageArray 图片转多模态
+  AI-13: At 段转可读文本 + nickname_map
+  AI-14: 不支持段跳过并警告
+  AI-15: 单个 MessageSegment 输入
 """
 
 import asyncio
@@ -286,3 +291,184 @@ async def test_generate_image_returns_base64():
 
     assert isinstance(result, Image)
     assert result.file == "base64://iVBORw0KGgo="
+
+
+# ---- AI-11 ----
+
+
+@pytest.mark.asyncio
+async def test_chat_message_array_text_only():
+    """AI-11: MessageArray 纯文本段拼接为普通字符串"""
+    from ncatbot.types.common.segment.array import MessageArray
+    from ncatbot.types.common.segment.text import PlainText
+
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    arr = MessageArray([PlainText(text="你好"), PlainText(text="世界")])
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(arr)
+
+    msgs = mock_fn.call_args.kwargs["messages"]
+    assert len(msgs) == 1
+    assert msgs[0]["role"] == "user"
+    assert msgs[0]["content"] == "你好世界"
+
+
+# ---- AI-12 ----
+
+
+@pytest.mark.asyncio
+async def test_chat_message_array_with_image():
+    """AI-12: MessageArray 含 Image 时转为多模态 content"""
+    from ncatbot.types.common.segment.array import MessageArray
+    from ncatbot.types.common.segment.text import PlainText
+
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    arr = MessageArray(
+        [
+            PlainText(text="描述图片"),
+            Image(
+                file="https://img.example.com/cat.png",
+                url="https://img.example.com/cat.png",
+            ),
+        ]
+    )
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(arr)
+
+    msgs = mock_fn.call_args.kwargs["messages"]
+    content = msgs[0]["content"]
+    assert isinstance(content, list)
+    assert content[0] == {"type": "text", "text": "描述图片"}
+    assert content[1] == {
+        "type": "image_url",
+        "image_url": {"url": "https://img.example.com/cat.png"},
+    }
+
+
+@pytest.mark.asyncio
+async def test_chat_message_array_base64_image():
+    """AI-12: base64:// 前缀的 Image 转为 data URI"""
+    from ncatbot.types.common.segment.array import MessageArray
+
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    arr = MessageArray(
+        [
+            Image(file="base64://iVBORw0KGgo="),
+        ]
+    )
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(arr)
+
+    content = mock_fn.call_args.kwargs["messages"][0]["content"]
+    assert content[0]["image_url"]["url"] == "data:image/png;base64,iVBORw0KGgo="
+
+
+# ---- AI-13 ----
+
+
+@pytest.mark.asyncio
+async def test_chat_at_segment_default():
+    """AI-13: At 段默认渲染为 @{user_id}"""
+    from ncatbot.types.common.segment.array import MessageArray
+    from ncatbot.types.common.segment.text import At, PlainText
+
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    arr = MessageArray([PlainText(text="你好 "), At(user_id="12345")])
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(arr)
+
+    content = mock_fn.call_args.kwargs["messages"][0]["content"]
+    assert content == "你好 @12345"
+
+
+@pytest.mark.asyncio
+async def test_chat_at_segment_with_nickname_map():
+    """AI-13: 提供 nickname_map 时 At 渲染为 @昵称"""
+    from ncatbot.types.common.segment.array import MessageArray
+    from ncatbot.types.common.segment.text import At, PlainText
+
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    arr = MessageArray([PlainText(text="你好 "), At(user_id="12345")])
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(arr, nickname_map={"12345": "小明"})
+
+    content = mock_fn.call_args.kwargs["messages"][0]["content"]
+    assert content == "你好 @小明"
+
+
+# ---- AI-14 ----
+
+
+@pytest.mark.asyncio
+async def test_chat_unsupported_segment_skipped(caplog):
+    """AI-14: 不支持的媒体段跳过并记录警告"""
+    from ncatbot.types.common.segment.array import MessageArray
+    from ncatbot.types.common.segment.media import Video
+    from ncatbot.types.common.segment.text import PlainText
+
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    arr = MessageArray(
+        [
+            PlainText(text="看这个"),
+            Video(file="video.mp4"),
+        ]
+    )
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(arr)
+
+    # 文本部分正常传递，视频被跳过
+    content = mock_fn.call_args.kwargs["messages"][0]["content"]
+    assert content == "看这个"
+
+
+# ---- AI-15 ----
+
+
+@pytest.mark.asyncio
+async def test_chat_single_image_segment():
+    """AI-15: 直接传入单个 Image 段"""
+    cfg = AIConfig(completion_model="gpt-4")
+    api = AIBotAPI(cfg)
+
+    img = Image(
+        file="https://img.example.com/cat.png", url="https://img.example.com/cat.png"
+    )
+
+    mock_response = MagicMock()
+    with patch("litellm.acompletion", new_callable=AsyncMock) as mock_fn:
+        mock_fn.return_value = mock_response
+        await api.chat(img)
+
+    content = mock_fn.call_args.kwargs["messages"][0]["content"]
+    assert isinstance(content, list)
+    assert content[0]["type"] == "image_url"

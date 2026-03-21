@@ -413,3 +413,29 @@ await event.reject(reason="理由")
 | `"forward_friend_single_msg"` | `forward_friend_single_msg()` (messaging) |
 | `"forward_group_single_msg"` | `forward_group_single_msg()` (messaging) |
 | `"friend_poke"` | `friend_poke()` (messaging) |
+
+## AI 平台 API
+
+> 参考文档：`reference/1. Bot API/5. AI/1. API.md`
+
+通过 `self.api.ai.*` 访问（需配置 AI 适配器）：
+
+```python
+# Chat Completion — 支持 str / list[dict] / MessageArray / MessageSegment
+resp = await self.api.ai.chat("你好")
+resp = await self.api.ai.chat(event.message)  # 直接传 MessageArray（图文混合）
+resp = await self.api.ai.chat(event.message, nickname_map={"12345": "小明"})
+
+# Sugar — 直接返回文本
+text = await self.api.ai.chat_text("你好")        # → str
+text = await self.api.ai.chat_text(event.message)  # MessageArray 也行
+
+# Embeddings
+resp = await self.api.ai.embeddings("文本")
+vector = resp.data[0].embedding  # List[float]
+
+# Image Generation
+resp = await self.api.ai.image_generation("一只猫", size="1024x1024")
+image = await self.api.ai.generate_image("一只猫")  # → Image 消息段
+await event.reply(image)
+```

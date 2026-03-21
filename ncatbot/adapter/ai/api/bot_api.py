@@ -8,9 +8,15 @@ from ncatbot.api.base import IAPIClient
 
 if TYPE_CHECKING:
     from ncatbot.types import Image
+    from ncatbot.types.common.segment.array import MessageArray
+    from ncatbot.types.common.segment.base import MessageSegment
+
 from ncatbot.utils import get_log
 
 from ..config import AIConfig
+
+# 接受的输入类型：str / list[dict] / MessageArray / 单个 MessageSegment
+ChatInput = Union[str, List[dict], "MessageArray", "MessageSegment"]
 
 LOG = get_log("AIBotAPI")
 
@@ -48,11 +54,12 @@ class AIBotAPI(IAPIClient):
 
     async def chat(
         self,
-        content_or_messages: Union[str, List[dict]],
+        content_or_messages: ChatInput,
         *,
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        nickname_map: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> Any:
         """Chat Completion
@@ -62,12 +69,17 @@ class AIBotAPI(IAPIClient):
         content_or_messages:
             - ``str``: 自动包装为 ``[{"role": "user", "content": str}]``
             - ``list[dict]``: 直接作为 messages 参数
+            - ``MessageArray``: 自动转为多模态 content（文本 + 图片）
+            - ``MessageSegment``: 单个消息段（Image / PlainText 等）
         model:
             模型名（覆盖 ``completion_model``）。
         temperature:
             采样温度。
         max_tokens:
             最大生成 token 数（覆盖 config 的 ``max_tokens``）。
+        nickname_map:
+            ``{user_id: 昵称}`` 映射，用于将 ``At`` 段转为可读文本。
+            缺省时 At 段渲染为 ``@{user_id}``。
 
         Returns
         -------
@@ -76,10 +88,7 @@ class AIBotAPI(IAPIClient):
         """
         from litellm import acompletion
 
-        if isinstance(content_or_messages, str):
-            messages = [{"role": "user", "content": content_or_messages}]
-        else:
-            messages = content_or_messages
+        messages = self._normalize_messages(content_or_messages, nickname_map)
 
         resolved_model = model or self._config.completion_model
         if not resolved_model:
@@ -214,11 +223,12 @@ class AIBotAPI(IAPIClient):
 
     async def chat_text(
         self,
-        content_or_messages: Union[str, List[dict]],
+        content_or_messages: ChatInput,
         *,
         model: Optional[str] = None,
         temperature: Optional[float] = None,
         max_tokens: Optional[int] = None,
+        nickname_map: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> str:
         """Chat Completion — 直接返回文本
@@ -230,9 +240,104 @@ class AIBotAPI(IAPIClient):
             model=model,
             temperature=temperature,
             max_tokens=max_tokens,
+            nickname_map=nickname_map,
             **kwargs,
         )
         return resp.choices[0].message.content or ""
+
+    # ---- 输入归一化 ----
+
+    def _normalize_messages(
+        self,
+        content_or_messages: ChatInput,
+        nickname_map: Optional[Dict[str, str]] = None,
+    ) -> List[dict]:
+        """将各种输入格式统一为 ``list[dict]`` (OpenAI messages 格式)"""
+        from ncatbot.types.common.segment.array import MessageArray
+        from ncatbot.types.common.segment.base import MessageSegment
+
+        if isinstance(content_or_messages, str):
+            return [{"role": "user", "content": content_or_messages}]
+
+        if isinstance(content_or_messages, list):
+            return content_or_messages  # list[dict] 透传
+
+        if isinstance(content_or_messages, MessageSegment):
+            # 单个消息段 → 包装为 MessageArray 再转
+            arr = MessageArray([content_or_messages])
+            content = self._convert_message_array(arr, nickname_map)
+            return [{"role": "user", "content": content}]
+
+        if isinstance(content_or_messages, MessageArray):
+            content = self._convert_message_array(content_or_messages, nickname_map)
+            return [{"role": "user", "content": content}]
+
+        raise TypeError(
+            f"不支持的输入类型: {type(content_or_messages).__name__}，"
+            "请传入 str / list[dict] / MessageArray / MessageSegment"
+        )
+
+    def _convert_message_array(
+        self,
+        msg_array: MessageArray,
+        nickname_map: Optional[Dict[str, str]] = None,
+    ) -> Union[str, List[dict]]:
+        """将 MessageArray 转为 OpenAI content 格式
+
+        纯文本时返回 str；包含图片时返回多模态 content list。
+        """
+        from ncatbot.types.common.segment.media import (
+            DownloadableSegment,
+            Image,
+        )
+        from ncatbot.types.common.segment.text import At, PlainText, Reply
+
+        parts: list[dict] = []
+        has_image = False
+
+        for seg in msg_array:
+            if isinstance(seg, PlainText):
+                parts.append({"type": "text", "text": seg.text})
+
+            elif isinstance(seg, Image):
+                has_image = True
+                url = seg.url or seg.file
+                # base64:// 前缀转为 data URI
+                if url.startswith("base64://"):
+                    url = f"data:image/png;base64,{url[9:]}"
+                parts.append({"type": "image_url", "image_url": {"url": url}})
+
+            elif isinstance(seg, At):
+                nick = nickname_map.get(seg.user_id) if nickname_map else None
+                display = f"@{nick}" if nick else f"@{seg.user_id}"
+                parts.append({"type": "text", "text": display})
+
+            elif isinstance(seg, Reply):
+                parts.append({"type": "text", "text": f"[回复消息 id={seg.id}]"})
+
+            elif isinstance(seg, DownloadableSegment):
+                # Video / File / Record — 不可序列化给 LLM
+                LOG.warning(
+                    "AI chat: 跳过不支持的媒体段 %s (file=%s)",
+                    type(seg).__name__,
+                    getattr(seg, "file", "?"),
+                )
+
+            else:
+                # Face / Share / Location / Forward / Json / Markdown 等
+                LOG.warning(
+                    "AI chat: 跳过不支持的消息段 %s",
+                    type(seg).__name__,
+                )
+
+        if not parts:
+            return ""
+
+        # 纯文本优化：拼成普通字符串，避免不必要的多模态格式
+        if not has_image:
+            return "".join(p["text"] for p in parts)
+
+        return parts
 
     async def generate_image(
         self,
