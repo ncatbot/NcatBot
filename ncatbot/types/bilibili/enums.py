@@ -7,6 +7,7 @@ __all__ = [
     "BiliLiveEventType",
     "BiliSessionEventType",
     "BiliCommentEventType",
+    "BiliDynamicEventType",
 ]
 
 
@@ -14,6 +15,7 @@ class BiliPostType(str, Enum):
     LIVE = "live"
     MESSAGE = "message"
     COMMENT = "comment"
+    DYNAMIC = "dynamic"
     SYSTEM = "system"
 
 
@@ -70,3 +72,10 @@ class BiliCommentEventType(str, Enum):
 
     NEW_REPLY = "new_reply"
     NEW_SUB_REPLY = "new_sub_reply"
+
+
+class BiliDynamicEventType(str, Enum):
+    """动态事件类型"""
+
+    NEW_DYNAMIC = "new_dynamic"
+    DELETED_DYNAMIC = "deleted_dynamic"

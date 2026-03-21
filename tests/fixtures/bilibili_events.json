@@ -320,5 +320,168 @@
         }
       }
     }
+  },
+  {
+    "source_type": "dynamic",
+    "raw_data": {
+      "source": "dynamic",
+      "uid": 621240130,
+      "status": "new",
+      "dynamic": {
+        "id_str": "999000111222333",
+        "type": "DYNAMIC_TYPE_DRAW",
+        "visible": true,
+        "modules": {
+          "module_author": {
+            "mid": 621240130,
+            "name": "TestDynUser",
+            "face": "https://example.com/face.jpg",
+            "pub_ts": 1700000100,
+            "pub_time": "2023-11-15 08:00"
+          },
+          "module_dynamic": {
+            "major": {
+              "opus": {
+                "summary": {
+                  "text": "这是一条图文动态测试"
+                },
+                "pics": [
+                  {"url": "https://example.com/pic1.jpg"},
+                  {"url": "https://example.com/pic2.jpg"}
+                ]
+              }
+            },
+            "desc": null
+          },
+          "module_stat": {
+            "comment": {"count": 10},
+            "like": {"count": 50},
+            "forward": {"count": 3}
+          },
+          "module_tag": {
+            "text": "置顶"
+          }
+        }
+      }
+    }
+  },
+  {
+    "source_type": "dynamic",
+    "raw_data": {
+      "source": "dynamic",
+      "uid": 621240130,
+      "status": "new",
+      "dynamic": {
+        "id_str": "999000111222444",
+        "type": "DYNAMIC_TYPE_AV",
+        "visible": true,
+        "modules": {
+          "module_author": {
+            "mid": 621240130,
+            "name": "TestDynUser",
+            "face": "https://example.com/face.jpg",
+            "pub_ts": 1700000200,
+            "pub_time": "2023-11-15 09:00"
+          },
+          "module_dynamic": {
+            "major": {
+              "archive": {
+                "aid": "100200300",
+                "bvid": "BV1test123",
+                "title": "测试视频标题",
+                "cover": "https://example.com/cover.jpg",
+                "desc": "视频简介",
+                "duration_text": "10:30",
+                "stat": {
+                  "play": 12345,
+                  "danmaku": 678
+                }
+              }
+            },
+            "desc": {
+              "text": "视频动态文本"
+            }
+          },
+          "module_stat": {
+            "comment": {"count": 20},
+            "like": {"count": 100},
+            "forward": {"count": 5}
+          }
+        }
+      }
+    }
+  },
+  {
+    "source_type": "dynamic",
+    "raw_data": {
+      "source": "dynamic",
+      "uid": 621240130,
+      "status": "deleted",
+      "dynamic": {
+        "id_str": "999000111222555",
+        "type": "DYNAMIC_TYPE_WORD",
+        "visible": true,
+        "modules": {
+          "module_author": {
+            "mid": 621240130,
+            "name": "TestDynUser",
+            "face": "https://example.com/face.jpg",
+            "pub_ts": 1700000050,
+            "pub_time": "2023-11-15 07:30"
+          },
+          "module_dynamic": {
+            "major": {
+              "opus": {
+                "summary": {
+                  "text": "这条动态被删除了"
+                }
+              }
+            },
+            "desc": null
+          },
+          "module_stat": {
+            "comment": {"count": 0},
+            "like": {"count": 2},
+            "forward": {"count": 0}
+          }
+        }
+      }
+    }
+  },
+  {
+    "source_type": "dynamic",
+    "raw_data": {
+      "source": "dynamic",
+      "uid": 621240130,
+      "status": "new",
+      "dynamic": {
+        "id_str": "999000111222666",
+        "type": "DYNAMIC_TYPE_FORWARD",
+        "visible": true,
+        "modules": {
+          "module_author": {
+            "mid": 621240130,
+            "name": "TestDynUser",
+            "face": "https://example.com/face.jpg",
+            "pub_ts": 1700000300,
+            "pub_time": "2023-11-15 10:00"
+          },
+          "module_dynamic": {
+            "major": null,
+            "desc": {
+              "text": "转发一下"
+            }
+          },
+          "module_stat": {
+            "comment": {"count": 1},
+            "like": {"count": 5},
+            "forward": {"count": 0}
+          }
+        },
+        "orig": {
+          "id_str": "888000111222333"
+        }
+      }
+    }
   }
 ]

@@ -60,3 +60,8 @@ python -m pytest tests/unit/adapter/ -v
 | BL-15 | LIVE live_event_type | `live_event_type = BiliLiveEventType.LIVE` |
 | BL-16 | PREPARING live_event_type | `live_event_type = BiliLiveEventType.PREPARING` |
 | BL-17 | LIVE 附加 LiveRoomInfo | 携带 room_info 时解析为 `LiveRoomInfo` |
+| BL-18 | 动态图文 (DYNAMIC_TYPE_DRAW) | BiliDynamicEventData 字段正确、tag/stat/pics 正确 |
+| BL-19 | 动态视频 (DYNAMIC_TYPE_AV) | DynamicVideoInfo 字段正确 |
+| BL-20 | 删除动态 | dynamic_event_type 为 DELETED_DYNAMIC |
+| BL-21 | 转发动态 (DYNAMIC_TYPE_FORWARD) | text 和 forward_dynamic_id 正确 |
+| BL-22 | DataPair 时间戳缓存 | 首次/后续 update 与深拷贝隔离 |

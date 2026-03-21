@@ -15,6 +15,7 @@ from .base import BaseSource
 from .live_source import LiveSource
 from .session_source import SessionSource
 from .comment_source import CommentSource
+from .dynamic_source import DynamicSource
 
 LOG = get_log("SourceManager")
 
@@ -30,6 +31,7 @@ class SourceManager:
         retry_after: float = 1.0,
         session_poll_interval: float = 6.0,
         comment_poll_interval: float = 30.0,
+        dynamic_poll_interval: float = 600.0,
     ) -> None:
         self._callback = callback
         self._sources: Dict[str, BaseSource] = {}
@@ -37,6 +39,7 @@ class SourceManager:
         self._retry_after = retry_after
         self._session_poll_interval = session_poll_interval
         self._comment_poll_interval = comment_poll_interval
+        self._dynamic_poll_interval = dynamic_poll_interval
         self._stop_event = asyncio.Event()
 
     # ---- 直播间 ----
@@ -79,6 +82,28 @@ class SourceManager:
 
     async def stop_session(self) -> None:
         source = self._sources.pop("session", None)
+        if source is not None:
+            await source.stop()
+
+    # ---- 动态 ----
+
+    async def add_dynamic_watch(self, uid: int, credential: Any) -> None:
+        key = f"dynamic:{uid}"
+        if key in self._sources:
+            LOG.warning("动态源 %s 已存在，跳过", uid)
+            return
+        source = DynamicSource(
+            uid=uid,
+            credential=credential,
+            callback=self._callback,
+            poll_interval=self._dynamic_poll_interval,
+        )
+        self._sources[key] = source
+        await source.start()
+
+    async def remove_dynamic_watch(self, uid: int) -> None:
+        key = f"dynamic:{uid}"
+        source = self._sources.pop(key, None)
         if source is not None:
             await source.stop()
 

@@ -20,8 +20,13 @@ LOG = get_log("BilibiliAdapter")
 
 class BilibiliAdapter(BaseAdapter):
     name = "bilibili"
-    description = "Bilibili 适配器 (直播/私信/评论)"
-    supported_protocols = ["bilibili_live", "bilibili_session", "bilibili_comment"]
+    description = "Bilibili 适配器 (直播/私信/评论/动态)"
+    supported_protocols = [
+        "bilibili_live",
+        "bilibili_session",
+        "bilibili_comment",
+        "bilibili_dynamic",
+    ]
     platform = "bilibili"
     pip_dependencies = {"bilibili-api-python": ">=17.0.0"}
 
@@ -90,6 +95,7 @@ class BilibiliAdapter(BaseAdapter):
             retry_after=self._config.retry_after,
             session_poll_interval=self._config.session_poll_interval,
             comment_poll_interval=self._config.comment_poll_interval,
+            dynamic_poll_interval=self._config.dynamic_poll_interval,
         )
 
         self._api = BiliBotAPI(self._credential, self._source_manager)
@@ -106,12 +112,16 @@ class BilibiliAdapter(BaseAdapter):
                 watch.id, watch.type, self._credential
             )
 
+        for watch in self._config.dynamic_watches:
+            await self._source_manager.add_dynamic_watch(watch.uid, self._credential)
+
         self._connected = True
         LOG.info(
-            "Bilibili 适配器已连接 (直播间: %d, 私信: %s, 评论: %d)",
+            "Bilibili 适配器已连接 (直播间: %d, 私信: %s, 评论: %d, 动态: %d)",
             len(self._config.live_rooms),
             self._config.enable_session,
             len(self._config.comment_watches),
+            len(self._config.dynamic_watches),
         )
 
     async def listen(self) -> None:

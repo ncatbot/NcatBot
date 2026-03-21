@@ -253,6 +253,20 @@ class BilibiliRegistrar(PlatformRegistrar):
         """注册所有评论事件 handler"""
         return self.on("comment", priority=priority, **metadata)
 
+    # ---- 动态事件 ----
+
+    def on_dynamic(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册所有动态事件 handler（新动态 + 删动态）"""
+        return self.on("dynamic", priority=priority, **metadata)
+
+    def on_dynamic_new(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册新动态事件 handler"""
+        return self.on("dynamic.new_dynamic", priority=priority, **metadata)
+
+    def on_dynamic_deleted(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册删除动态事件 handler"""
+        return self.on("dynamic.deleted_dynamic", priority=priority, **metadata)
+
 
 class GitHubRegistrar(PlatformRegistrar):
     """GitHub 平台子注册器

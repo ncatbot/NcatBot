@@ -13,7 +13,7 @@ tests/
 │   ├── core/          # 核心分发与注册 + 谓词 (D-01 ~ D-09, K-01 ~ K-21, H-01 ~ H-11, R-01 ~ R-09, PR-01 ~ PR-06)
 │   ├── service/       # 服务管理 + RBAC + 调度 (SM-01 ~ SM-08, SC-01 ~ SC-12, TS-01 ~ TS-06)
 │   ├── plugin/        # 插件 Mixin + 导入去重 + Loader (M-01 ~ M-41, ID-01 ~ ID-02, LD-01 ~ LD-05)
-│   ├── adapter/       # 适配器解析 + 注册表 + 真实数据 (P-01 ~ P-07, RF-01 ~ RF-08, AR-01 ~ AR-05, GM-01 ~ GM-05, BL-01 ~ BL-17, GH-01 ~ GH-11)
+│   ├── adapter/       # 适配器解析 + 注册表 + 真实数据 (P-01 ~ P-07, RF-01 ~ RF-08, AR-01 ~ AR-05, GM-01 ~ GM-05, BL-01 ~ BL-22, GH-01 ~ GH-11)
 │   └── config/        # 配置迁移 + 安全 (CF-01 ~ CF-05, CS-01 ~ CS-05)
 ├── integration/       # 集成测试 (I-01 ~ I-21)
 ├── e2e/               # 端到端测试

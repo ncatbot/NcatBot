@@ -16,6 +16,7 @@ from ncatbot.types.bilibili.events import (
     BiliPrivateMessageEventData,
     BiliPrivateMessageWithdrawEventData,
     BiliCommentEventData,
+    BiliDynamicEventData,
 )
 from ncatbot.event.common.base import BaseEvent
 from .live import (
@@ -29,6 +30,7 @@ from .live import (
 )
 from .session import BiliPrivateMessageEvent, BiliPrivateMessageWithdrawEvent
 from .comment import BiliCommentEvent
+from .dynamic import BiliDynamicEvent
 
 if TYPE_CHECKING:
     from ncatbot.api import IAPIClient
@@ -48,6 +50,7 @@ _BILI_ENTITY_MAP: Dict[Type[BaseEventData], Type[BaseEvent]] = {
     BiliPrivateMessageEventData: BiliPrivateMessageEvent,
     BiliPrivateMessageWithdrawEventData: BiliPrivateMessageWithdrawEvent,
     BiliCommentEventData: BiliCommentEvent,
+    BiliDynamicEventData: BiliDynamicEvent,
 }
 
 # post_type → 降级实体基类
@@ -55,6 +58,7 @@ _BILI_FALLBACK_MAP: Dict[str, Type[BaseEvent]] = {
     BiliPostType.LIVE: BiliLiveEvent,
     BiliPostType.MESSAGE: BaseEvent,
     BiliPostType.COMMENT: BaseEvent,
+    BiliPostType.DYNAMIC: BaseEvent,
     BiliPostType.SYSTEM: BaseEvent,
 }
 

@@ -9,8 +9,20 @@ from pydantic import Field
 
 from ncatbot.types.common.base import BaseEventData
 from ncatbot.types.common.segment.array import MessageArray
-from .enums import BiliPostType, BiliLiveEventType, BiliCommentEventType
-from .models import LiveRoomInfo
+from .enums import (
+    BiliPostType,
+    BiliLiveEventType,
+    BiliCommentEventType,
+    BiliDynamicEventType,
+)
+from .models import (
+    LiveRoomInfo,
+    DynamicVideoInfo,
+    DynamicMusicInfo,
+    DynamicArticleInfo,
+    DynamicLiveRcmdInfo,
+    DynamicStatInfo,
+)
 from .sender import BiliSender
 
 __all__ = [
@@ -39,6 +51,8 @@ __all__ = [
     "BiliPrivateMessageWithdrawEventData",
     # comment
     "BiliCommentEventData",
+    # dynamic
+    "BiliDynamicEventData",
     # system
     "BiliConnectionEventData",
 ]
@@ -261,6 +275,37 @@ class BiliCommentEventData(BaseEventData):
     parent_id: str = ""
     like_count: int = 0
     ctime: int = 0
+    sender: BiliSender = Field(default_factory=BiliSender)
+
+
+# ==================== 动态事件 ====================
+
+
+class BiliDynamicEventData(BaseEventData):
+    """动态事件"""
+
+    post_type: str = Field(default=BiliPostType.DYNAMIC)
+    dynamic_event_type: str = Field(default=BiliDynamicEventType.NEW_DYNAMIC)
+    dynamic_status: str = "new"  # "new" | "deleted"
+    dynamic_id: str = ""
+    dynamic_type: str = ""
+    uid: str = ""
+    user_name: str = ""
+    face_url: str = ""
+    pub_ts: int = 0
+    pub_time: str = ""
+    text: Optional[str] = None
+    pics_url: Optional[list] = None
+    tag: Optional[str] = None
+    # 统计
+    stat: Optional[DynamicStatInfo] = None
+    # 各类型动态内容
+    video: Optional[DynamicVideoInfo] = None
+    music: Optional[DynamicMusicInfo] = None
+    article: Optional[DynamicArticleInfo] = None
+    live_rcmd: Optional[DynamicLiveRcmdInfo] = None
+    # 转发原动态 ID
+    forward_dynamic_id: Optional[str] = None
     sender: BiliSender = Field(default_factory=BiliSender)
 
 

@@ -15,6 +15,7 @@ from .danmu import DanmuAPIMixin
 from .room_manage import RoomManageAPIMixin
 from .session import SessionAPIMixin
 from .comment import CommentAPIMixin
+from .dynamic import DynamicAPIMixin
 from .query import QueryAPIMixin
 
 if TYPE_CHECKING:
@@ -30,6 +31,7 @@ class BiliBotAPI(
     RoomManageAPIMixin,
     SessionAPIMixin,
     CommentAPIMixin,
+    DynamicAPIMixin,
     QueryAPIMixin,
     IBiliAPIClient,
 ):

@@ -12,6 +12,11 @@ __all__ = [
     "RoomInfo",
     "AnchorInfo",
     "WatchedShow",
+    "DynamicStatInfo",
+    "DynamicVideoInfo",
+    "DynamicMusicInfo",
+    "DynamicArticleInfo",
+    "DynamicLiveRcmdInfo",
 ]
 
 
@@ -122,3 +127,62 @@ class LiveRoomInfo(BaseModel):
             )
         except Exception:
             return None
+
+
+# ==================== 动态相关模型 ====================
+
+
+class DynamicStatInfo(BaseModel):
+    """动态统计信息"""
+
+    comment_count: int = 0
+    like_count: int = 0
+    forward_count: int = 0
+
+
+class DynamicVideoInfo(BaseModel):
+    """动态中的视频信息"""
+
+    av_id: str = ""
+    bv_id: str = ""
+    title: str = ""
+    cover: str = ""
+    desc: str = ""
+    duration_text: str = ""
+    play_count: str = ""
+    danmaku_count: str = ""
+    dynamic_text: str = ""
+
+
+class DynamicMusicInfo(BaseModel):
+    """动态中的音乐信息"""
+
+    music_id: str = ""
+    title: str = ""
+    cover: str = ""
+    label: str = ""
+    dynamic_text: str = ""
+
+
+class DynamicArticleInfo(BaseModel):
+    """动态中的专栏信息"""
+
+    title: str = ""
+    summary: str = ""
+    has_more: bool = False
+    article_id: int = 0
+
+
+class DynamicLiveRcmdInfo(BaseModel):
+    """动态中的直播推荐信息"""
+
+    room_id: int = 0
+    live_status: int = 0
+    title: str = ""
+    cover: str = ""
+    online: int = 0
+    area_id: int = 0
+    area_name: str = ""
+    parent_area_id: int = 0
+    parent_area_name: str = ""
+    live_start_time: int = 0

@@ -113,6 +113,24 @@ class IBiliAPIClient(IAPIClient):
     ) -> list:
         """获取评论列表"""
 
+    # ---- 动态 ----
+
+    @abstractmethod
+    async def get_user_dynamics(self, uid: int, offset: str = "") -> dict:
+        """获取用户动态列表"""
+
+    @abstractmethod
+    async def get_user_latest_dynamic(self, uid: int) -> Optional[dict]:
+        """获取用户最新一条动态"""
+
+    @abstractmethod
+    async def add_dynamic_watch(self, uid: int) -> None:
+        """添加动态监听"""
+
+    @abstractmethod
+    async def remove_dynamic_watch(self, uid: int) -> None:
+        """移除动态监听"""
+
     # ---- 用户查询 ----
 
     @abstractmethod

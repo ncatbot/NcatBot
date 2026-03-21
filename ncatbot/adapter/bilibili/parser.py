@@ -12,6 +12,7 @@ from typing import Any, Callable, Dict, Optional
 from ncatbot.types.bilibili.events import (
     BiliCommentEventData,
     BiliConnectionEventData,
+    BiliDynamicEventData,
     BiliPrivateMessageEventData,
     BiliPrivateMessageWithdrawEventData,
     DanmuAggregationEventData,
@@ -34,7 +35,14 @@ from ncatbot.types.bilibili.events import (
     WatchedChangeEventData,
 )
 from ncatbot.types.bilibili.enums import BiliLiveEventType, BiliSessionEventType
-from ncatbot.types.bilibili.models import LiveRoomInfo
+from ncatbot.types.bilibili.models import (
+    LiveRoomInfo,
+    DynamicStatInfo,
+    DynamicVideoInfo,
+    DynamicMusicInfo,
+    DynamicArticleInfo,
+    DynamicLiveRcmdInfo,
+)
 from ncatbot.types.bilibili.sender import BiliSender
 from ncatbot.types.common.base import BaseEventData
 from ncatbot.types.common.segment.array import MessageArray
@@ -57,6 +65,8 @@ class BiliEventParser:
                 return self._parse_session(raw_data)
             if source_type == "comment":
                 return self._parse_comment(raw_data)
+            if source_type == "dynamic":
+                return self._parse_dynamic(raw_data)
         except Exception:
             LOG.debug(
                 "解析 %s 事件失败: %s",
@@ -174,6 +184,170 @@ class BiliEventParser:
             parent_id=str(reply.get("parent", "0")),
             like_count=reply.get("like", 0),
             ctime=reply.get("ctime", 0),
+            sender=sender,
+        )
+
+    # ==================== 动态解析 ====================
+
+    def _parse_dynamic(self, raw: dict) -> Optional[BaseEventData]:
+        import json as _json
+        from ncatbot.types.bilibili.enums import BiliDynamicEventType
+
+        item = raw.get("dynamic") or {}
+        dynamic_status = raw.get("status", "new")  # "new" | "deleted"
+        now = int(time.time())
+
+        # 基础信息 — 与 DTO.from_raw 保持一致
+        dynamic_id = item.get("id_str", "")
+        dynamic_type = item.get("type", "")
+        modules = item.get("modules") or {}
+        author_info = modules.get("module_author") or {}
+        pub_ts = author_info.get("pub_ts", 0)
+        pub_time = author_info.get("pub_time", "")
+
+        uid = str(author_info.get("mid", raw.get("uid", "")))
+        uname = author_info.get("name", "")
+        face = author_info.get("face", "")
+
+        # 解析动态内容
+        text = None
+        pics_url = None
+        video = None
+        music = None
+        article = None
+        live_rcmd = None
+        tag = None
+        stat = None
+
+        module_dynamic = modules.get("module_dynamic") or {}
+        major = module_dynamic.get("major") or {}
+
+        # 统计信息
+        stat_info = modules.get("module_stat")
+        if stat_info:
+            stat = DynamicStatInfo(
+                comment_count=(stat_info.get("comment") or {}).get("count", 0),
+                like_count=(stat_info.get("like") or {}).get("count", 0),
+                forward_count=(stat_info.get("forward") or {}).get("count", 0),
+            )
+
+        # 标签（如置顶）
+        if modules.get("module_tag"):
+            tag = modules["module_tag"].get("text")
+
+        # 文字/图片动态
+        if dynamic_type in ("DYNAMIC_TYPE_WORD", "DYNAMIC_TYPE_DRAW"):
+            opus = major.get("opus") or {}
+            summary = opus.get("summary") or {}
+            text = summary.get("text", "")
+            pics = opus.get("pics") or []
+            if pics:
+                pics_url = [pic.get("url", "") for pic in pics]
+
+        # 视频动态
+        elif dynamic_type == "DYNAMIC_TYPE_AV":
+            archive = major.get("archive") or {}
+            desc_info = module_dynamic.get("desc")
+            stat_v = archive.get("stat") or {}
+            video = DynamicVideoInfo(
+                av_id=str(archive.get("aid", "")),
+                bv_id=archive.get("bvid", ""),
+                title=archive.get("title", ""),
+                cover=archive.get("cover", ""),
+                desc=archive.get("desc", ""),
+                duration_text=archive.get("duration_text", ""),
+                dynamic_text=desc_info.get("text", "") if desc_info else "",
+                play_count=str(stat_v.get("play", "")),
+                danmaku_count=str(stat_v.get("danmaku", "")),
+            )
+
+        # 音乐动态
+        elif dynamic_type == "DYNAMIC_TYPE_MUSIC":
+            music_info = major.get("music") or {}
+            desc_info = module_dynamic.get("desc")
+            music = DynamicMusicInfo(
+                music_id=str(music_info.get("id", "")),
+                title=music_info.get("title", ""),
+                cover=music_info.get("cover", ""),
+                label=music_info.get("label", ""),
+                dynamic_text=desc_info.get("text", "") if desc_info else "",
+            )
+
+        # 专栏动态
+        elif dynamic_type == "DYNAMIC_TYPE_ARTICLE":
+            opus = major.get("opus") or {}
+            summary_info = opus.get("summary") or {}
+            article = DynamicArticleInfo(
+                title=opus.get("title", ""),
+                summary=summary_info.get("text", ""),
+                has_more=summary_info.get("has_more", False),
+                article_id=int(dynamic_id) if dynamic_id.isdigit() else 0,
+            )
+
+        # 直播推荐动态
+        elif dynamic_type == "DYNAMIC_TYPE_LIVE_RCMD":
+            live_rcmd_obj = major.get("live_rcmd") or {}
+            live_rcmd_content = live_rcmd_obj.get("content", "{}")
+            try:
+                live_data = _json.loads(live_rcmd_content)
+            except Exception:
+                live_data = {}
+            live_play_info = live_data.get("live_play_info") or {}
+            live_rcmd = DynamicLiveRcmdInfo(
+                room_id=live_play_info.get("room_id", 0),
+                live_status=live_play_info.get("live_status", 0),
+                title=live_play_info.get("title", ""),
+                cover=live_play_info.get("cover", ""),
+                online=live_play_info.get("online", 0),
+                area_id=live_play_info.get("area_id", 0),
+                area_name=live_play_info.get("area_name", ""),
+                parent_area_id=live_play_info.get("parent_area_id", 0),
+                parent_area_name=live_play_info.get("parent_area_name", ""),
+                live_start_time=live_play_info.get("live_start_time", 0),
+            )
+
+        # 转发动态
+        forward_dynamic_id = None
+        if dynamic_type == "DYNAMIC_TYPE_FORWARD":
+            desc_info = module_dynamic.get("desc")
+            text = desc_info.get("text", "") if desc_info else ""
+            orig = item.get("orig") or {}
+            forward_dynamic_id = orig.get("id_str", "")
+
+        # 映射 status → dynamic_event_type
+        if dynamic_status == "deleted":
+            dyn_event_type = BiliDynamicEventType.DELETED_DYNAMIC
+        else:
+            dyn_event_type = BiliDynamicEventType.NEW_DYNAMIC
+
+        sender = BiliSender(
+            user_id=uid,
+            nickname=uname,
+            face_url=face,
+        )
+
+        return BiliDynamicEventData(
+            time=pub_ts or now,
+            self_id=self._self_id,
+            platform="bilibili",
+            dynamic_event_type=dyn_event_type,
+            dynamic_status=dynamic_status,
+            dynamic_id=dynamic_id,
+            dynamic_type=dynamic_type,
+            uid=uid,
+            user_name=uname,
+            face_url=face,
+            pub_ts=pub_ts,
+            pub_time=pub_time,
+            text=text,
+            pics_url=pics_url,
+            tag=tag,
+            stat=stat,
+            video=video,
+            music=music,
+            article=article,
+            live_rcmd=live_rcmd,
+            forward_dynamic_id=forward_dynamic_id,
             sender=sender,
         )
 

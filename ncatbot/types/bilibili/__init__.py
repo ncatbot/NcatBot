@@ -2,15 +2,24 @@
 
 from .enums import (
     BiliCommentEventType,
+    BiliDynamicEventType,
     BiliLiveEventType,
     BiliPostType,
     BiliSessionEventType,
 )
 from .sender import BiliSender
-from .models import LiveRoomInfo
+from .models import (
+    LiveRoomInfo,
+    DynamicStatInfo,
+    DynamicVideoInfo,
+    DynamicMusicInfo,
+    DynamicArticleInfo,
+    DynamicLiveRcmdInfo,
+)
 from .events import (
     BiliCommentEventData,
     BiliConnectionEventData,
+    BiliDynamicEventData,
     BiliLiveEventData,
     BiliPrivateMessageEventData,
     BiliPrivateMessageWithdrawEventData,
@@ -33,6 +42,7 @@ __all__ = [
     "BiliLiveEventType",
     "BiliSessionEventType",
     "BiliCommentEventType",
+    "BiliDynamicEventType",
     # sender
     "BiliSender",
     # live events
@@ -53,8 +63,15 @@ __all__ = [
     "BiliPrivateMessageWithdrawEventData",
     # comment events
     "BiliCommentEventData",
+    # dynamic events
+    "BiliDynamicEventData",
     # system events
     "BiliConnectionEventData",
     # models
     "LiveRoomInfo",
+    "DynamicStatInfo",
+    "DynamicVideoInfo",
+    "DynamicMusicInfo",
+    "DynamicArticleInfo",
+    "DynamicLiveRcmdInfo",
 ]

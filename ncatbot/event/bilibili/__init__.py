@@ -12,6 +12,7 @@ from .live import (
 )
 from .session import BiliPrivateMessageEvent, BiliPrivateMessageWithdrawEvent
 from .comment import BiliCommentEvent
+from .dynamic import BiliDynamicEvent
 from .factory import create_bili_entity
 
 # 自动注册 Bilibili 平台工厂和 secondary keys 到通用工厂
@@ -26,6 +27,7 @@ _register_keys(
     {
         "live": "live_event_type",
         "comment": "comment_event_type",
+        "dynamic": "dynamic_event_type",
     },
 )
 del _register, _register_keys
@@ -45,6 +47,8 @@ __all__ = [
     "BiliPrivateMessageWithdrawEvent",
     # comment
     "BiliCommentEvent",
+    # dynamic
+    "BiliDynamicEvent",
     # factory
     "create_bili_entity",
 ]

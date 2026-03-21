@@ -21,6 +21,11 @@ Bilibili 事件解析器测试
   BL-15: LIVE 事件 live_event_type 设置为 LIVE
   BL-16: PREPARING 事件 live_event_type 设置为 PREPARING
   BL-17: LIVE 事件携带 room_info 时附加 LiveRoomInfo
+  BL-18: 动态图文 (DYNAMIC_TYPE_DRAW) 解析
+  BL-19: 动态视频 (DYNAMIC_TYPE_AV) 解析
+  BL-20: 删除动态解析 — dynamic_event_type 为 DELETED_DYNAMIC
+  BL-21: 转发动态 (DYNAMIC_TYPE_FORWARD) 解析
+  BL-22: DataPair 时间戳缓存与深拷贝
 """
 
 import json
@@ -33,6 +38,7 @@ from ncatbot.adapter.bilibili.parser import BiliEventParser
 from ncatbot.types.bilibili.events import (
     BiliCommentEventData,
     BiliConnectionEventData,
+    BiliDynamicEventData,
     BiliPrivateMessageEventData,
     BiliPrivateMessageWithdrawEventData,
     DanmuAggregationEventData,
@@ -366,3 +372,146 @@ class TestLiveRoomInfoAttach:
         result = parser.parse(fix["source_type"], fix["raw_data"])
         assert isinstance(result, LiveStatusEventData)
         assert result.room_info is None
+
+
+# ==================== 动态解析 ====================
+
+
+def _get_dynamic(fixtures, dynamic_type=None, status=None):
+    """按 dynamic_type + status 查找动态夹具"""
+    for fix in fixtures:
+        if fix["source_type"] != "dynamic":
+            continue
+        raw = fix["raw_data"]
+        dyn = raw.get("dynamic", {})
+        if dynamic_type and dyn.get("type") != dynamic_type:
+            continue
+        if status and raw.get("status") != status:
+            continue
+        return fix
+    pytest.skip(f"夹具中不存在 dynamic_type={dynamic_type}, status={status}")
+
+
+class TestDynamicDraw:
+    """BL-18: 动态图文 (DYNAMIC_TYPE_DRAW)"""
+
+    def test_bl18_draw_dynamic(self, parser, fixtures):
+        """BL-18: 图文动态解析字段正确"""
+        fix = _get_dynamic(fixtures, "DYNAMIC_TYPE_DRAW")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, BiliDynamicEventData)
+        assert result.dynamic_id == "999000111222333"
+        assert result.dynamic_type == "DYNAMIC_TYPE_DRAW"
+        assert result.uid == "621240130"
+        assert result.user_name == "TestDynUser"
+        assert result.text == "这是一条图文动态测试"
+        assert result.pics_url == [
+            "https://example.com/pic1.jpg",
+            "https://example.com/pic2.jpg",
+        ]
+        assert result.pub_ts == 1700000100
+        assert result.tag == "置顶"
+        assert result.stat is not None
+        assert result.stat.comment_count == 10
+        assert result.stat.like_count == 50
+        assert result.stat.forward_count == 3
+        assert result.dynamic_status == "new"
+
+
+class TestDynamicVideo:
+    """BL-19: 动态视频 (DYNAMIC_TYPE_AV)"""
+
+    def test_bl19_video_dynamic(self, parser, fixtures):
+        """BL-19: 视频动态解析字段正确"""
+        fix = _get_dynamic(fixtures, "DYNAMIC_TYPE_AV")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, BiliDynamicEventData)
+        assert result.dynamic_id == "999000111222444"
+        assert result.dynamic_type == "DYNAMIC_TYPE_AV"
+        assert result.video is not None
+        assert result.video.title == "测试视频标题"
+        assert result.video.bv_id == "BV1test123"
+        assert result.video.av_id == "100200300"
+        assert result.video.duration_text == "10:30"
+        assert result.video.dynamic_text == "视频动态文本"
+        assert result.video.play_count == "12345"
+        assert result.video.danmaku_count == "678"
+
+
+class TestDynamicDeleted:
+    """BL-20: 删除动态"""
+
+    def test_bl20_deleted_dynamic(self, parser, fixtures):
+        """BL-20: 删除动态的 dynamic_event_type 为 DELETED_DYNAMIC"""
+        from ncatbot.types.bilibili.enums import BiliDynamicEventType
+
+        fix = _get_dynamic(fixtures, status="deleted")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, BiliDynamicEventData)
+        assert result.dynamic_event_type == BiliDynamicEventType.DELETED_DYNAMIC
+        assert result.dynamic_status == "deleted"
+        assert result.text == "这条动态被删除了"
+
+
+class TestDynamicForward:
+    """BL-21: 转发动态 (DYNAMIC_TYPE_FORWARD)"""
+
+    def test_bl21_forward_dynamic(self, parser, fixtures):
+        """BL-21: 转发动态解析字段正确"""
+        fix = _get_dynamic(fixtures, "DYNAMIC_TYPE_FORWARD")
+        result = parser.parse(fix["source_type"], fix["raw_data"])
+        assert isinstance(result, BiliDynamicEventData)
+        assert result.dynamic_type == "DYNAMIC_TYPE_FORWARD"
+        assert result.text == "转发一下"
+        assert result.forward_dynamic_id == "888000111222333"
+
+
+class TestDynamicDataPair:
+    """BL-22: DataPair 时间戳缓存与深拷贝"""
+
+    def test_bl22_initial_update(self):
+        """BL-22: 首次 update 初始化 old/new 双端"""
+        from ncatbot.adapter.bilibili.source.dynamic_source import _DynamicDataPair
+
+        pair = _DynamicDataPair()
+        item = {"id_str": "111", "modules": {"module_author": {"pub_ts": 100}}}
+        pair.update(item, 100)
+
+        assert pair.old_ts == 100
+        assert pair.new_ts == 100
+        assert pair.old_data["id_str"] == "111"
+        assert pair.new_data["id_str"] == "111"
+        # old_data 是深拷贝，修改 new_data 不影响 old_data
+        pair.new_data["id_str"] = "modified"
+        assert pair.old_data["id_str"] == "111"
+
+    def test_bl22_subsequent_update(self):
+        """BL-22: 后续 update 将 new 移到 old，新数据放入 new"""
+        from ncatbot.adapter.bilibili.source.dynamic_source import _DynamicDataPair
+
+        pair = _DynamicDataPair()
+        item1 = {"id_str": "aaa"}
+        pair.update(item1, 100)
+
+        item2 = {"id_str": "bbb"}
+        pair.update(item2, 200)
+
+        assert pair.old_ts == 100
+        assert pair.new_ts == 200
+        assert pair.old_data["id_str"] == "aaa"
+        assert pair.new_data["id_str"] == "bbb"
+
+    def test_bl22_deep_copy_isolation(self):
+        """BL-22: old_data 深拷贝与 new_data 相互独立"""
+        from ncatbot.adapter.bilibili.source.dynamic_source import _DynamicDataPair
+
+        pair = _DynamicDataPair()
+        item1 = {"id_str": "first", "nested": {"key": "val"}}
+        pair.update(item1, 100)
+
+        item2 = {"id_str": "second", "nested": {"key": "val2"}}
+        pair.update(item2, 200)
+
+        # old_data 应是 item1 的深拷贝，修改 old_data 不影响 new_data
+        pair.old_data["nested"]["key"] = "changed"
+        assert pair.new_data["nested"]["key"] == "val2"
