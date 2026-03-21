@@ -7,32 +7,28 @@ from unittest.mock import MagicMock
 
 from ncatbot.core import CommandGroupHook, HookAction
 from ncatbot.core.registry.hook import HookContext
+from ncatbot.core.registry.dispatcher import HandlerEntry
+from ncatbot.core.dispatcher.event import Event
+from ncatbot.testing import factory
+
+
+def _make_ctx(text: str, handler_func):
+    """构造 HookContext（使用真实 MessageArray）"""
+    data = factory.group_message(text, group_id="100200")
+    event = Event(type="message.group", data=data)
+    entry = HandlerEntry(func=handler_func, event_type="message")
+    return HookContext(
+        event=event,
+        event_type="message.group",
+        handler_entry=entry,
+        api=None,
+    )
 
 
 @pytest.fixture
 def mock_context():
     """构造 mock context 的辅助工厂"""
-
-    def _make(text: str, handler_func):
-        msg = MagicMock()
-        msg.text = text
-        msg.filter_at = MagicMock(return_value=[])
-
-        event = MagicMock()
-        event.data = MagicMock()
-        event.data.message = msg
-
-        entry = MagicMock()
-        entry.func = handler_func
-
-        return HookContext(
-            event=event,
-            event_type="message.group",
-            handler_entry=entry,
-            api=MagicMock(),
-        )
-
-    return _make
+    return _make_ctx
 
 
 # ---- 命令匹配 ----
