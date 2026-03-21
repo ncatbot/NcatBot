@@ -26,6 +26,7 @@ Bilibili 事件解析器测试
   BL-20: 删除动态解析 — dynamic_event_type 为 DELETED_DYNAMIC
   BL-21: 转发动态 (DYNAMIC_TYPE_FORWARD) 解析
   BL-22: DataPair 时间戳缓存与深拷贝
+  BL-23 系列（DynamicPageSource）见 test_bilibili_dynamic_page_source.py
 """
 
 import json

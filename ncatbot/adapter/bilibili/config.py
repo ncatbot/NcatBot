@@ -35,11 +35,13 @@ class BilibiliConfig(BaseModel):
     enable_session: bool = False
     comment_watches: List[CommentWatch] = Field(default_factory=list)
     dynamic_watches: List[DynamicWatch] = Field(default_factory=list)
+    dynamic_page_watches: List[DynamicWatch] = Field(default_factory=list)
 
     # 轮询配置
     session_poll_interval: float = 6.0
     comment_poll_interval: float = 30.0
     dynamic_poll_interval: float = 600.0
+    dynamic_page_poll_interval: float = 180.0
 
     # 连接
     max_retry: int = 5
