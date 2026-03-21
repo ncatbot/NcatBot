@@ -122,7 +122,7 @@ class {class_name}(NcatBotPlugin):
     async def on_close(self):
         self.logger.info(f"{{self.name}} 已卸载")
 
-    @registrar.on_group_command("hello", ignore_case=True)
+    @registrar.qq.on_group_command("hello", ignore_case=True)
     async def on_group_hello(self, event: GroupMessageEvent):
         await event.reply(text="hi")
 
