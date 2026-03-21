@@ -108,6 +108,15 @@ skip_covered = false
 [tool.coverage.html]
 directory = "htmlcov"
 
+[tool.uv]
+# 安全约束：修复间接依赖中的已知漏洞
+constraint-dependencies = [
+  "virtualenv>=20.36.2",   # TOCTOU 符号链接攻击 (CWE-362, CWE-59)
+  "filelock>=3.20.3",      # SoftFileLock TOCTOU 漏洞 (CWE-362, CWE-367)
+  "cryptography>=46.0.5",  # SECT 曲线子群验证缺失
+  "urllib3>=2.6.3",        # HTTP 重定向解压缩炸弹绕过 (CWE-409)
+]
+
 [tool.codespell]
 ignore-words-list = "ans,fo,therefrom"
 
