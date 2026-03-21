@@ -5,6 +5,7 @@ import socket
 import urllib
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Optional
 
 from .logger import get_log
@@ -141,3 +142,132 @@ def gen_url_with_proxy(original_url: str) -> str:
         if proxy_url
         else original_url
     )
+
+
+# ==================== 异步 HTTP 工具 ====================
+
+
+async def async_download_to_file(
+    url: str,
+    dest_dir: str | Path,
+    *,
+    filename: Optional[str] = None,
+    proxy: Optional[str] = None,
+) -> Path:
+    """异步下载 URL 到目录，返回文件路径。
+
+    Parameters
+    ----------
+    url : str
+        下载地址。
+    dest_dir : str | Path
+        目标目录，不存在时自动创建。
+    filename : str, optional
+        文件名。省略则从 URL 路径推断。
+    proxy : str, optional
+        HTTP/SOCKS5 代理地址（如 ``"http://127.0.0.1:7890"``）。
+    """
+    from urllib.parse import unquote, urlparse
+
+    import httpx
+
+    dest = Path(dest_dir)
+    dest.mkdir(parents=True, exist_ok=True)
+    if filename is None:
+        filename = unquote(urlparse(url).path.rsplit("/", 1)[-1]) or "download"
+    filepath = dest / filename
+
+    async with httpx.AsyncClient(
+        proxy=proxy, follow_redirects=True, timeout=120
+    ) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        filepath.write_bytes(resp.content)
+
+    return filepath
+
+
+async def async_download_to_bytes(
+    url: str,
+    *,
+    proxy: Optional[str] = None,
+) -> bytes:
+    """异步下载 URL 到内存，返回原始字节。
+
+    Parameters
+    ----------
+    url : str
+        下载地址。
+    proxy : str, optional
+        HTTP/SOCKS5 代理地址。
+    """
+    import httpx
+
+    async with httpx.AsyncClient(
+        proxy=proxy, follow_redirects=True, timeout=120
+    ) as client:
+        resp = await client.get(url)
+        resp.raise_for_status()
+        return resp.content
+
+
+async def async_http_get(
+    url: str,
+    *,
+    headers: Optional[dict] = None,
+    proxy: Optional[str] = None,
+    timeout: float = 10.0,
+) -> bytes:
+    """异步 GET 请求，返回响应体字节。
+
+    Parameters
+    ----------
+    url : str
+        请求地址。
+    headers : dict, optional
+        额外请求头。
+    proxy : str, optional
+        HTTP/SOCKS5 代理地址。
+    timeout : float
+        超时秒数，默认 10。
+    """
+    import httpx
+
+    req_headers = {"User-Agent": "ncatbot/1.0"}
+    if headers:
+        req_headers.update(headers)
+
+    async with httpx.AsyncClient(
+        proxy=proxy, follow_redirects=True, timeout=timeout
+    ) as client:
+        resp = await client.get(url, headers=req_headers)
+        resp.raise_for_status()
+        return resp.content
+
+
+async def async_check_proxy(proxy_url: str) -> bool:
+    """检查 HTTP/SOCKS5 代理是否可用。
+
+    通过代理请求 ``https://www.google.com/generate_204`` 验证连通性。
+
+    Parameters
+    ----------
+    proxy_url : str
+        代理地址（如 ``"http://127.0.0.1:7890"``）。
+
+    Returns
+    -------
+    bool
+        代理可用返回 ``True``，否则 ``False``。
+    """
+    import httpx
+
+    test_url = "https://www.google.com/generate_204"
+    try:
+        async with httpx.AsyncClient(
+            proxy=proxy_url, follow_redirects=True, timeout=5
+        ) as client:
+            resp = await client.get(test_url)
+            return resp.status_code in (200, 204)
+    except Exception:
+        return False

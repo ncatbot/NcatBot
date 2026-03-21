@@ -210,6 +210,12 @@ class Config(BaseConfig):
     github_proxy: Optional[str] = Field(
         default_factory=lambda: os.getenv("GITHUB_PROXY")
     )
+    http_proxy: Optional[str] = Field(default_factory=lambda: os.getenv("HTTP_PROXY"))
+    """标准 HTTP/SOCKS5 代理地址（如 ``http://127.0.0.1:7890``）。
+
+    用于 Attachment 下载、MiscAPI 请求等。
+    也可通过环境变量 ``HTTP_PROXY`` 设置。
+    """
     check_ncatbot_update: bool = True
     skip_ncatbot_install_check: bool = False
     websocket_timeout: int = 15

@@ -14,6 +14,10 @@ from .network import (  # noqa
     download_file,
     get_proxy_url,
     gen_url_with_proxy,
+    async_download_to_file,
+    async_download_to_bytes,
+    async_http_get,
+    async_check_proxy,
 )
 from .status import Status, status  # noqa
 from .error import NcatBotError, NcatBotValueError, NcatBotConnectionError  # noqa
@@ -50,6 +54,10 @@ __all__ = [
     "download_file",
     "get_proxy_url",
     "gen_url_with_proxy",
+    "async_download_to_file",
+    "async_download_to_bytes",
+    "async_http_get",
+    "async_check_proxy",
     "NcatBotError",
     "NcatBotValueError",
     "NcatBotConnectionError",
