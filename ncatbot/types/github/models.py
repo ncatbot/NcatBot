@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import List, Optional
 
 
-from pydantic import ConfigDict, Field
+from pydantic import Field
 
 from ._base import GitHubModel
 
@@ -75,12 +75,6 @@ class GitHubRelease(GitHubModel):
 
 class GitHubReleaseAsset(GitHubModel):
     """Release Asset 信息"""
-
-    model_config = ConfigDict(
-        coerce_numbers_to_str=True,
-        extra="allow",
-        populate_by_name=True,
-    )
 
     id: str = ""
     name: str = ""

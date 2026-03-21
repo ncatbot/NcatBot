@@ -18,7 +18,9 @@ class GitHubModel(BaseModel):
       方便从 raw-dict 用法无痛迁移。
     """
 
-    model_config = ConfigDict(extra="allow", populate_by_name=True)
+    model_config = ConfigDict(
+        extra="allow", populate_by_name=True, coerce_numbers_to_str=True
+    )
 
     # ---- dict 兼容层 ----
 
