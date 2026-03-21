@@ -88,6 +88,14 @@ class LiveSource(BaseSource):
         self._loop = loop
         try:
             loop.run_until_complete(self._connect_danmaku())
+        except RuntimeError as exc:
+            # stop() 在 connect() 自然返回前调用了 loop.stop()，属于正常关闭路径
+            if "Event loop stopped before Future completed" in str(exc):
+                LOG.debug(
+                    "直播源 %s 事件循环在连接完成前被停止（正常关闭）", self._room_id
+                )
+            else:
+                LOG.exception("直播源 %s 线程异常退出", self._room_id)
         except Exception:
             LOG.exception("直播源 %s 线程异常退出", self._room_id)
         finally:
@@ -145,8 +153,8 @@ class LiveSource(BaseSource):
                 future.result(timeout=10)
             except Exception:
                 LOG.debug("断开直播源 %s 时异常", self._room_id, exc_info=True)
-            # 通知子线程事件循环停止
-            loop.call_soon_threadsafe(loop.stop)
+            # disconnect() 完成后 connect() 会自然返回，不需要手动 stop loop
+            # 直接等待线程退出即可（join 已有超时保护）
 
         if self._thread is not None and self._thread.is_alive():
             self._thread.join(timeout=15)
