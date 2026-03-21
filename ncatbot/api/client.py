@@ -18,6 +18,7 @@ from ncatbot.utils import get_log
 from .qq import QQAPIClient
 from .bilibili import IBiliAPIClient
 from .github import IGitHubAPIClient
+from .ai import IAIAPIClient
 
 
 LOG = get_log("BotAPIClient")
@@ -62,6 +63,11 @@ class BotAPIClient:
     def github(self) -> IGitHubAPIClient:
         """GitHub 平台 API 快捷访问"""
         return self.platform("github")
+
+    @property
+    def ai(self) -> IAIAPIClient:
+        """AI 平台 API 快捷访问"""
+        return self.platform("ai")
 
     @property
     def platforms(self) -> Dict[str, Any]:
