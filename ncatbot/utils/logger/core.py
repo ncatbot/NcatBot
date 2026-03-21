@@ -9,11 +9,20 @@ _early_handlers: list[tuple[logging.Logger, logging.Handler]] = []
 # 全局 debug 标志，由 setup_logging() 设置
 _debug_mode: bool = False
 
+# 记录所有通过 get_log() 注册的 logger 名称，供 set_debug_mode 回溯更新
+_managed_loggers: set[str] = set()
+
 
 def set_debug_mode(enabled: bool) -> None:
-    """设置全局 debug 模式（由 setup_logging 调用）。"""
+    """设置全局 debug 模式（由 setup_logging 调用）。
+
+    同时回溯更新所有已通过 get_log() 创建的 logger 的级别。
+    """
     global _debug_mode
     _debug_mode = enabled
+    target_level = logging.DEBUG if enabled else logging.INFO
+    for name in _managed_loggers:
+        logging.getLogger(name).setLevel(target_level)
 
 
 class BoundLogger:
@@ -110,6 +119,7 @@ def get_log(name: Optional[str] = None) -> BoundLogger:
     logger = logging.getLogger(name)
     if name is not None:
         logger.setLevel(logging.DEBUG if _debug_mode else logging.INFO)
+        _managed_loggers.add(name)
     return BoundLogger(logger)
 
 

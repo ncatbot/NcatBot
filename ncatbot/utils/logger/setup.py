@@ -70,6 +70,8 @@ def setup_logging(
     logging.getLogger("schedule").setLevel(logging.WARNING)
     logging.getLogger("asyncio").setLevel(logging.WARNING)
     logging.getLogger("Session").setLevel(logging.WARNING)
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+    logging.getLogger("httpcore").setLevel(logging.WARNING)
 
     # 控制台 handler — level 由 console_level 控制
     console_handler = logging.StreamHandler()
