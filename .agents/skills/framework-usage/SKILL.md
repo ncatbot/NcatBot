@@ -91,7 +91,7 @@ Bot:  <输出>
 2. **读取用户项目已有代码**，理解项目架构和约定。
 3. **生成完整可运行代码**，包括插件文件、manifest.toml、配置等。
 
-搭建项目详见 [getting-started.md](./references/getting-started.md)。
+搭建项目、启动方式、CLI 命令详见 [getting-started.md](./references/getting-started.md)（含工作区检测、config 模板、NapCat 自动安装说明）。
 
 ### Phase 4：验证
 

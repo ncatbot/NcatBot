@@ -8,6 +8,19 @@
 pip install ncatbot5
 ```
 
+## 工作区检测（搭建前必做）
+
+在创建或修改项目之前，先判断当前工作区状态：
+
+| 工作区状态 | 操作 |
+|-----------|------|
+| 已有 `config.yaml` + `plugins/` | 直接开发插件，不要重新搭建项目 |
+| 已有 `config.yaml`，无 `plugins/` | 手动创建 `plugins/` 目录，然后开发 |
+| NcatBot 框架源码仓库 | 在 `plugins/` 目录下开发插件，**不要在仓库外新建项目** |
+| 空目录 | 用 `ncatbot init` 或手动搭建（见下方） |
+
+> **核心规则**：不要在已有项目的工作区外新建独立项目目录。插件开发在当前工作区的 `plugins/` 下进行。
+
 ## 项目搭建
 
 ### 方式 1：CLI 交互式（推荐）
@@ -111,6 +124,8 @@ if __name__ == "__main__":
 | `ncatbot config check` | 一键检查配置有效性 |
 | `ncatbot napcat install [--yes]` | 安装 NapCat + QQ（`--yes` 跳过确认，Docker/CI 用） |
 | `ncatbot napcat diagnose` | 连接诊断 |
+
+> ⚠️ **NapCat 自动安装说明**：NapCat 由 NcatBot Setup 模式（首次 `ncatbot run` 或 `ncatbot dev`）自动安装，无需手动安装。`ncatbot napcat install --yes` 仅用于 CI/Docker 等无交互环境。启动后通过 WebUI 扫码登录 QQ。
 
 ### CLI 交互式命令注意事项
 
