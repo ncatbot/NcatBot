@@ -47,7 +47,26 @@ async def on_calc(self, event, match=None):
 
 ## 命令参数自动绑定
 
+**实现含参数命令时，建议使用自动参数绑定**，无需手动解析消息：
+
 ```python
+# ✅ 推荐：自动参数绑定
+@registrar.on_command("echo")
+async def on_echo(self, event, content: str):
+    """'echo 你好' → content='你好'"""
+    await event.reply(text=f"🔊 {content}")
+
+# ❌ 不推荐：手动解析
+@registrar.on_command("echo-manual")
+async def on_echo_manual(self, event):
+    parts = event.raw_message.split(maxsplit=1)
+    content = parts[1] if len(parts) > 1 else ""
+    if not content:
+        await event.reply("用法: echo-manual <内容>")
+        return
+    await event.reply(f"🔊 {content}")
+
+# 更复杂的参数绑定
 @registrar.on_group_command("add")
 async def on_add(self, event, a: int, b: int):
     await event.reply(f"{a} + {b} = {a + b}")
@@ -57,16 +76,26 @@ async def on_kick(self, event, target: At):
     await self.api.qq.manage.set_group_kick(event.group_id, target.qq)
 ```
 
-**参数绑定规则**：
+### 执行流程
+
+1. **预处理**：首个 `PlainText` 移到 index 0（解决 Reply 开头的消息匹配失败）
+2. **匹配**：shlex 分词后首 token 匹配命令名即触发（统一前缀匹配）
+3. **binding stream**：命令后剩余文本 + 后续段 → `[("token", str), ("at", At), ...]`
+4. **绑定**：逐参数从 stream 中匹配，不匹配的段跳过（永久消耗）
+5. **缺失**：必选参数缺失 → WARNING + 自动回复 usage + SKIP
+
+### 参数绑定规则
 
 | 类型注解 | 绑定来源 | 说明 |
 |---------|---------|------|
-| `At` | `message.filter_at()` | 下一个 @ 对象 |
-| `int` / `float` | 文本 token | 自动类型转换 |
-| `str`（非最后参数） | 单个文本 token | 消费一个词 |
-| `str`（最后参数） | 剩余全部文本 | 空格拼接 |
+| `At` | binding stream 中 kind="at" 的项 | 从消息段匹配 @ 对象 |
+| `int` / `float` | binding stream 中 kind="token" 的项 | 自动类型转换，转换失败则跳过 |
+| `str`（非最后参数） | binding stream 中 kind="token" 的项 | 消费一个 token |
+| `str`（最后参数） | 剩余所有 kind="token" 的项 | 空格拼接 |
+| 引号包裹 | shlex 分词 | `"hello world"` / `'foo bar'` 作为单个 token |
 | 有默认值 | — | 缺失时使用默认值 |
-| 必填且缺失 | — | 跳过 handler（SKIP） |
+| 必填且缺失 | — | WARNING + 回复用法说明 + SKIP |
+| 段跳过 | — | 不匹配的段被永久消耗，不参与后续参数匹配 |
 
 ## 内置 Hook 完整清单
 
