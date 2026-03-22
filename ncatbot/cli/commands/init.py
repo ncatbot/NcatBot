@@ -29,24 +29,7 @@ def init(target_dir: str):
     bot_uin = click.prompt("请输入机器人 QQ 号", type=str)
     root = click.prompt("请输入管理员 QQ 号", type=str)
 
-    config_data = {
-        "bot_uin": bot_uin,
-        "root": root,
-        "debug": False,
-        "napcat": {
-            "ws_uri": "ws://localhost:3001",
-            "ws_token": "napcat_ws",
-            "webui_uri": "http://localhost:6099",
-            "webui_token": "napcat_webui",
-            "enable_webui": True,
-        },
-        "plugin": {
-            "plugins_dir": "plugins",
-            "load_plugin": True,
-            "plugin_whitelist": [],
-            "plugin_blacklist": [],
-        },
-    }
+    config_data = _build_default_config(bot_uin=bot_uin, root=root)
 
     target.mkdir(parents=True, exist_ok=True)
     with open(config_path, "w", encoding="utf-8") as f:
@@ -63,6 +46,46 @@ def init(target_dir: str):
     _generate_template_plugin(plugins_path)
     click.echo()
     click.echo(info("下一步: 运行 'ncatbot run' 启动机器人"))
+
+
+def _build_default_config(bot_uin: str, root: str) -> dict:
+    """构建 init 命令的默认配置（新 adapters 结构）。"""
+    return {
+        "adapters": [
+            {
+                "config": {
+                    "enable_webui": True,
+                    "webui_token": "napcat_webui",
+                    "webui_uri": "http://localhost:6099",
+                    "ws_token": "napcat_ws",
+                    "ws_uri": "ws://localhost:3001",
+                },
+                "enabled": True,
+                "platform": "qq",
+                "type": "napcat",
+            }
+        ],
+        "bot_uin": bot_uin,
+        "check_ncatbot_update": True,
+        "debug": False,
+        "enable_webui_interaction": True,
+        "logging": {
+            "event_log_levels": {
+                "meta_event": "NONE",
+            }
+        },
+        "plugin": {
+            "auto_install_pip_deps": True,
+            "load_plugin": True,
+            "plugin_blacklist": [],
+            "plugin_configs": {},
+            "plugin_whitelist": [],
+            "plugins_dir": "plugins",
+        },
+        "root": root,
+        "skip_ncatbot_install_check": False,
+        "websocket_timeout": 15,
+    }
 
 
 def _ensure_plugins_dir(path: Path):
