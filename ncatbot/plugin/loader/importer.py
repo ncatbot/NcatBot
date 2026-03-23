@@ -58,14 +58,14 @@ class ModuleImporter:
 
         pkg_name = manifest.folder_name
         module_name = f"{pkg_name}.{manifest.entry_stem}"
-        plugin_path = str(manifest.plugin_dir)
+        plugin_path = str(manifest.plugins_dir)
 
         created_pkg = False
         created_module = False
         try:
             # 确保插件包存在于 sys.modules
             if pkg_name not in sys.modules:
-                init_file = manifest.plugin_dir / "__init__.py"
+                init_file = manifest.plugins_dir / "__init__.py"
                 if init_file.exists():
                     pkg_spec = importlib.util.spec_from_file_location(
                         pkg_name,
@@ -179,7 +179,7 @@ class ModuleImporter:
 
     @staticmethod
     def _clear_pycache(manifest: PluginManifest) -> None:
-        pycache = manifest.plugin_dir / "__pycache__"
+        pycache = manifest.plugins_dir / "__pycache__"
         if pycache.exists():
             import shutil
 

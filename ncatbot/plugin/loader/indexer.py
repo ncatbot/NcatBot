@@ -36,21 +36,21 @@ class PluginIndexer:
 
         return dict(self._manifests)
 
-    def index_plugin(self, plugin_dir: Path) -> Optional[PluginManifest]:
+    def index_plugin(self, plugins_dir: Path) -> Optional[PluginManifest]:
         """索引单个插件目录，返回 PluginManifest 或 None。"""
-        plugin_dir = Path(plugin_dir).resolve()
-        manifest_path = plugin_dir / "manifest.toml"
+        plugins_dir = Path(plugins_dir).resolve()
+        manifest_path = plugins_dir / "manifest.toml"
 
-        if not plugin_dir.is_dir():
+        if not plugins_dir.is_dir():
             return None
         if not manifest_path.exists():
-            LOG.debug("跳过缺少 manifest.toml 的目录: %s", plugin_dir.name)
+            LOG.debug("跳过缺少 manifest.toml 的目录: %s", plugins_dir.name)
             return None
 
         try:
             manifest = PluginManifest.from_toml(manifest_path)
         except (FileNotFoundError, ValueError) as e:
-            LOG.warning("解析清单失败 [%s]: %s", plugin_dir.name, e)
+            LOG.warning("解析清单失败 [%s]: %s", plugins_dir.name, e)
             return None
         except Exception:
             LOG.exception("解析清单异常: %s", manifest_path)
@@ -61,13 +61,13 @@ class PluginIndexer:
             LOG.warning(
                 "插件名冲突: %s (已有: %s, 新: %s)，跳过",
                 manifest.name,
-                existing.plugin_dir,
-                plugin_dir,
+                existing.plugins_dir,
+                plugins_dir,
             )
             return None
 
         self._manifests[manifest.name] = manifest
-        LOG.debug("已索引插件: %s (%s)", manifest.name, plugin_dir)
+        LOG.debug("已索引插件: %s (%s)", manifest.name, plugins_dir)
         return manifest
 
     def rescan_plugin(self, name: str) -> Optional[PluginManifest]:
@@ -76,9 +76,9 @@ class PluginIndexer:
         if old is None:
             return None
 
-        plugin_dir = old.plugin_dir
+        plugins_dir = old.plugins_dir
         del self._manifests[name]
-        return self.index_plugin(plugin_dir)
+        return self.index_plugin(plugins_dir)
 
     # ------------------------------------------------------------------
     # 查询

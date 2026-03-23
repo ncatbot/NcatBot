@@ -32,9 +32,6 @@ class ServiceManager:
         ```
     """
 
-    _debug_mode: bool = False
-    _test_mode: bool = False
-
     def __init__(self):
         self._services: Dict[str, BaseService] = {}
         self._service_classes: Dict[str, Type[BaseService]] = {}
@@ -44,14 +41,6 @@ class ServiceManager:
     def set_event_callback(self, callback: EventCallback) -> None:
         """注入事件发布回调，load 时会传递给服务实例。"""
         self._event_callback = callback
-
-    def set_debug_mode(self, enable: bool = True) -> None:
-        """设置调试模式"""
-        self._debug_mode = enable
-
-    def set_test_mode(self, enable: bool = True) -> None:
-        """设置测试模式"""
-        self._test_mode = enable
 
     # -------------------------------------------------------------------------
     # 内置服务属性（IDE 类型提示）
@@ -76,10 +65,10 @@ class ServiceManager:
     # 服务管理方法
     # -------------------------------------------------------------------------
 
-    def register_builtin(self, *, debug: bool = False) -> None:
+    def register_builtin(self) -> None:
         """注册所有内置服务。"""
         self.register(RBACService, storage_path="data/rbac.json")
-        self.register(FileWatcherService, debug_mode=debug)
+        self.register(FileWatcherService)
         self.register(TimeTaskService)
 
     def register(self, service_class: Type[BaseService], **config: Any) -> None:

@@ -31,7 +31,7 @@ class PluginManifest:
     pip_dependencies: Dict[str, str] = field(default_factory=dict)
 
     # 运行时附加（不来自 toml）
-    plugin_dir: Path = field(default=Path("."), repr=False)
+    plugins_dir: Path = field(default=Path("."), repr=False)
     folder_name: str = ""
 
     # 保留原始数据供扩展使用
@@ -66,7 +66,7 @@ class PluginManifest:
 
         with open(manifest_path, "rb") as f:
             raw = tomllib.load(f)
-        plugin_dir = manifest_path.parent
+        plugins_dir = manifest_path.parent
 
         # 验证必填字段
         name = raw.get("name")
@@ -92,7 +92,7 @@ class PluginManifest:
         entry_stem = main_field
         if entry_stem.endswith(".py"):
             entry_stem = entry_stem[:-3]
-        entry_file = plugin_dir / f"{entry_stem}.py"
+        entry_file = plugins_dir / f"{entry_stem}.py"
         if not entry_file.exists():
             raise ValueError(
                 f"入口文件不存在: {entry_file} (manifest: {manifest_path})"
@@ -107,8 +107,8 @@ class PluginManifest:
             description=raw.get("description", ""),
             dependencies=raw.get("dependencies") or {},
             pip_dependencies=cls._normalize_deps(raw.get("pip_dependencies")),
-            plugin_dir=plugin_dir,
-            folder_name=plugin_dir.name,
+            plugins_dir=plugins_dir,
+            folder_name=plugins_dir.name,
             _raw=raw,
         )
 
@@ -126,7 +126,7 @@ class PluginManifest:
     @property
     def entry_file(self) -> Path:
         """入口文件的完整路径"""
-        return self.plugin_dir / f"{self.entry_stem}.py"
+        return self.plugins_dir / f"{self.entry_stem}.py"
 
     def as_dict(self) -> Dict[str, Any]:
         """返回元数据字典"""

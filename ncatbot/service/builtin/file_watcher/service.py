@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Callable, Optional, Set, Dict
 
 from ...base import BaseService
-from ncatbot.utils import get_log
+from ncatbot.utils import get_config_manager, get_log
 
 LOG = get_log("FileWatcher")
 
@@ -33,8 +33,6 @@ class FileWatcherService(BaseService):
 
     DEFAULT_WATCH_INTERVAL = 1.0
     DEFAULT_DEBOUNCE_DELAY = 1.0
-    FAST_WATCH_INTERVAL = 0.02
-    FAST_DEBOUNCE_DELAY = 0.02
 
     def __init__(self, **config_args):
         super().__init__(**config_args)
@@ -67,13 +65,8 @@ class FileWatcherService(BaseService):
 
     async def on_load(self) -> None:
         """启动文件监视"""
-        is_test_mode = False
-        self._watch_interval = (
-            self.FAST_WATCH_INTERVAL if is_test_mode else self.DEFAULT_WATCH_INTERVAL
-        )
-        self._debounce_delay = (
-            self.FAST_DEBOUNCE_DELAY if is_test_mode else self.DEFAULT_DEBOUNCE_DELAY
-        )
+        self._watch_interval = self.DEFAULT_WATCH_INTERVAL
+        self._debounce_delay = self.DEFAULT_DEBOUNCE_DELAY
 
         # 自动监听全局配置文件
         self._setup_config_watch()
@@ -215,8 +208,8 @@ class FileWatcherService(BaseService):
         self._first_scan_done = True
 
     def _on_file_changed(self, file_path: str, plugins_dir: str) -> None:
-        """处理文件变化"""
-        if not self.config.get("debug_mode", False):
+        """处理文件变化（与 plugin.hot_reload / effective_hot_reload 对齐，独立于 debug）"""
+        if not get_config_manager().effective_hot_reload():
             return
 
         LOG.info(f"检测到文件变化: {file_path}")
@@ -251,16 +244,16 @@ class FileWatcherService(BaseService):
 
         LOG.info(f"处理修改的插件目录: {dirs_to_process}")
 
-        for plugin_dir in dirs_to_process:
-            self._notify_file_changed(plugin_dir)
+        for plugins_dir in dirs_to_process:
+            self._notify_file_changed(plugins_dir)
 
-    def _notify_file_changed(self, plugin_dir: str) -> None:
+    def _notify_file_changed(self, plugins_dir: str) -> None:
         """通知文件变化（通过回调）"""
         if self.on_file_changed is None:
-            LOG.debug(f"未设置 on_file_changed 回调，跳过: {plugin_dir}")
+            LOG.debug(f"未设置 on_file_changed 回调，跳过: {plugins_dir}")
             return
 
         try:
-            self.on_file_changed(plugin_dir)
+            self.on_file_changed(plugins_dir)
         except Exception as e:
-            LOG.error(f"on_file_changed 回调执行失败 [{plugin_dir}]: {e}")
+            LOG.error(f"on_file_changed 回调执行失败 [{plugins_dir}]: {e}")

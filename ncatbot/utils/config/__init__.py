@@ -1,8 +1,9 @@
-from .manager import ConfigManager, get_config_manager, ConfigValueError
+from .manager import ConfigManager, get_config_manager, ConfigValueError, MISSING
 from .models import (
     Config,
     NapCatConfig,
     PluginConfig,
+    BuiltinCommandsConfig,
     LoggingConfig,
     BaseConfig,
     AdapterEntry,
@@ -17,9 +18,11 @@ __all__ = [
     "ConfigManager",
     "get_config_manager",
     "ConfigValueError",
+    "MISSING",
     "Config",
     "NapCatConfig",
     "PluginConfig",
+    "BuiltinCommandsConfig",
     "LoggingConfig",
     "BaseConfig",
     "AdapterEntry",

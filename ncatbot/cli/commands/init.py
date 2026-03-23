@@ -86,13 +86,13 @@ def _generate_template_plugin(plugins_path: Path):
     username = getpass.getuser()
     plugin_name = _sanitize_plugin_name(username) + "_plugin"
     class_name = plugin_name.title().replace("_", "") + "Plugin"
-    plugin_dir = plugins_path / plugin_name
+    plugins_dir = plugins_path / plugin_name
 
-    if plugin_dir.exists():
-        click.echo(info(f"模板插件已存在，跳过: {plugin_dir}"))
+    if plugins_dir.exists():
+        click.echo(info(f"模板插件已存在，跳过: {plugins_dir}"))
         return
 
-    plugin_dir.mkdir(parents=True)
+    plugins_dir.mkdir(parents=True)
 
     manifest_content = f"""\
 name = "{plugin_name}"
@@ -131,6 +131,6 @@ class {class_name}(NcatBotPlugin):
         await event.reply(text="hi")
 """
 
-    (plugin_dir / "manifest.toml").write_text(manifest_content, encoding="utf-8")
-    (plugin_dir / "plugin.py").write_text(plugin_py_content, encoding="utf-8")
-    click.echo(success(f"模板插件已创建: {plugin_dir}"))
+    (plugins_dir / "manifest.toml").write_text(manifest_content, encoding="utf-8")
+    (plugins_dir / "plugin.py").write_text(plugin_py_content, encoding="utf-8")
+    click.echo(success(f"模板插件已创建: {plugins_dir}"))

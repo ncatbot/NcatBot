@@ -15,7 +15,7 @@ from typing import Optional, TYPE_CHECKING
 
 import websockets
 
-from ncatbot.utils import NcatBotError, get_log  # type: ignore[attr-defined]
+from ncatbot.utils import NcatBotError, get_config_manager, get_log  # type: ignore[attr-defined]
 from ncatbot.utils.config.models import DEFAULT_BOT_UIN
 from .auth import AuthHandler
 from .config import NapCatConfigManager
@@ -164,7 +164,8 @@ class NapCatLauncher:
         assert self._installer is not None
         assert self._config is not None
 
-        if not self._installer.ensure_installed():
+        skip_confirm = get_config_manager().effective_skip_napcat_install_confirm()
+        if not self._installer.ensure_installed(skip_confirm=skip_confirm):
             raise NcatBotError("安装或更新 NapCat 失败")
 
         self._config.configure_all()

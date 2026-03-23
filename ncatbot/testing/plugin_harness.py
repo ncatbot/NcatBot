@@ -27,7 +27,7 @@ class PluginTestHarness(TestHarness):
 
         async with PluginTestHarness(
             plugin_names=["hello_world"],
-            plugin_dir=Path("docs/docs/examples/common/01_hello_world"),
+            plugins_dir=Path("docs/docs/examples/common/01_hello_world"),
         ) as harness:
             await harness.inject(group_message("hello"))
             await harness.settle()
@@ -39,7 +39,7 @@ class PluginTestHarness(TestHarness):
     def __init__(
         self,
         plugin_names: List[str],
-        plugin_dir: Path,
+        plugins_dir: Path,
         *,
         skip_builtin: bool = True,
         skip_pip: bool = True,
@@ -48,7 +48,7 @@ class PluginTestHarness(TestHarness):
         self._adapter = MockAdapter(platform="qq")
         self._bot = BotClient(adapter=self._adapter)
         self._plugin_names = plugin_names
-        self._plugin_dir = Path(plugin_dir)
+        self._plugins_dir = Path(plugins_dir)
         self._skip_builtin = skip_builtin
         self._skip_pip = skip_pip
 
@@ -69,13 +69,19 @@ class PluginTestHarness(TestHarness):
 
         loader._on_plugin_init = _inject_plugin_deps
 
-        # 可选：加载内置插件
+        # 可选：加载内置插件（同一进程内重复测试时需重载模块，否则 @registrar 不会再次入队）
         if not self._skip_builtin:
+            import importlib
+
+            import ncatbot.plugin.builtin as _bi
+
+            importlib.reload(_bi.system_manager.main)
+            importlib.reload(_bi)
             await loader.load_builtin_plugins()
 
         # 选择性加载目标插件及其传递依赖
         await loader.load_selected(
-            self._plugin_dir,
+            self._plugins_dir,
             self._plugin_names,
             skip_pip=self._skip_pip,
         )

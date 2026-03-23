@@ -15,23 +15,23 @@ from ncatbot.utils import get_log
 LOG = get_log("PluginDiscovery")
 
 
-def discover_testable_plugins(plugin_dir: Path) -> List[PluginManifest]:
+def discover_testable_plugins(plugins_dir: Path) -> List[PluginManifest]:
     """扫描目录下所有包含 manifest.toml 的插件。
 
     Args:
-        plugin_dir: 插件根目录
+        plugins_dir: 插件根目录
 
     Returns:
         可测试的 PluginManifest 列表
     """
-    plugin_dir = Path(plugin_dir).resolve()
+    plugins_dir = Path(plugins_dir).resolve()
     manifests = []
 
-    if not plugin_dir.is_dir():
-        LOG.warning("插件目录不存在: %s", plugin_dir)
+    if not plugins_dir.is_dir():
+        LOG.warning("插件目录不存在: %s", plugins_dir)
         return manifests
 
-    for entry in plugin_dir.iterdir():
+    for entry in plugins_dir.iterdir():
         if not entry.is_dir():
             continue
         manifest_path = entry / "manifest.toml"
@@ -71,18 +71,18 @@ from ncatbot.testing import PluginTestHarness, group_message
 pytestmark = pytest.mark.asyncio
 
 
-async def test_{name}_loads(plugin_dir):
+async def test_{name}_loads(plugins_dir):
     """冒烟: {name} 加载成功"""
     async with PluginTestHarness(
-        plugin_names=["{name}"], plugin_dir=plugin_dir
+        plugin_names=["{name}"], plugins_dir=plugins_dir
     ) as h:
         assert "{name}" in h.loaded_plugins
 
 
-async def test_{name}_unloads(plugin_dir):
+async def test_{name}_unloads(plugins_dir):
     """冒烟: {name} 卸载成功"""
     h = PluginTestHarness(
-        plugin_names=["{name}"], plugin_dir=plugin_dir
+        plugin_names=["{name}"], plugins_dir=plugins_dir
     )
     await h.start()
     assert "{name}" in h.loaded_plugins
@@ -93,10 +93,10 @@ async def test_{name}_unloads(plugin_dir):
     await h.stop()
 
 
-async def test_{name}_survives_event(plugin_dir):
+async def test_{name}_survives_event(plugins_dir):
     """冒烟: {name} 收到群消息不崩溃"""
     async with PluginTestHarness(
-        plugin_names=["{name}"], plugin_dir=plugin_dir
+        plugin_names=["{name}"], plugins_dir=plugins_dir
     ) as h:
         await h.inject(group_message("test", group_id="1", user_id="1"))
         await h.settle(0.1)
@@ -126,7 +126,7 @@ pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
-def plugin_dir():
+def plugins_dir():
     """由调用者提供的插件根目录"""
     raise NotImplementedError("请在 conftest.py 中覆盖此 fixture")
 

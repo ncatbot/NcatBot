@@ -45,6 +45,16 @@ class BaseConfig(BaseModel):
 # ==================== 子配置模型 ====================
 
 
+class BuiltinCommandsConfig(BaseConfig):
+    """内置 ``!`` 管理命令的细粒度开关（总开关见 ``PluginConfig.enable_builtin_commands``）。"""
+
+    reload: bool = True
+    load: bool = True
+    unload: bool = True
+    sysinfo: bool = True
+    config_toggle: bool = True
+
+
 class PluginConfig(BaseConfig):
     """插件相关配置。"""
 
@@ -54,6 +64,18 @@ class PluginConfig(BaseConfig):
     load_plugin: bool = False
     auto_install_pip_deps: bool = True
     """是否允许自动安装插件声明的 pip 依赖（仍会先询问用户确认）。"""
+    skip_pip_install_confirm: bool = False
+    """为 True 时跳过安装 pip 依赖前的确认，直接安装（仍受 auto_install_pip_deps 控制）。"""
+    hot_reload: bool = True
+    """是否启用插件热重载（需 file_watcher 服务与调试场景配合）。"""
+    enable_builtin_commands: bool = True
+    """是否启用内置插件提供的 ``!`` 管理命令（仍要求发送者为 ``root``）。"""
+    builtin_commands: BuiltinCommandsConfig = Field(
+        default_factory=BuiltinCommandsConfig
+    )
+    """各子命令开关；未列出的子命令视为开启。"""
+    builtin_commands_group_allowed: bool = False
+    """是否允许在群聊中使用 ``!`` 管理命令（默认仅私聊）。"""
     plugin_configs: Dict[str, Dict[str, Any]] = Field(default_factory=dict)
     """全局配置文件中的插件配置覆盖。键为插件名，值为配置字典。"""
 
@@ -218,6 +240,8 @@ class Config(BaseConfig):
     """
     check_ncatbot_update: bool = True
     skip_ncatbot_install_check: bool = False
+    skip_napcat_install_confirm: bool = False
+    """为 True 时跳过 NapCat 安装/更新前的交互确认（等价于 CLI napcat install --yes）。"""
     websocket_timeout: int = 15
 
     # 标记本次加载是否发生了旧格式迁移（供 ConfigManager 判断是否回写）

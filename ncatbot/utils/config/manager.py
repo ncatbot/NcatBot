@@ -1,8 +1,11 @@
 """配置管理器 — 对外暴露的主要接口。"""
 
+from __future__ import annotations
+
 import os
 import warnings
-from typing import List, Optional
+from dataclasses import dataclass
+from typing import Any, List, Optional
 
 from ..logger import get_early_logger
 
@@ -25,20 +28,44 @@ class ConfigValueError(Exception):
         super().__init__(f"配置项错误: {msg}")
 
 
+class _MissingType:
+    """apply_runtime_overrides 未传入某参数时使用。"""
+
+    __slots__ = ()
+
+
+MISSING = _MissingType()
+
+
+@dataclass
+class RuntimeOverrides:
+    debug: Optional[bool] = None
+    plugins_dir: Optional[str] = None
+    hot_reload: Optional[bool] = None
+
+
+def _truthy_env(name: str) -> bool:
+    v = os.getenv(name)
+    if v is None:
+        return False
+    return v.strip().lower() in ("1", "true", "yes", "on")
+
+
 class ConfigManager:
     """配置管理器。
 
     职责：
     - 配置的懒加载、重载、保存
     - 嵌套键的读写（支持 'napcat.ws_uri' 形式）
+    - 运行时覆盖（debug / plugins_dir / hot_reload）：不写回 yaml
     - 安全检查与修复
-    - 目录创建等副作用操作
     - 旧格式迁移时自动回写配置文件
     """
 
     def __init__(self, path: Optional[str] = None):
         self._storage = ConfigStorage(path)
         self._config: Optional[Config] = None
+        self._runtime = RuntimeOverrides()
 
     @property
     def config(self) -> Config:
@@ -62,7 +89,55 @@ class ConfigManager:
 
     def save(self) -> None:
         if self._config is not None:
-            self._storage.save(self._config)
+            self._storage.save(
+                self._config,
+                env_only_bot_uin=self._storage._env_only_bot_uin,
+                env_only_root=self._storage._env_only_root,
+            )
+
+    def apply_runtime_overrides(
+        self,
+        *,
+        debug: Any = MISSING,
+        plugins_dir: Any = MISSING,
+        hot_reload: Any = MISSING,
+    ) -> None:
+        """进程内覆盖（CLI / BotClient 传参），不写入 config.yaml。"""
+        if debug is not MISSING:
+            self._runtime.debug = debug
+        if plugins_dir is not MISSING:
+            self._runtime.plugins_dir = plugins_dir
+        if hot_reload is not MISSING:
+            self._runtime.hot_reload = hot_reload
+
+    def clear_runtime_overrides(self) -> None:
+        self._runtime = RuntimeOverrides()
+
+    @property
+    def effective_debug(self) -> bool:
+        if self._runtime.debug is not None:
+            return self._runtime.debug
+        return self.config.debug
+
+    def effective_plugins_dir(self) -> str:
+        if self._runtime.plugins_dir:
+            return self._runtime.plugins_dir
+        return self.plugin.plugins_dir
+
+    def effective_hot_reload(self) -> bool:
+        if self._runtime.hot_reload is not None:
+            return self._runtime.hot_reload
+        return self.config.plugin.hot_reload
+
+    def effective_skip_napcat_install_confirm(self) -> bool:
+        return self.config.skip_napcat_install_confirm or _truthy_env(
+            "NCATBOT_SKIP_NAPCAT_INSTALL_CONFIRM"
+        )
+
+    def effective_skip_pip_install_confirm(self) -> bool:
+        return self.config.plugin.skip_pip_install_confirm or _truthy_env(
+            "NCATBOT_SKIP_PIP_INSTALL_CONFIRM"
+        )
 
     # ---- 通用读写 ----
 
@@ -79,6 +154,10 @@ class ConfigManager:
         if not hasattr(obj, final):
             raise ConfigValueError(f"未知的配置项: {key}")
         setattr(obj, final, value)
+        if final == "bot_uin":
+            self._storage._env_only_bot_uin = False
+        if final == "root":
+            self._storage._env_only_root = False
 
     # ---- 适配器配置访问 ----
 
@@ -122,11 +201,12 @@ class ConfigManager:
 
     @property
     def debug(self) -> bool:
-        return self.config.debug
+        return self.effective_debug
 
     @debug.setter
     def debug(self, value: bool) -> None:
         self.config.debug = value
+        self._runtime.debug = None
 
     @property
     def websocket_timeout(self) -> int:
@@ -209,7 +289,7 @@ class ConfigManager:
 
     def ensure_plugins_dir(self) -> None:
         """确保插件目录存在。"""
-        d = self.plugin.plugins_dir
+        d = self.effective_plugins_dir()
         if not os.path.exists(d):
             os.makedirs(d)
 

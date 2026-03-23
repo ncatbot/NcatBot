@@ -75,13 +75,18 @@ class BaseAdapter(ABC):
             return True
 
         from ncatbot.utils import async_confirm
+        from ncatbot.utils import get_config_manager
 
         listing = ", ".join(missing)
         _LOG.info("适配器 %s 需要安装 pip 依赖: %s", self.name, listing)
-        approved = await async_confirm(
-            f"适配器 {self.name} 需要安装以下 pip 依赖:\n  {listing}\n确认安装?",
-            default=True,
-        )
+        mgr = get_config_manager()
+        if mgr.effective_skip_pip_install_confirm():
+            approved = True
+        else:
+            approved = await async_confirm(
+                f"适配器 {self.name} 需要安装以下 pip 依赖:\n  {listing}\n确认安装?",
+                default=True,
+            )
         if not approved:
             return False
 

@@ -7,6 +7,7 @@ from .config import (  # noqa
     Config,
     CONFIG_PATH,
     ConfigValueError,
+    MISSING,
 )
 from .network import (  # noqa
     post_json,
@@ -42,6 +43,7 @@ __all__ = [
     "ConfigManager",
     "get_config_manager",
     "ConfigValueError",
+    "MISSING",
     "CONFIG_PATH",
     "get_log",
     "BoundLogger",

@@ -20,9 +20,9 @@ def _plugins_dir() -> Path:
     return Path(mgr.plugin.plugins_dir)
 
 
-def _read_manifest(plugin_dir: Path) -> dict | None:
+def _read_manifest(plugins_dir: Path) -> dict | None:
     """读取插件的 manifest.toml 文件。"""
-    manifest_path = plugin_dir / "manifest.toml"
+    manifest_path = plugins_dir / "manifest.toml"
     if not manifest_path.exists():
         return None
     try:

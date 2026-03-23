@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import List, Optional, Sequence, TYPE_CHECKING
+from typing import Any, List, Optional, Sequence, TYPE_CHECKING
 
 from ncatbot.adapter import BaseAdapter, adapter_registry
 from ncatbot.api import BotAPIClient
@@ -18,7 +18,9 @@ from ncatbot.api.misc import MiscAPI
 from ncatbot.core import AsyncEventDispatcher, HandlerDispatcher, flush_pending
 from ncatbot.plugin import PluginLoader
 from ncatbot.service import ServiceManager
-from ncatbot.utils import get_log, setup_logging, ncatbot_config
+from ncatbot.utils import get_config_manager, get_log, setup_logging
+from ncatbot.utils.config.manager import MISSING
+from ncatbot.utils import ncatbot_config
 
 if TYPE_CHECKING:
     pass
@@ -51,10 +53,15 @@ class BotClient:
         adapter: Optional[BaseAdapter] = None,
         *,
         adapters: Optional[Sequence[BaseAdapter]] = None,
-        plugin_dir: str = "plugins",
-        debug: bool = False,
+        plugins_dir: Any = MISSING,
+        debug: Any = MISSING,
+        hot_reload: Any = MISSING,
     ) -> None:
-        setup_logging(debug=ncatbot_config.debug)
+        mgr = get_config_manager()
+        mgr.apply_runtime_overrides(
+            debug=debug, plugins_dir=plugins_dir, hot_reload=hot_reload
+        )
+        setup_logging(debug=mgr.effective_debug)
 
         # 构建适配器列表
         if adapters is not None:
@@ -80,9 +87,8 @@ class BotClient:
         self._dispatcher: Optional[AsyncEventDispatcher] = None
         self._handler_dispatcher: Optional[HandlerDispatcher] = None
         self._service_manager = ServiceManager()
-        self._plugin_loader = PluginLoader(debug=debug)
-        self._plugin_dir = Path(plugin_dir)
-        self._debug = debug
+        self._plugin_loader = PluginLoader()
+        self._plugins_dir = Path(mgr.effective_plugins_dir())
         self._running = False
         self._listen_task: Optional[asyncio.Task] = None
         self._listen_tasks: List[asyncio.Task] = []
@@ -312,7 +318,7 @@ class BotClient:
         self._api = BotAPIClient()
 
         # 注册与平台无关的 MiscAPI
-        self._api.register_platform("misc", MiscAPI(ncatbot_config.config))
+        self._api.register_platform("misc", MiscAPI(get_config_manager().config))
 
         for adapter in self._adapters:
             platform = getattr(adapter, "platform", adapter.name)
@@ -348,7 +354,7 @@ class BotClient:
     async def _setup_services(self) -> None:
         """注册并加载所有内置服务。"""
         self._service_manager.set_event_callback(self.dispatcher.callback)
-        self._service_manager.register_builtin(debug=self._debug)
+        self._service_manager.register_builtin()
         await self._service_manager.load_all()
 
     async def _setup_plugins(self) -> None:
@@ -367,9 +373,10 @@ class BotClient:
 
         self._plugin_loader._on_plugin_init = _inject_plugin_deps
         await self._plugin_loader.load_builtin_plugins()
-        await self._plugin_loader.load_all(self._plugin_dir)
+        await self._plugin_loader.load_all(self._plugins_dir)
 
-        if self._debug and self._service_manager.has("file_watcher"):
+        mgr = get_config_manager()
+        if mgr.effective_hot_reload() and self._service_manager.has("file_watcher"):
             fw = self._service_manager.file_watcher
-            fw.add_watch_dir(str(self._plugin_dir.resolve()))
+            fw.add_watch_dir(str(self._plugins_dir.resolve()))
             self._plugin_loader.setup_hot_reload(fw)

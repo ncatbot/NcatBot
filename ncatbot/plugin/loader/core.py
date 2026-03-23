@@ -29,14 +29,13 @@ class PluginLoader:
 
     典型用法::
 
-        loader = PluginLoader(debug=True)
+        loader = PluginLoader()
         await loader.load_all(Path("plugins"))
 
         # 热重载由 setup_hot_reload 自动配置
     """
 
-    def __init__(self, *, debug: bool = False) -> None:
-        self._debug = debug
+    def __init__(self) -> None:
         self._indexer = PluginIndexer()
         self._resolver = DependencyResolver()
         self._importer = ModuleImporter()
@@ -59,18 +58,18 @@ class PluginLoader:
     # 批量加载
     # ------------------------------------------------------------------
 
-    async def load_all(self, plugin_dir: Path) -> List[str]:
+    async def load_all(self, plugins_dir: Path) -> List[str]:
         """扫描目录并按依赖顺序加载所有插件。
 
         Returns:
             成功加载的插件名列表
         """
         # 将插件根目录加入 sys.path（使跨插件导入可用）
-        self._importer.add_plugin_root(plugin_dir)
+        self._importer.add_plugin_root(plugins_dir)
 
-        manifests = self._indexer.scan(plugin_dir)
+        manifests = self._indexer.scan(plugins_dir)
         if not manifests:
-            LOG.info("未在 %s 中发现插件", plugin_dir)
+            LOG.info("未在 %s 中发现插件", plugins_dir)
             return []
 
         # 依赖解析
@@ -95,7 +94,7 @@ class PluginLoader:
 
     async def load_selected(
         self,
-        plugin_dir: Path,
+        plugins_dir: Path,
         names: List[str],
         *,
         skip_pip: bool = True,
@@ -103,18 +102,18 @@ class PluginLoader:
         """只加载指定插件及其传递依赖。
 
         Args:
-            plugin_dir: 插件根目录
+            plugins_dir: 插件根目录
             names: 需要加载的目标插件名列表
             skip_pip: 是否跳过 pip 依赖检查（测试环境默认跳过）
 
         Returns:
             成功加载的插件名列表
         """
-        self._importer.add_plugin_root(plugin_dir)
+        self._importer.add_plugin_root(plugins_dir)
 
-        manifests = self._indexer.scan(plugin_dir)
+        manifests = self._indexer.scan(plugins_dir)
         if not manifests:
-            LOG.info("未在 %s 中发现插件", plugin_dir)
+            LOG.info("未在 %s 中发现插件", plugins_dir)
             return []
 
         # 解析目标插件及其传递依赖的加载顺序
@@ -336,6 +335,8 @@ class PluginLoader:
         """加载内置插件。"""
         from ...plugin.builtin import BUILTIN_PLUGINS
 
+        last_loaded: Optional[BasePlugin] = None
+
         for plugin_class in BUILTIN_PLUGINS:
             name = plugin_class.name
             if name in self.plugins:
@@ -348,7 +349,7 @@ class PluginLoader:
                 main="__builtin__",
                 author=getattr(plugin_class, "author", "NcatBot"),
                 description=getattr(plugin_class, "description", ""),
-                plugin_dir=Path("data") / name,
+                plugins_dir=Path("data") / name,
                 folder_name=name,
             )
 
@@ -356,9 +357,25 @@ class PluginLoader:
                 plugin = self._instantiate(plugin_class, manifest)
                 await plugin.__onload__()
                 self.plugins[name] = plugin
+                last_loaded = plugin
                 LOG.info("内置插件加载成功: %s v%s", name, manifest.version)
             except Exception as e:
                 LOG.error("加载内置插件 %s 失败: %s", name, e)
+
+        # 内置模块在首次 flush_pending(__global__) 之后才导入，@registrar 收集在 __global__。
+        # 移到真实插件名以便 unload_plugin 时 revoke_plugin 能移除；并注入实例以绑定 self。
+        if self._handler_dispatcher is not None and last_loaded is not None:
+            from ncatbot.core import flush_pending
+            from ncatbot.core.registry.registrar import _pending_handlers
+
+            pending = _pending_handlers.pop("__global__", [])
+            if pending:
+                _pending_handlers[last_loaded.name] = pending
+            flush_pending(
+                self._handler_dispatcher,
+                last_loaded.name,
+                plugin_instance=last_loaded,
+            )
 
     # ------------------------------------------------------------------
     # 内部方法
@@ -414,9 +431,12 @@ class PluginLoader:
         LOG.info("%s", report)
 
         # 询问用户
-        approved = await async_confirm(
-            f"是否安装以上 {len(missing)} 个依赖?", default=True
-        )
+        if config.effective_skip_pip_install_confirm():
+            approved = True
+        else:
+            approved = await async_confirm(
+                f"是否安装以上 {len(missing)} 个依赖?", default=True
+            )
         if not approved:
             # 找出哪些插件受影响
             missing_names = {
@@ -476,10 +496,13 @@ class PluginLoader:
             LOG.warning("auto_install_pip_deps 已禁用，跳过插件 %s", manifest.name)
             return False
 
-        approved = await async_confirm(
-            f"插件 {manifest.name} 需要安装 {len(missing)} 个 pip 依赖，是否安装?",
-            default=True,
-        )
+        if config.effective_skip_pip_install_confirm():
+            approved = True
+        else:
+            approved = await async_confirm(
+                f"插件 {manifest.name} 需要安装 {len(missing)} 个 pip 依赖，是否安装?",
+                default=True,
+            )
         if not approved:
             LOG.info("用户拒绝安装，跳过插件 %s", manifest.name)
             return False
@@ -506,7 +529,9 @@ class PluginLoader:
 
         # 注入框架属性
         plugin._manifest = manifest
-        plugin._debug = self._debug
+        from ncatbot.utils import get_config_manager
+
+        plugin._debug = get_config_manager().effective_debug
         plugin.workspace = Path("data") / manifest.name
         plugin.config = {}
         plugin.data = {}
