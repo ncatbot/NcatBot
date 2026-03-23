@@ -28,7 +28,7 @@ def examples_dir():
 async def test_ping_pong(examples_dir):
     """PL-10: 群里发 'ping' → event.reply('pong 🏓') → send_group_msg"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("ping", group_id="200", user_id="99"))
         await h.settle(0.1)
@@ -39,7 +39,7 @@ async def test_ping_pong(examples_dir):
 async def test_status_command(examples_dir):
     """PL-10b: 群里发 '状态' → 回复插件运行状态"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("状态", group_id="200", user_id="99"))
         await h.settle(0.1)
@@ -53,7 +53,7 @@ async def test_status_command(examples_dir):
 async def test_stream_listener_receives_private_message(examples_dir):
     """PL-11: 事件流监听私聊消息（不崩溃即为通过）"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 注入私聊消息，事件流后台任务应能收到并记录日志
         await h.inject(private_message("测试私聊", user_id="88"))
@@ -68,7 +68,7 @@ async def test_stream_listener_receives_private_message(examples_dir):
 async def test_confirm_test_timeout(examples_dir):
     """PL-12: '确认测试' 后不回复 → 超时取消"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 设置较短超时用于测试（原始超时 15s 太长）
         # 先触发确认流程
@@ -82,7 +82,7 @@ async def test_confirm_test_timeout(examples_dir):
 async def test_confirm_test_success(examples_dir):
     """PL-12b: '确认测试' 后回复 '确认' → 操作确认"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("确认测试", group_id="200", user_id="99"))
         await h.settle(0.1)

@@ -31,7 +31,7 @@ def examples_dir():
 async def test_full_registration_flow(examples_dir):
     """PL-40: 注册 → 输入名字 → 输入年龄 → 确认 → 保存"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 触发注册
         await h.inject(group_message("注册", group_id=GROUP_ID, user_id=USER_ID))
@@ -63,7 +63,7 @@ async def test_full_registration_flow(examples_dir):
 async def test_registration_cancel(examples_dir):
     """PL-42: 注册过程中输入 '取消' → 退出"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("注册", group_id=GROUP_ID, user_id=USER_ID))
         await h.settle(0.1)
@@ -81,7 +81,7 @@ async def test_registration_cancel(examples_dir):
 async def test_data_persistence_after_registration(examples_dir):
     """PL-43: 完整注册后 data 中应有用户信息"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 完整注册流程
         await h.inject(group_message("注册", group_id=GROUP_ID, user_id=USER_ID))
@@ -110,7 +110,7 @@ async def test_data_persistence_after_registration(examples_dir):
 async def test_my_info_after_registration(examples_dir):
     """注册后发 '我的信息' → 回复注册数据"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 完整注册
         await h.inject(group_message("注册", group_id=GROUP_ID, user_id=USER_ID))

@@ -36,7 +36,7 @@ HELLO_PLUGIN = "hello_world_common"
 async def test_pv01_hello_plugin_loads():
     """PV-01a: hello_world_common 插件加载成功"""
     async with PluginTestHarness(
-        plugin_names=[HELLO_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[HELLO_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         assert HELLO_PLUGIN in h.loaded_plugins
 
@@ -44,7 +44,7 @@ async def test_pv01_hello_plugin_loads():
 async def test_pv01_hello_command_reply():
     """PV-01b: 群聊发 'hello' → send_group_msg"""
     async with PluginTestHarness(
-        plugin_names=[HELLO_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[HELLO_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         await h.inject(group_message("hello", group_id="10001"))
         await h.settle(0.1)
@@ -54,7 +54,7 @@ async def test_pv01_hello_command_reply():
 async def test_pv01_hi_command_reply():
     """PV-01c: 群聊发 'hi' → send_group_msg"""
     async with PluginTestHarness(
-        plugin_names=[HELLO_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[HELLO_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         await h.inject(group_message("hi", group_id="10001"))
         await h.settle(0.1)
@@ -73,7 +73,7 @@ DIALOG_USER = "67890"
 async def test_pv02_dialog_plugin_loads():
     """PV-02a: multi_step_dialog 插件加载成功"""
     async with PluginTestHarness(
-        plugin_names=[DIALOG_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[DIALOG_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         assert DIALOG_PLUGIN in h.loaded_plugins
 
@@ -81,7 +81,7 @@ async def test_pv02_dialog_plugin_loads():
 async def test_pv02_full_registration_flow():
     """PV-02b: 注册 → 名字 → 年龄 → 确认 → 成功"""
     async with PluginTestHarness(
-        plugin_names=[DIALOG_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[DIALOG_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         # 触发注册
         await h.inject(
@@ -123,7 +123,7 @@ async def test_pv02_full_registration_flow():
 async def test_pv02_cancel_registration():
     """PV-02c: 注册中输入 '取消' → 退出"""
     async with PluginTestHarness(
-        plugin_names=[DIALOG_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[DIALOG_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         await h.inject(
             group_message("注册", group_id=DIALOG_GROUP, user_id=DIALOG_USER)
@@ -148,7 +148,7 @@ API_PLUGIN = "external_api"
 async def test_pv03_api_plugin_loads():
     """PV-03a: external_api 插件加载成功"""
     async with PluginTestHarness(
-        plugin_names=[API_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[API_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         assert API_PLUGIN in h.loaded_plugins
 
@@ -156,7 +156,7 @@ async def test_pv03_api_plugin_loads():
 async def test_pv03_api_status_command():
     """PV-03b: 发 'api状态' → send_group_msg（不依赖外部网络）"""
     async with PluginTestHarness(
-        plugin_names=[API_PLUGIN], plugin_dir=COMMON_EXAMPLES
+        plugin_names=[API_PLUGIN], plugins_dir=COMMON_EXAMPLES
     ) as h:
         await h.inject(group_message("api状态", group_id="10001"))
         await h.settle(0.1)

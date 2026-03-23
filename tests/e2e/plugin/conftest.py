@@ -25,7 +25,7 @@ async def example_harness(request):
     使用方式::
 
         @pytest.mark.plugin_names(["hello_world"])
-        @pytest.mark.plugin_dir("01_hello_world")
+        @pytest.mark.plugins_dir("01_hello_world")
         async def test_xxx(example_harness):
             ...
 
@@ -33,17 +33,17 @@ async def example_harness(request):
     """
     # 从 marker 中读取配置
     names_marker = request.node.get_closest_marker("plugin_names")
-    dir_marker = request.node.get_closest_marker("plugin_dir")
+    dir_marker = request.node.get_closest_marker("plugins_dir")
 
     if names_marker is None or dir_marker is None:
-        pytest.skip("需要 @pytest.mark.plugin_names 和 @pytest.mark.plugin_dir")
+        pytest.skip("需要 @pytest.mark.plugin_names 和 @pytest.mark.plugins_dir")
 
     plugin_names: List[str] = names_marker.args[0]
-    plugin_dir_name: str = dir_marker.args[0]
+    example_subdir: str = dir_marker.args[0]
 
     harness = PluginTestHarness(
         plugin_names=plugin_names,
-        plugin_dir=EXAMPLES_DIR / plugin_dir_name,
+        plugins_dir=EXAMPLES_DIR / example_subdir,
     )
     async with harness:
         yield harness
@@ -55,6 +55,6 @@ async def make_example_harness(
     """直接创建 PluginTestHarness 的辅助函数（需手动管理生命周期）。"""
     harness = PluginTestHarness(
         plugin_names=plugin_names,
-        plugin_dir=EXAMPLES_DIR,
+        plugins_dir=EXAMPLES_DIR,
     )
     return harness

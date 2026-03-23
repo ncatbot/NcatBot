@@ -31,7 +31,7 @@ def examples_dir():
 async def test_full_featured_loads(examples_dir):
     """PL-50: full_featured_bot 插件加载成功"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         assert PLUGIN_NAME in h.loaded_plugins
         plugin = h.get_plugin(PLUGIN_NAME)
@@ -44,7 +44,7 @@ async def test_full_featured_loads(examples_dir):
 async def test_sign_in(examples_dir):
     """PL-51: '签到' → 获取积分 → send_group_msg"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("签到", group_id=GROUP_ID, user_id=USER_ID))
         await h.settle(0.1)
@@ -61,7 +61,7 @@ async def test_sign_in(examples_dir):
 async def test_sign_in_duplicate(examples_dir):
     """PL-51b: 同一天重复签到 → 提示已签到"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 第一次签到
         await h.inject(group_message("签到", group_id=GROUP_ID, user_id=USER_ID))
@@ -79,7 +79,7 @@ async def test_sign_in_duplicate(examples_dir):
 async def test_score_query(examples_dir):
     """PL-51c: '积分' → 查看积分"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("积分", group_id=GROUP_ID, user_id=USER_ID))
         await h.settle(0.1)
@@ -93,7 +93,7 @@ async def test_score_query(examples_dir):
 async def test_config_initialized(examples_dir):
     """PL-52: 加载后 config 有默认值"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         plugin = h.get_plugin(PLUGIN_NAME)
         assert plugin.get_config("welcome_msg") is not None
@@ -102,7 +102,7 @@ async def test_config_initialized(examples_dir):
 async def test_data_initialized(examples_dir):
     """PL-52b: 加载后 data 有初始化结构"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         plugin = h.get_plugin(PLUGIN_NAME)
         assert "scores" in plugin.data
@@ -115,7 +115,7 @@ async def test_data_initialized(examples_dir):
 async def test_help_command(examples_dir):
     """PL-53: '帮助' → 回复帮助文本"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("帮助", group_id=GROUP_ID, user_id=USER_ID))
         await h.settle(0.1)
@@ -126,7 +126,7 @@ async def test_help_command(examples_dir):
 async def test_keyword_add_and_list(examples_dir):
     """PL-53b: 添加关键词 → 关键词列表"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         # 添加关键词
         await h.inject(
@@ -150,7 +150,7 @@ async def test_keyword_add_and_list(examples_dir):
 async def test_view_config(examples_dir):
     """PL-53c: '查看配置' → 回复当前配置"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("查看配置", group_id=GROUP_ID, user_id=USER_ID))
         await h.settle(0.1)
@@ -161,7 +161,7 @@ async def test_view_config(examples_dir):
 async def test_ranking(examples_dir):
     """排行榜命令（无数据时也应回复）"""
     async with PluginTestHarness(
-        plugin_names=[PLUGIN_NAME], plugin_dir=examples_dir
+        plugin_names=[PLUGIN_NAME], plugins_dir=examples_dir
     ) as h:
         await h.inject(group_message("排行榜", group_id=GROUP_ID, user_id=USER_ID))
         await h.settle(0.1)

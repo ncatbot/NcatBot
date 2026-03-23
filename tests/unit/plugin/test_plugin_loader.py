@@ -46,7 +46,7 @@ def _make_manifest(name: str, deps=None) -> PluginManifest:
 
 @pytest.fixture
 def loader() -> PluginLoader:
-    ld = PluginLoader(debug=True)
+    ld = PluginLoader()
     # 注入 mock handler dispatcher
     mock_hd = MagicMock()
     mock_hd.revoke_plugin = MagicMock()

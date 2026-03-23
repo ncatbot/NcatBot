@@ -6,7 +6,7 @@
 
 | Fixture | 说明 |
 |---------|------|
-| `example_harness` | 工厂 fixture，根据 `@pytest.mark.plugin_names` / `@pytest.mark.plugin_dir` 自动创建 `PluginTestHarness` |
+| `example_harness` | 工厂 fixture，根据 `@pytest.mark.plugin_names` / `@pytest.mark.plugins_dir` 自动创建 `PluginTestHarness` |
 | `make_example_harness()` | 辅助函数，手动创建 `PluginTestHarness` 实例（需自行管理生命周期） |
 
 ## 验证规范
