@@ -1,8 +1,8 @@
 """
-事件工厂 — 快速构建测试用 BaseEventData 实例
+QQ 事件工厂 — 快速构建测试用 QQ 平台 BaseEventData 实例
 
 所有 factory 方法产出经过 model_validate 的合法数据模型，
-可直接喂入 MockAdapter.inject_event()。
+可直接喂入 TestHarness.inject()。
 """
 
 from __future__ import annotations

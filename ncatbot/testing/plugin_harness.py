@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import asyncio
 from pathlib import Path
-from typing import List, Optional, TYPE_CHECKING
+from typing import List, Optional, Sequence, TYPE_CHECKING
 
-from ncatbot.adapter import MockAdapter
+from ncatbot.adapter.mock import MockAdapter
 from ncatbot.app import BotClient
 
 from .harness import TestHarness
@@ -29,9 +29,9 @@ class PluginTestHarness(TestHarness):
             plugin_names=["hello_world"],
             plugins_dir=Path("docs/docs/examples/common/01_hello_world"),
         ) as harness:
-            await harness.inject(group_message("hello"))
+            await harness.inject(qq.group_message("hello"))
             await harness.settle()
-            assert harness.api_called("post_group_msg")
+            harness.assert_api("send_group_msg").called()
     """
 
     __test__ = False
@@ -41,12 +41,13 @@ class PluginTestHarness(TestHarness):
         plugin_names: List[str],
         plugins_dir: Path,
         *,
+        platforms: Sequence[str] = ("qq",),
         skip_builtin: bool = True,
         skip_pip: bool = True,
     ) -> None:
-        # 不调用 super().__init__()，自行构建 bot
-        self._adapter = MockAdapter(platform="qq")
-        self._bot = BotClient(adapter=self._adapter)
+        adapters = [MockAdapter(platform=p) for p in platforms]
+        self._bot = BotClient(adapters=adapters)
+        self._adapters = {a.platform: a for a in adapters}
         self._plugin_names = plugin_names
         self._plugins_dir = Path(plugins_dir)
         self._skip_builtin = skip_builtin
@@ -54,10 +55,8 @@ class PluginTestHarness(TestHarness):
 
     async def start(self) -> None:
         """启动核心基础设施 + 选择性加载插件"""
-        # 只启动 adapter/api/dispatcher/services，不加载插件
         await self._bot._startup_core()
 
-        # 配置 PluginLoader 的 HandlerDispatcher 和依赖注入
         loader = self._bot._plugin_loader
         loader.set_handler_dispatcher(self._bot.handler_dispatcher)
 
@@ -69,7 +68,6 @@ class PluginTestHarness(TestHarness):
 
         loader._on_plugin_init = _inject_plugin_deps
 
-        # 可选：加载内置插件（同一进程内重复测试时需重载模块，否则 @registrar 不会再次入队）
         if not self._skip_builtin:
             import importlib
 
@@ -79,14 +77,12 @@ class PluginTestHarness(TestHarness):
             importlib.reload(_bi)
             await loader.load_builtin_plugins()
 
-        # 选择性加载目标插件及其传递依赖
         await loader.load_selected(
             self._plugins_dir,
             self._plugin_names,
             skip_pip=self._skip_pip,
         )
 
-        # 启动后台监听
         self._bot._running = True
         self._bot._listen_task = asyncio.create_task(self._bot._listen_forever())
 

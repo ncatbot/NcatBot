@@ -1,43 +1,38 @@
 """
-TestHarness — 编排 BotClient + MockAdapter 的测试工具
+TestHarness — 多平台测试编排器
 
-提供 async with 上下文管理器，在后台运行 BotClient，
-支持注入事件和检查 API 调用。
+提供 async with 上下文管理器，在后台运行 BotClient（多 MockAdapter），
+支持事件注入、fluent 断言、平台作用域。
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import Callable, List, Optional, TYPE_CHECKING
+from typing import Callable, Dict, List, Optional, Sequence, TYPE_CHECKING
 
-from ncatbot.adapter import MockAdapter, MockBotAPI, APICall
+from ncatbot.adapter.mock import MockAdapter, MockAPIBase
 from ncatbot.app import BotClient
 from ncatbot.core import AsyncEventDispatcher, Event
+
+from .assertions import APICallAssertion, PlatformScope
 
 if TYPE_CHECKING:
     from ncatbot.types import BaseEventData
 
 
 class TestHarness:
-    """测试编排器 — 在后台启动 BotClient（使用 MockAdapter），提供事件注入和断言 API。"""
+    """多平台测试编排器 — 启动 BotClient + MockAdapter，提供注入与断言。"""
 
-    __test__ = False  # 告知 pytest 这不是测试类
+    __test__ = False
 
-    def __init__(self) -> None:
-        self._adapter = MockAdapter(platform="qq")
-        self._bot = BotClient(adapter=self._adapter)
+    def __init__(self, platforms: Sequence[str] = ("qq",)) -> None:
+        adapters = [MockAdapter(platform=p) for p in platforms]
+        self._bot = BotClient(adapters=adapters)
+        self._adapters: Dict[str, MockAdapter] = {a.platform: a for a in adapters}
 
     @property
     def bot(self) -> BotClient:
         return self._bot
-
-    @property
-    def adapter(self) -> MockAdapter:
-        return self._adapter
-
-    @property
-    def mock_api(self) -> MockBotAPI:
-        return self._adapter.mock_api
 
     @property
     def dispatcher(self) -> AsyncEventDispatcher:
@@ -63,8 +58,13 @@ class TestHarness:
     # ---- 事件注入 ----
 
     async def inject(self, event_data: "BaseEventData") -> None:
-        """注入事件到 dispatcher"""
-        await self._adapter.inject_event(event_data)
+        """注入事件到对应平台的 adapter（走真实链路）"""
+        platform = getattr(event_data, "platform", "unknown")
+        adapter = self._adapters.get(platform)
+        if adapter:
+            await adapter.inject_event(event_data)
+        else:
+            raise ValueError(f"未注册平台 '{platform}'，已注册: {list(self._adapters)}")
 
     async def inject_many(self, events: List["BaseEventData"]) -> None:
         """依次注入多个事件"""
@@ -74,10 +74,7 @@ class TestHarness:
     # ---- 等待/同步 ----
 
     async def settle(self, delay: float = 0.05) -> None:
-        """给 handler 一点时间执行
-
-        如果测试不稳定可以适当增大 delay。
-        """
+        """给 handler 一点时间执行"""
         await asyncio.sleep(delay)
 
     async def wait_event(
@@ -88,24 +85,37 @@ class TestHarness:
         """等待 dispatcher 产出的下一个事件"""
         return await self._bot._dispatcher.wait_event(predicate, timeout)
 
-    # ---- API 调用断言 ----
+    # ---- 平台访问 ----
+
+    def mock_api_for(self, platform: str) -> MockAPIBase:
+        """获取指定平台的 Mock API"""
+        return self._adapters[platform].mock_api
 
     @property
-    def api_calls(self) -> List[APICall]:
-        return self.mock_api.calls
+    def mock_api(self) -> MockAPIBase:
+        """单平台快捷访问（返回第一个平台的 mock）"""
+        return next(iter(self._adapters.values())).mock_api
 
-    def api_called(self, action: str) -> bool:
-        return self.mock_api.called(action)
+    def adapter_for(self, platform: str) -> MockAdapter:
+        return self._adapters[platform]
 
-    def api_call_count(self, action: str) -> int:
-        return self.mock_api.call_count(action)
+    # ---- Fluent 断言 ----
 
-    def get_api_calls(self, action: str) -> List[APICall]:
-        return self.mock_api.get_calls(action)
+    def assert_api(self, action: str) -> APICallAssertion:
+        """全平台范围断言"""
+        all_calls = [c for a in self._adapters.values() for c in a.mock_api.calls]
+        return APICallAssertion(action, all_calls)
 
-    def last_api_call(self, action: Optional[str] = None) -> Optional[APICall]:
-        return self.mock_api.last_call(action)
+    def on(self, platform: str) -> PlatformScope:
+        """限定平台范围"""
+        return PlatformScope(self, platform)
 
-    def reset_api(self) -> None:
+    # ---- 重置 ----
+
+    def reset_api(self, platform: Optional[str] = None) -> None:
         """清空 API 调用记录"""
-        self.mock_api.reset()
+        if platform:
+            self._adapters[platform].mock_api.reset()
+        else:
+            for a in self._adapters.values():
+                a.mock_api.reset()
