@@ -8,7 +8,8 @@
 |-----------|------|------|
 | 构造 | `TestHarness(platforms=("qq",))` | 可传多平台 |
 | `bot` | `BotClient` | BotClient 实例 |
-| `dispatcher` | `AsyncEventDispatcher` | 事件分发器 |
+| `dispatcher` | `AsyncEventDispatcher` | 事件分发器（原始事件流） |
+| `bot.handler_dispatcher` | `HandlerDispatcher` | Handler 路由层（注册 handler 用此属性） |
 | `mock_api` | `MockAPIBase` | 第一个平台的 MockAPI（单平台快捷） |
 | `mock_api_for(platform)` | `MockAPIBase` | 指定平台的 MockAPI |
 | `adapter_for(platform)` | `MockAdapter` | 指定平台的 MockAdapter |

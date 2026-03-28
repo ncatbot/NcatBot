@@ -16,6 +16,7 @@
 | Bot API | `ncatbot/api/` | `BotAPIClient`, `IAPIClient` |
 | API 语法糖 | `ncatbot/api/qq/sugar.py` | `QQMessageSugarMixin` |
 | NapCat 适配 | `ncatbot/adapter/napcat/` | `NapCatAdapter` |
+| NapCat Bot API | `ncatbot/adapter/napcat/api/` | `NapCatBotAPI`（Message/Group/Account/Query/File Mixin 组合） |
 | WebSocket | `ncatbot/adapter/napcat/connection/` | WebSocket + OB11Protocol |
 | 事件解析 | `ncatbot/adapter/napcat/` | `NapCatEventParser` |
 | 事件模型 | `ncatbot/event/` | `MessageEvent`, `NoticeEvent`, `RequestEvent` |
