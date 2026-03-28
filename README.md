@@ -35,7 +35,13 @@ pip install ncatbot5
 
 ### 2. 获取 AI 参考资料（推荐）
 
-前往本项目 [GitHub Releases](https://github.com/ncatbot/NcatBot/releases) 页面，在最新版本的 Assets 中找到 `ncatbot5-X.Y.Z-user-reference.zip`，下载并解压到你的**项目根目录**。解压后目录结构如下：
+```bash
+ncatbot ref              # 交互式选择 IDE
+ncatbot ref --vscode     # VSCode + Copilot / Cursor
+ncatbot ref --trae       # Trae
+```
+
+一键从 GitHub Releases 下载最新版 `user-reference.zip` 并自动解压到当前目录（自动使用 GitHub 代理加速）。也可以手动前往 [GitHub Releases](https://github.com/ncatbot/NcatBot/releases) 页面下载。解压后目录结构如下：
 
 ```
 your-project/

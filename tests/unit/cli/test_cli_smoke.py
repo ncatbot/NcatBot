@@ -35,6 +35,7 @@ def test_cli_subcommands_help():
         "napcat",
         "init",
         "adapter",
+        "ref",
     ):
         run_help([sub, "--help"])
 
@@ -178,3 +179,54 @@ def test_napcat_diagnose_ws_binds_uri_token():
     mock_check.assert_called_once()
     assert mock_check.call_args[0][0] == "ws://127.0.0.1:1"
     assert mock_check.call_args[0][1] == "tok"
+
+
+def test_ref_downloads_and_extracts(tmp_path):
+    """CX-11: ref --vscode 从 Release 下载并解压 user-reference.zip（mock 网络）"""
+    import io
+    import zipfile as zf
+
+    # 构造一个内存 zip 包含一个测试文件
+    buf = io.BytesIO()
+    with zf.ZipFile(buf, "w") as z:
+        z.writestr("docs/test.md", "hello")
+    zip_bytes = buf.getvalue()
+
+    fake_release = {
+        "tag_name": "v0.0.1",
+        "assets": [
+            {
+                "name": "ncatbot5-0.0.1-user-reference.zip",
+                "browser_download_url": "https://github.com/fake/download.zip",
+            }
+        ],
+    }
+
+    class FakeResponse:
+        status_code = 200
+
+        def json(self):
+            return fake_release
+
+        def raise_for_status(self):
+            pass
+
+    def fake_download(url, file_name):
+        """写入预构建的 zip 文件。"""
+        with open(file_name, "wb") as f:
+            f.write(zip_bytes)
+
+    runner = CliRunner()
+    with (
+        patch("ncatbot.cli.commands.ref.httpx.get", return_value=FakeResponse()),
+        patch("ncatbot.utils.network.download_file", fake_download),
+        patch("ncatbot.utils.download_file", fake_download),
+    ):
+        r = runner.invoke(
+            cli,
+            ["ref", "--dir", str(tmp_path), "--no-proxy", "--vscode"],
+            catch_exceptions=False,
+        )
+    assert r.exit_code == 0
+    assert (tmp_path / "docs" / "test.md").exists()
+    assert (tmp_path / "docs" / "test.md").read_text() == "hello"

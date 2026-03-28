@@ -25,3 +25,5 @@
 | CX-08 | `config show` | 临时 `NCATBOT_CONFIG_PATH` + 最小 yaml，进入回调并输出 |
 | CX-09 | `napcat install -y` | `PlatformOps` mock 已安装早退，绑定 `-y` |
 | CX-10 | `napcat diagnose ws` | `--uri` / `--token` 传入 `check_ws`（mock） |
+| CX-11 | `ref` 下载解压 | mock GitHub API + download_file，`--vscode`，验证 zip 解压到目标目录 |
+| CX-12 | `ref --trae` 重命名 | `--trae` 解压后 `.agents` 重命名为 `.trae` |
