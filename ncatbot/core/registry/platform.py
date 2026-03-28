@@ -30,6 +30,7 @@ __all__ = [
     "QQRegistrar",
     "BilibiliRegistrar",
     "GitHubRegistrar",
+    "LarkRegistrar",
 ]
 
 
@@ -309,3 +310,26 @@ class GitHubRegistrar(PlatformRegistrar):
     def on_comment(self, priority: int = 0, **metadata: Any) -> Callable:
         """注册 comment 事件 handler（issue comment + PR review comment）"""
         return self.on("comment", priority=priority, **metadata)
+
+
+class LarkRegistrar(PlatformRegistrar):
+    """飞书平台子注册器
+
+    提供飞书专属便捷装饰器::
+
+        @registrar.lark.on_message()
+        async def handle_msg(self, event): ...
+
+        @registrar.lark.on_message_read()
+        async def handle_read(self, event): ...
+    """
+
+    _platform = "lark"
+
+    def on_message_read(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册消息已读通知 handler"""
+        return self.on("notice.message_read", priority=priority, **metadata)
+
+    def on_message_recalled(self, priority: int = 0, **metadata: Any) -> Callable:
+        """注册消息撤回通知 handler"""
+        return self.on("notice.message_recalled", priority=priority, **metadata)

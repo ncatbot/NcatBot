@@ -18,7 +18,7 @@ from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 from ncatbot.utils import get_log
 
 from .context import get_current_plugin
-from .platform import BilibiliRegistrar, GitHubRegistrar, QQRegistrar
+from .platform import BilibiliRegistrar, GitHubRegistrar, LarkRegistrar, QQRegistrar
 from .hook import Hook
 from .builtin_hooks import MessageTypeFilter, PlatformFilter
 from .command_hook import CommandHook
@@ -129,6 +129,11 @@ class Registrar:
     def github(self):
         """GitHub 平台子注册器"""
         return GitHubRegistrar(self)
+
+    @cached_property
+    def lark(self):
+        """飞书平台子注册器"""
+        return LarkRegistrar(self)
 
     # ==================== 跨平台便捷装饰器 ====================
     # 事件类型使用 BaseEventData.resolve_type() 产出的格式

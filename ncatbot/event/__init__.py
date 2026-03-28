@@ -22,10 +22,12 @@ from .common import (
 from . import qq as _qq  # noqa: F401
 from . import bilibili as _bili  # noqa: F401
 from . import github as _gh  # noqa: F401
+from . import lark as _lark  # noqa: F401
 
 del _qq
 del _bili
 del _gh
+del _lark
 
 __all__ = [
     # common

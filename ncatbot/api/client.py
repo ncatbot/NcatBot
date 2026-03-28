@@ -66,6 +66,11 @@ class BotAPIClient:
         return self.platform("github")
 
     @property
+    def lark(self):
+        """飞书平台 API 快捷访问"""
+        return self.platform("lark")
+
+    @property
     def ai(self) -> IAIAPIClient:
         """AI 平台 API 快捷访问"""
         return self.platform("ai")
