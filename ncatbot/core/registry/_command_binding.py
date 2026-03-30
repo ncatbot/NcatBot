@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import inspect
 import shlex
-from typing import Any, Dict, List, Optional, Tuple, get_type_hints
+from typing import Any, Dict, List, Optional, Tuple, Union, get_args, get_origin, get_type_hints
 
 from ncatbot.utils import get_log
 from ncatbot.types import PlainText, At
@@ -50,7 +50,7 @@ class _ParamSpec:
 
 
 def _is_type(annotation: Any, target: type) -> bool:
-    """检查注解是否为指定类型 (处理字符串注解)"""
+    """检查注解是否为指定类型 (处理字符串注解和 Optional/Union)"""
     if annotation is inspect.Parameter.empty:
         return False
     if annotation is target:
@@ -59,6 +59,10 @@ def _is_type(annotation: Any, target: type) -> bool:
         return True
     if isinstance(annotation, str):
         return annotation == target.__name__
+    # 处理 Optional[T] / Union[T, None] 等泛型
+    origin = get_origin(annotation)
+    if origin is Union:
+        return any(_is_type(arg, target) for arg in get_args(annotation) if arg is not type(None))
     return False
 
 
