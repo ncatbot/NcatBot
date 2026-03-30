@@ -92,10 +92,23 @@ async def on_kick(self, event, target: At):
 | `int` / `float` | binding stream 中 kind="token" 的项 | 自动类型转换，转换失败则跳过 |
 | `str`（非最后参数） | binding stream 中 kind="token" 的项 | 消费一个 token |
 | `str`（最后参数） | 剩余所有 kind="token" 的项 | 空格拼接 |
+| `Optional[T]` | 与 `T` 相同 | 自动解包 `Union[T, None]`，按内部类型 `T` 绑定 |
 | 引号包裹 | shlex 分词 | `"hello world"` / `'foo bar'` 作为单个 token |
 | 有默认值 | — | 缺失时使用默认值 |
 | 必填且缺失 | — | WARNING + 回复用法说明 + SKIP |
 | 段跳过 | — | 不匹配的段被永久消耗，不参与后续参数匹配 |
+
+**`Optional` 用法示例**：
+
+```python
+@registrar.qq.on_group_command("授权")
+async def on_grant(self, event, target: Optional[At] = None):
+    """target 为 Optional[At]：@了用户就绑定 At 对象，没 @ 则为 None"""
+    if target is None:
+        await event.reply("请 @一个用户")
+        return
+    # target.user_id 可用
+```
 
 ## 内置 Hook 完整清单
 

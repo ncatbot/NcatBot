@@ -10,6 +10,7 @@
 | 事件分发 | `ncatbot/core/dispatcher/` | `AsyncEventDispatcher` |
 | Handler 注册 | `ncatbot/core/registry/` | `HandlerDispatcher`, `Registrar` |
 | Hook 机制 | `ncatbot/core/registry/` | Hook 相关 |
+| 命令参数绑定 | `ncatbot/core/registry/_command_binding.py` | `_is_type()`, `bind_params()`, `build_binding_stream()`, `get_param_spec()` |
 | 插件基类 | `ncatbot/plugin/` | `NcatBotPlugin`, `BasePlugin` |
 | 插件加载 | `ncatbot/plugin/loader/` | `PluginLoader`, `PluginIndexer` |
 | Mixin 扩展 | `ncatbot/plugin/mixin/` | Event / TimeTask / RBAC / Config / Data |

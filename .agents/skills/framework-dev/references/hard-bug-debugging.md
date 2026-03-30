@@ -164,3 +164,26 @@ python -m pytest tests/unit/core/test_xxx.py -v -s -o "addopts="
 **根因**：`exec_module()` 是底层 API，不查 `sys.modules` 缓存；`load_module()` 在步骤 2 没有检查入口模块是否已被步骤 1 间接导入。
 
 **修复**：在 `load_module()` 的入口模块加载处，先检查 `sys.modules.get(module_name)`，命中则直接返回已有模块。
+
+### `Optional[T]` 参数绑定静默失败 (K-22a ~ K-22e)
+
+**症状**：插件 `@registrar.qq.on_group_command("授权")` 的 handler 声明 `target: Optional[At] = None`，群内发送 `授权 @用户` 后 `target` 始终为 `None`，At 段未被绑定。
+
+**分类**：根因已知类——纯类型检查函数不处理泛型，无需插桩（可直接走快速路径）。
+
+**定位**：`ncatbot/core/registry/_command_binding.py` → `_is_type()` 函数。`Optional[At]` 是 `Union[At, None]`，`_is_type(annotation, At)` 逐条检查：
+- `annotation is At` → False（annotation 是 `Union`）
+- `isinstance(annotation, type) and issubclass(...)` → False（Union 不是 type）
+- `isinstance(annotation, str)` → False
+- 返回 `False` → `bind_params` 走到 else 分支，把 At 段当 str/token 匹配 → 匹配不到 → 使用默认值
+
+**修复**：在 `_is_type()` 末尾增加 Union 解包：
+```python
+from typing import Union, get_args, get_origin
+
+origin = get_origin(annotation)
+if origin is Union:
+    return any(_is_type(arg, target) for arg in get_args(annotation) if arg is not type(None))
+```
+
+**教训**：Python 类型注解内省必须处理 `Optional[T]` / `Union[T, None]`。任何新增的类型判断函数都应将 `get_origin()` + `get_args()` 作为标准检查步骤。

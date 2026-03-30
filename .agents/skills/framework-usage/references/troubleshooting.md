@@ -124,6 +124,8 @@ plugin:
 1. 使用 `ncatbot dev` 或 `ncatbot run --debug`
 2. FileWatcherService 加载成功
 3. 仅 `plugins/` 目录变更触发
+4. 若插件首次热重载加载失败（如语法错误），修复后再次保存仍会触发重新加载（`_reload_consumer` 对已索引插件无论是否在 `plugins` 中都会尝试加载）
+5. 运行时新放入 `plugins/` 的插件目录会被自动索引并加载（`_reload_consumer` 通过 `_indexer.index_plugin()` 自动索引未知文件夹）
 
 ## 异常类
 
