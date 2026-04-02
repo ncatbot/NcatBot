@@ -76,6 +76,10 @@ class NapCatLauncher:
                 webui_client=self._webui_client,
             )
 
+    def stop(self) -> None:
+        """停止当前平台上的 NapCat 进程。"""
+        self.platform.stop_napcat()
+
     # ==================== WebSocket 连接测试 ====================
 
     async def _test_websocket(self, log_failure: bool = False) -> Optional[int]:

@@ -1,6 +1,7 @@
 """napcat 命令组 — NapCat 管理与诊断。"""
 
 import asyncio
+import platform
 
 import click
 
@@ -83,3 +84,17 @@ def install(yes: bool):
     else:
         click.echo("NapCat 安装失败或被取消。", err=True)
         raise SystemExit(1)
+
+
+@napcat.command()
+def stop():
+    """停止本机 NapCat 进程（仅 Linux）。"""
+    if platform.system() != "Linux":
+        click.echo("napcat stop 仅支持 Linux。", err=True)
+        raise SystemExit(1)
+
+    from ncatbot.adapter.napcat.setup.platform import PlatformOps
+
+    platform_ops = PlatformOps.create()
+    platform_ops.stop_napcat()
+    click.echo("NapCat 已停止。")

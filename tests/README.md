@@ -15,7 +15,7 @@ tests/
 │   ├── plugin/        # 插件 Mixin + 导入去重 + Loader (M-01 ~ M-41, ID-01 ~ ID-02, LD-01 ~ LD-05)
 │   ├── adapter/       # 适配器解析 + 注册表 + 真实数据 (P-01 ~ P-07, RF-01 ~ RF-08, AR-01 ~ AR-05, GM-01 ~ GM-05, BL-01 ~ BL-22, GH-01 ~ GH-11, LK-01 ~ LK-09, LKP-01 ~ LKP-10)
 │   ├── config/        # 配置迁移 + 安全 + 分层 (CF-01 ~ CF-05, CS-01 ~ CS-05, CE-01 ~ CE-05, BQ-01 ~ BQ-05)
-│   └── cli/           # CLI 冒烟 (CX-01 ~ CX-10)
+│   └── cli/           # CLI 冒烟 (CX-01 ~ CX-14)
 ├── integration/       # 集成测试 (I-01 ~ I-21)
 ├── e2e/               # 端到端测试
 │   ├── test_bot_client.py  # BotClient E2E (B-01 ~ B-05)
@@ -69,7 +69,7 @@ python tests/e2e/napcat/run.py
 | AR | AdapterRegistry | AR-01 ~ AR-05 |
 | CF | Config Migration | CF-01 ~ CF-05 |
 | CE | Config 分层与运行时覆盖 | CE-01 ~ CE-05 |
-| CX | CLI 冒烟 | CX-01 ~ CX-10 |
+| CX | CLI 冒烟 | CX-01 ~ CX-14 |
 | D | AsyncEventDispatcher | D-01 ~ D-09 |
 | K | Hook System | K-01 ~ K-22 |
 | H | HandlerDispatcher | H-01 ~ H-11 |

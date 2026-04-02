@@ -73,6 +73,10 @@ class NapCatAdapter(BaseAdapter):
             await self._ws.disconnect()
         self._api = self._protocol = self._ws = None
 
+    def stop_managed_runtime(self) -> None:
+        """停止由 NapCat 平台层管理的本地运行时。"""
+        self._launcher.stop()
+
     async def listen(self) -> None:
         await self._ws.listen(self._protocol.on_message)
 

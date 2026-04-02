@@ -181,6 +181,34 @@ def test_napcat_diagnose_ws_binds_uri_token():
     assert mock_check.call_args[0][1] == "tok"
 
 
+def test_napcat_stop_calls_platform_ops_on_linux():
+    """CX-12: napcat stop 在 Linux 下调用平台 stop 逻辑"""
+    runner = CliRunner()
+    mock_ops = MagicMock()
+    with (
+        patch("platform.system", return_value="Linux"),
+        patch(
+            "ncatbot.adapter.napcat.setup.platform.PlatformOps.create",
+            return_value=mock_ops,
+        ),
+    ):
+        r = runner.invoke(cli, ["napcat", "stop"], catch_exceptions=False)
+
+    assert r.exit_code == 0
+    mock_ops.stop_napcat.assert_called_once()
+    assert "NapCat 已停止" in r.output
+
+
+def test_napcat_stop_rejects_non_linux():
+    """CX-13: napcat stop 在非 Linux 平台拒绝执行"""
+    runner = CliRunner()
+    with patch("platform.system", return_value="Windows"):
+        r = runner.invoke(cli, ["napcat", "stop"], catch_exceptions=False)
+
+    assert r.exit_code == 1
+    assert "仅支持 Linux" in r.output
+
+
 def test_ref_downloads_and_extracts(tmp_path):
     """CX-11: ref --vscode 从 Release 下载并解压 user-reference.zip（mock 网络）"""
     import io

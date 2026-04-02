@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import asyncio
+import platform
 from pathlib import Path
 from typing import Any, List, Optional, Sequence
 
@@ -225,6 +226,8 @@ class BotClient:
         except Exception as e:
             LOG.error("关闭分发器异常: %s", e)
 
+        self._stop_configured_napcat_runtimes()
+
         LOG.info("已关闭")
 
     # ---- 内部 ----
@@ -375,3 +378,22 @@ class BotClient:
             fw = self._service_manager.file_watcher
             fw.add_watch_dir(str(self._plugins_dir.resolve()))
             self._plugin_loader.setup_hot_reload(fw)
+
+    def _stop_configured_napcat_runtimes(self) -> None:
+        """按适配器配置停止本地 NapCat 进程。"""
+        if platform.system() != "Linux":
+            return
+
+        for adapter in self._adapters:
+            napcat_config = getattr(adapter, "napcat_config", None)
+            if getattr(napcat_config, "stop_napcat", False) is not True:
+                continue
+
+            stop_runtime = getattr(adapter, "stop_managed_runtime", None)
+            if not callable(stop_runtime):
+                continue
+
+            try:
+                stop_runtime()
+            except Exception as e:
+                LOG.error("停止 NapCat 运行时异常: %s", e)

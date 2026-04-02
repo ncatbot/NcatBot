@@ -72,6 +72,14 @@ ncatbot init
 ncatbot run
 ```
 
+常用 CLI 命令：
+
+```bash
+ncatbot config show          # 查看当前配置
+ncatbot napcat diagnose      # 诊断 NapCat 连接
+ncatbot napcat stop          # 停止本机 NapCat（仅 Linux）
+```
+
 ## AI Agent 开发
 
 工作区中预置了领域专有技能（Skills），在 VS Code 中使用 Copilot Chat 即可获得定制化辅助：
