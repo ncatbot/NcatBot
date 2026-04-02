@@ -20,8 +20,17 @@ from ncatbot.types.qq import (
     GroupDecreaseNoticeEventData,
     GroupBanNoticeEventData,
     GroupMsgEmojiLikeNoticeEventData,
+    GroupUploadNoticeEventData,
+    GroupAdminNoticeEventData,
+    FriendAddNoticeEventData,
+    GroupRecallNoticeEventData,
+    FriendRecallNoticeEventData,
 )
-from ncatbot.types.qq.notice import NotifyEventData
+from ncatbot.types.qq import (
+    PokeNotifyEventData,
+    LuckyKingNotifyEventData,
+    HonorNotifyEventData,
+)
 
 _msg_id_counter = count(1)
 _SELF_ID = "10001"
@@ -283,7 +292,7 @@ def poke(
     *,
     self_id: str = _SELF_ID,
     **extra: Any,
-) -> NotifyEventData:
+) -> PokeNotifyEventData:
     """构造戳一戳通知"""
     data = {
         "time": _now(),
@@ -297,4 +306,171 @@ def poke(
         "target_id": target_id,
         **extra,
     }
-    return NotifyEventData.model_validate(data)
+    return PokeNotifyEventData.model_validate(data)
+
+
+def group_upload(
+    user_id: str = "99999",
+    group_id: str = "100200",
+    *,
+    file_id: str = "file_001",
+    file_name: str = "test.txt",
+    file_size: int = 1024,
+    busid: int = 0,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> GroupUploadNoticeEventData:
+    """构造群文件上传通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "group_upload",
+        "group_id": group_id,
+        "user_id": user_id,
+        "file": {
+            "id": file_id,
+            "name": file_name,
+            "size": file_size,
+            "busid": busid,
+        },
+        **extra,
+    }
+    return GroupUploadNoticeEventData.model_validate(data)
+
+
+def group_admin(
+    user_id: str = "99999",
+    group_id: str = "100200",
+    sub_type: str = "set",
+    *,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> GroupAdminNoticeEventData:
+    """构造群管理员变动通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "group_admin",
+        "sub_type": sub_type,
+        "group_id": group_id,
+        "user_id": user_id,
+        **extra,
+    }
+    return GroupAdminNoticeEventData.model_validate(data)
+
+
+def friend_add(
+    user_id: str = "99999",
+    *,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> FriendAddNoticeEventData:
+    """构造好友添加通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "friend_add",
+        "user_id": user_id,
+        **extra,
+    }
+    return FriendAddNoticeEventData.model_validate(data)
+
+
+def group_recall(
+    user_id: str = "99999",
+    group_id: str = "100200",
+    operator_id: str = "10001",
+    message_id: Optional[str] = None,
+    *,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> GroupRecallNoticeEventData:
+    """构造群消息撤回通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "group_recall",
+        "group_id": group_id,
+        "user_id": user_id,
+        "operator_id": operator_id,
+        "message_id": message_id or _next_msg_id(),
+        **extra,
+    }
+    return GroupRecallNoticeEventData.model_validate(data)
+
+
+def friend_recall(
+    user_id: str = "99999",
+    message_id: Optional[str] = None,
+    *,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> FriendRecallNoticeEventData:
+    """构造好友消息撤回通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "friend_recall",
+        "user_id": user_id,
+        "message_id": message_id or _next_msg_id(),
+        **extra,
+    }
+    return FriendRecallNoticeEventData.model_validate(data)
+
+
+def lucky_king(
+    user_id: str = "99999",
+    target_id: str = "88888",
+    group_id: str = "100200",
+    *,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> LuckyKingNotifyEventData:
+    """构造运气王通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "notify",
+        "sub_type": "lucky_king",
+        "group_id": group_id,
+        "user_id": user_id,
+        "target_id": target_id,
+        **extra,
+    }
+    return LuckyKingNotifyEventData.model_validate(data)
+
+
+def honor(
+    user_id: str = "99999",
+    group_id: str = "100200",
+    honor_type: str = "talkative",
+    *,
+    self_id: str = _SELF_ID,
+    **extra: Any,
+) -> HonorNotifyEventData:
+    """构造群荣誉变更通知"""
+    data = {
+        "time": _now(),
+        "self_id": self_id,
+        "platform": "qq",
+        "post_type": "notice",
+        "notice_type": "notify",
+        "sub_type": "honor",
+        "group_id": group_id,
+        "user_id": user_id,
+        "honor_type": honor_type,
+        **extra,
+    }
+    return HonorNotifyEventData.model_validate(data)

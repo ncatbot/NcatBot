@@ -247,13 +247,25 @@ pred = from_event(event) * P.of(lambda e: int(e.data.raw_message) > 0)
 
 ### QQ 事件实体
 
-| 实体类 | 便捷方法 |
+| 实体类 | 便捷方法 / 特有属性 |
 |--------|---------|
 | `MessageEvent` | `reply()`, `delete()`, `is_group_msg()` |
 | `PrivateMessageEvent` | 继承 MessageEvent |
 | `GroupMessageEvent` | `reply()`, `delete()`, `kick()`, `ban()` |
-| `NoticeEvent` | — |
-| `GroupIncreaseEvent` | `kick()` |
+| `NoticeEvent` | `notice_type`, `group_id?`, `user_id?` |
+| `GroupUploadEvent` | `file` |
+| `GroupAdminEvent` | `sub_type` |
+| `GroupDecreaseEvent` | `sub_type`, `operator_id` |
+| `GroupIncreaseEvent` | `sub_type`, `operator_id`, `kick()` |
+| `GroupBanEvent` | `sub_type`, `operator_id`, `duration` |
+| `FriendAddEvent` | — |
+| `GroupRecallEvent` | `operator_id`, `message_id` |
+| `FriendRecallEvent` | `message_id` |
+| `GroupMsgEmojiLikeEvent` | `message_id`, `likes`, `message_seq?`, `is_add?` |
+| `NotifyEvent` | `sub_type` |
+| `PokeNotifyEvent` | `target_id` |
+| `LuckyKingNotifyEvent` | `target_id` |
+| `HonorNotifyEvent` | `honor_type` |
 | `RequestEvent` | `approve()`, `reject()` |
 | `FriendRequestEvent` | `approve()`, `reject()` |
 | `GroupRequestEvent` | `approve()`, `reject()` |

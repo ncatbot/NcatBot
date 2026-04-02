@@ -21,6 +21,7 @@ from .message import (
     PrivateMessageEventData,
 )
 from .notice import (
+    EmojiLike,
     FriendAddNoticeEventData,
     FriendRecallNoticeEventData,
     GroupAdminNoticeEventData,
@@ -87,6 +88,7 @@ __all__ = [
     "PrivateMessageEventData",
     "GroupMessageEventData",
     # notice
+    "EmojiLike",
     "NoticeEventData",
     "GroupUploadNoticeEventData",
     "GroupAdminNoticeEventData",
