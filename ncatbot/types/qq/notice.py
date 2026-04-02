@@ -31,6 +31,7 @@ class NoticeEventData(BaseEventData):
     platform: str = "qq"
     post_type: PostType = Field(default=PostType.NOTICE)
     notice_type: NoticeType
+    sub_type: NotifySubType
     group_id: Optional[str] = None
     user_id: Optional[str] = None
 
