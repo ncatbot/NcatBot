@@ -1,0 +1,9 @@
+name = "JmComicPlugin"
+version = "0.0.2"
+main = "main.py"
+author = "FunEnn"
+description = "禁漫本子下载，/jm <ID> 发送 PDF"
+entry_class = "JmComicPlugin"
+pip_dependencies = ["jmcomic"]
+
+[dependencies]

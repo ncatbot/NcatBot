@@ -54,7 +54,6 @@ target/
 # === NcatBot runtime ===
 logs/
 /data
-/plugins
 /napcat
 config.yaml
 

@@ -1,0 +1,9 @@
+name = "Lolicon"
+version = "1.0.1"
+main = "main.py"
+author = "FunEnn"
+description = "调用 Lolicon API v2 发送随机二次元图片"
+entry_class = "Lolicon"
+pip_dependencies = ["aiohttp"]
+
+[dependencies]

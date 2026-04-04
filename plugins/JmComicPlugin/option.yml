@@ -1,0 +1,35 @@
+# Github Actions 下载脚本配置
+version: '2.0'
+
+dir_rule:
+  base_dir: stock
+  rule: Bd_Atitle_Pindex
+
+client:
+  # domain:
+  #   - 18comic.vip
+  #   - 18comic.org
+  #   - 18comic-mygo.org
+  #   - 18comic-mygo.vip
+  retry_times: 5
+
+download:
+  cache: true # 如果要下载的文件在磁盘上已存在，不用再下一遍了吧？
+  image:
+    decode: true # JM的原图是混淆过的，要不要还原？
+    suffix: .png
+  threading:
+    # batch_count: 章节的批量下载图片线程数
+    # 数值大，下得快，配置要求高，对禁漫压力大
+    # 数值小，下得慢，配置要求低，对禁漫压力小
+    # PS: 禁漫网页一般是一次请求50张图
+    batch_count: 45
+
+
+plugins:
+  after_album:
+    - plugin: img2pdf
+      kwargs:
+        img_dir: stock
+        pdf_dir: pdf
+        filename_rule: Aid

@@ -1,0 +1,9 @@
+name = "bot_menu"
+version = "1.0.0"
+main = "plugin.py"
+author = "migrated"
+description = "功能菜单与私聊测试指令（由 old_plugins/main.py 迁入）"
+entry_class = "BotMenuPlugin"
+pip_dependencies = []
+
+[dependencies]

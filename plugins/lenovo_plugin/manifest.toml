@@ -1,0 +1,9 @@
+name = "lenovo_plugin"
+version = "0.1.0"
+main = "plugin.py"
+author = "lenovo"
+description = "NcatBot 模板插件 — 发送 hello 回复 hi"
+entry_class = "LenovoPluginPlugin"
+pip_dependencies = []
+
+[dependencies]

@@ -1,0 +1,9 @@
+name = "template_plugin"
+version = "1.0.1"
+main = "plugin.py"
+author = "cheng160"
+description = "空白模板插件"
+entry_class = "TemplatePlugin"
+pip_dependencies = []
+
+[dependencies]

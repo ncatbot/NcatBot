@@ -1,0 +1,9 @@
+name = "CopyBank"
+version = "1.0.1"
+main = "plugin.py"
+author = "cheng160"
+description = "本地 JSON 文案库，/wa 随机发送"
+entry_class = "CopyBank"
+pip_dependencies = []
+
+[dependencies]
