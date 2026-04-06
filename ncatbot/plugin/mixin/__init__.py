@@ -10,6 +10,7 @@ from .data_mixin import DataMixin
 from .dispatch_filter_mixin import DispatchFilterMixin
 from .event_mixin import EventMixin
 from .rbac_mixin import RBACMixin
+from .session_types import SessionCancelled, SessionResult
 from .time_task_mixin import TimeTaskMixin
 
 __all__ = [
@@ -18,5 +19,7 @@ __all__ = [
     "DispatchFilterMixin",
     "EventMixin",
     "RBACMixin",
+    "SessionCancelled",
+    "SessionResult",
     "TimeTaskMixin",
 ]

@@ -7,6 +7,7 @@
 from .base import BasePlugin
 from .manifest import PluginManifest
 from .loader import PluginLoader, check_requirements, install_packages
+from .mixin import SessionCancelled, SessionResult
 from .ncatbot_plugin import NcatBotPlugin
 
 __all__ = [
@@ -14,6 +15,8 @@ __all__ = [
     "NcatBotPlugin",
     "PluginManifest",
     "PluginLoader",
+    "SessionCancelled",
+    "SessionResult",
     "check_requirements",
     "install_packages",
 ]

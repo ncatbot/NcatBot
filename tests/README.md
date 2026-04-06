@@ -76,7 +76,7 @@ python tests/e2e/napcat/run.py
 | R | Registrar | R-01 ~ R-09 |
 | ID | Import Dedup (插件导入去重) | ID-01 ~ ID-02 |
 | SM | ServiceManager | SM-01 ~ SM-08 |
-| M | Plugin Mixin | M-01 ~ M-41 |
+| M | Plugin Mixin | M-01 ~ M-41, M-50 ~ M-59 |
 | I | Integration | I-01 ~ I-21 |
 | B | BotClient E2E | B-01 ~ B-05 |
 | PL | Plugin E2E | PL-01 ~ PL-53 |

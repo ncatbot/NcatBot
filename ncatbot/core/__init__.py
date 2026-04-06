@@ -68,6 +68,9 @@ from .registry import (
     _pending_handlers,
 )
 
+# Session 便利类型（从 plugin 层 re-export，方便用户导入）
+from ncatbot.plugin import SessionCancelled, SessionResult
+
 __all__ = [
     "AsyncEventDispatcher",
     "Event",
@@ -133,4 +136,7 @@ __all__ = [
     "flush_pending",
     "clear_pending",
     "_pending_handlers",
+    # Session 便利类型
+    "SessionCancelled",
+    "SessionResult",
 ]
