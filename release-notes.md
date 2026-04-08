@@ -16,6 +16,7 @@
 - **napcat**: 修复 get_msg() 返回中 message 为 MessageArray (73b3f110)
 - **napcat**: reply 中 at 参数防呆传 bool (3da3862b)
 - **bilibili**: 修复 log 风格不一致问题，覆盖第三方库的 logger (7287eb3e)
+- **testing**: MockBotAPI 补齐 sugar 方法，extract_text 支持 MessageArray (0a2446da)
 
 ## ✅ 测试
 - **webui**: 新增 WebUI 单元/集成/E2E 测试 (2d6d4ec1)

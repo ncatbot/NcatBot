@@ -18,6 +18,7 @@ def extract_text(call: APICall) -> str:
     """从 APICall 中提取文本内容（跨平台感知）
 
     - QQ ``message`` 参数: 拼接 segment list 中 type=text 的 data.text
+    - QQ ``msg`` 参数 (MessageArray): 拼接 filter_text() 内容
     - Bilibili ``text``/``content``: 直接取字符串
     - GitHub ``body``: 直接取字符串
     - 兜底: str(params)
@@ -29,6 +30,16 @@ def extract_text(call: APICall) -> str:
             for seg in p["message"]
             if isinstance(seg, dict) and seg.get("type") == "text"
         )
+    if "msg" in p:
+        msg = p["msg"]
+        if hasattr(msg, "filter_text"):
+            return "".join(seg.text for seg in msg.filter_text())
+        if hasattr(msg, "to_list"):
+            return "".join(
+                seg.get("data", {}).get("text", "")
+                for seg in msg.to_list()
+                if isinstance(seg, dict) and seg.get("type") == "text"
+            )
     for key in ("text", "content", "body"):
         if key in p and isinstance(p[key], str):
             return p[key]

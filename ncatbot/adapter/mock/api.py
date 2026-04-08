@@ -60,6 +60,22 @@ class MockBotAPI(MockAPIBase, IQQAPIClient):
             "send_group_msg", group_id=group_id, message=message, **kwargs
         )
 
+    # ---- Sugar（event.reply() 等需要） ----
+
+    async def post_group_array_msg(
+        self, group_id: Union[str, int], msg, *, strict: bool = False
+    ) -> SendMessageResult:
+        return self._record(
+            "post_group_array_msg", group_id=group_id, msg=msg, strict=strict
+        )
+
+    async def post_private_array_msg(
+        self, user_id: Union[str, int], msg, *, strict: bool = False
+    ) -> SendMessageResult:
+        return self._record(
+            "post_private_array_msg", user_id=user_id, msg=msg, strict=strict
+        )
+
     async def delete_msg(self, message_id: Union[str, int]) -> None:
         self._record("delete_msg", message_id=message_id)
 

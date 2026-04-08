@@ -52,8 +52,8 @@ async def test_sysinfo_private_root_replies(tmp_path, monkeypatch):
     try:
         await h.inject(private_message("!sysinfo", user_id="10001"))
         await h.settle(0.15)
-        assert h.mock_api.called("send_private_msg")
-        calls = h.mock_api.get_calls("send_private_msg")
+        assert h.mock_api.called("post_private_array_msg")
+        calls = h.mock_api.get_calls("post_private_array_msg")
         assert calls
         text = extract_text(calls[-1])
         assert "NcatBot" in text or "ncatbot" in text.lower()
@@ -72,8 +72,8 @@ async def test_sysinfo_denied_non_root(tmp_path, monkeypatch):
         h.mock_api.reset()
         await h.inject(private_message("!sysinfo", user_id="99999"))
         await h.settle(0.15)
-        assert h.mock_api.called("send_private_msg")
-        text = extract_text(h.mock_api.get_calls("send_private_msg")[-1])
+        assert h.mock_api.called("post_private_array_msg")
+        text = extract_text(h.mock_api.get_calls("post_private_array_msg")[-1])
         assert "无权" in text
     finally:
         await h.stop()
@@ -90,8 +90,8 @@ async def test_sysinfo_denied_in_group_when_not_allowed(tmp_path, monkeypatch):
         h.mock_api.reset()
         await h.inject(group_message("!sysinfo", user_id="10001", group_id="1"))
         await h.settle(0.15)
-        assert h.mock_api.called("send_group_msg")
-        text = extract_text(h.mock_api.get_calls("send_group_msg")[-1])
+        assert h.mock_api.called("post_group_array_msg")
+        text = extract_text(h.mock_api.get_calls("post_group_array_msg")[-1])
         assert "私聊" in text
     finally:
         await h.stop()
@@ -111,7 +111,7 @@ async def test_builtin_toggle_off_then_on(tmp_path, monkeypatch):
 
         await h.inject(private_message("!sysinfo", user_id="10001"))
         await h.settle(0.15)
-        calls_off = h.mock_api.get_calls("send_private_msg")
+        calls_off = h.mock_api.get_calls("post_private_array_msg")
         assert "关闭" in extract_text(calls_off[-1])
 
         await h.inject(private_message("!builtin on", user_id="10001"))
@@ -121,8 +121,8 @@ async def test_builtin_toggle_off_then_on(tmp_path, monkeypatch):
         h.mock_api.reset()
         await h.inject(private_message("!sysinfo", user_id="10001"))
         await h.settle(0.15)
-        assert h.mock_api.called("send_private_msg")
-        ok_text = extract_text(h.mock_api.get_calls("send_private_msg")[-1])
+        assert h.mock_api.called("post_private_array_msg")
+        ok_text = extract_text(h.mock_api.get_calls("post_private_array_msg")[-1])
         assert "NcatBot" in ok_text or "Python" in ok_text
     finally:
         await h.stop()
