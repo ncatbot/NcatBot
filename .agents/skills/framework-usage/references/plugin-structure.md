@@ -115,4 +115,4 @@ async with PluginTestHarness(
 ## 相关示例
 
 - Hello World 插件：`docs/docs/examples/common/01_hello_world/`
-- 全功能 Bot：`docs/docs/examples/qq/09_full_featured_bot/`
+- 事件注册：`docs/docs/examples/qq/01_event_registration/`

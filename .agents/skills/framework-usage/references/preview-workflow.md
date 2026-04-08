@@ -127,7 +127,7 @@ Bot:  你好呀！这是跨平台 hello world 🎉
 
 ### 样板 2：多步对话
 
-> 来源：`docs/docs/examples/common/06_multi_step_dialog/`
+> 来源：`docs/docs/examples/qq/07_dialog_and_menu/`
 
 ```markdown
 ### 功能 2：用户注册
@@ -167,7 +167,7 @@ Bot:  👤 你的注册信息:
 
 ### 样板 3：外部 API 集成
 
-> 来源：`docs/docs/examples/common/07_external_api/`
+> 来源：`docs/docs/examples/common/06_external_api/`
 
 ```markdown
 ### 功能 3：每日一言

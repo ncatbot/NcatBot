@@ -201,7 +201,7 @@ class CooldownHook(Hook):
 ## CommandGroupHook — 分层命令
 
 > 参考文档：`docs/docs/notes/reference/4. 核心模块/3. 注册表.md`
-> 完整示例：`docs/docs/examples/common/08_command_group/`
+> 完整示例：`docs/docs/examples/common/07_command_group/`
 
 将命令按组织结构分层，支持 `/admin kick <uid>` 形式的子命令路由。
 

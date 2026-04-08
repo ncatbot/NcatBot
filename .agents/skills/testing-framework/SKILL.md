@@ -151,18 +151,18 @@ h.reset_api("qq")          # 只清空 QQ
 from ncatbot.testing import Scenario
 from ncatbot.testing import group_message
 
-async def test_registration_flow():
-    """PL-40: 注册 → 输入名字 → 确认"""
+async def test_dialog_flow():
+    """PL-40: 菜单 → 选择 → 执行"""
     async with PluginTestHarness(
-        plugin_names=["multi_step_dialog"], plugins_dir=PLUGINS_DIR
+        plugin_names=["dialog_and_menu_qq"], plugins_dir=PLUGINS_DIR
     ) as h:
         await (
-            Scenario("registration")
-            .inject(group_message("注册", group_id="500", user_id="111"))
+            Scenario("dialog")
+            .inject(group_message("菜单", group_id="500", user_id="111"))
             .settle()
             .assert_api_called("send_group_msg")
             .reset_api()
-            .inject(group_message("张三", group_id="500", user_id="111"))
+            .inject(group_message("1", group_id="500", user_id="111"))
             .settle()
             .assert_api_called("send_group_msg")
             .run(h)

@@ -171,7 +171,7 @@ if result.ok and result.key == "confirm":
 - 配置与数据：`docs/docs/examples/common/02_config_and_data/`
 - RBAC 权限：`docs/docs/examples/common/04_rbac/`
 - 定时任务：`docs/docs/examples/common/05_scheduled_tasks/`
-- 分发过滤：`docs/docs/examples/qq/10_dispatch_filter/`
+- 分发过滤：`docs/docs/examples/common/08_dispatch_filter/`
 
 ## DispatchFilterMixin — 分发过滤
 

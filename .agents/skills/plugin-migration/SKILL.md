@@ -125,9 +125,9 @@ license: MIT
 
 | 路径 | 说明 |
 |------|------|
-| `docs/docs/examples/qq/09_full_featured_bot/main.py` | 全功能示例：registrar、ConfigMixin、DataMixin、RBAC、定时任务 |
-| `docs/docs/examples/qq/01_hello_world/main.py` | 最简插件：`registrar.qq.on_group_command()` + `self.api.qq` 用法 |
-| `docs/docs/examples/qq/02_event_handling/main.py` | 事件流(`self.events()`)、`wait_event()`、优先级 |
+| `docs/docs/examples/common/01_hello_world/main.py` | 最简插件：`registrar.on_group_command()` + `event.reply()` 用法 |
+| `docs/docs/examples/qq/01_event_registration/main.py` | QQ 事件注册：on_command / on_message / on_notice / priority |
+| `docs/docs/examples/qq/02_command_binding/main.py` | 命令参数绑定：str / int / At / Optional / aliases |
 | `plugins/version_notifier/` | 实际运行的跨平台插件，含 manifest.toml |
 | `plugins/Lolicon/` | 从 4.5 迁移而来的实际插件 |
 

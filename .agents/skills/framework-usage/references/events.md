@@ -488,8 +488,9 @@ for t in pending:
 
 ## 相关示例
 
-- 事件处理：`docs/docs/examples/qq/02_event_handling/`
-- 多步对话：`docs/docs/examples/common/06_multi_step_dialog/`
+- 事件注册：`docs/docs/examples/qq/01_event_registration/`
+- 会话基础：`docs/docs/examples/qq/06_session_basics/`
+- 多步对话与菜单：`docs/docs/examples/qq/07_dialog_and_menu/`
 - Bilibili 直播间事件：`docs/docs/examples/bilibili/02_live_room/`
 
 > 完整模式（插件并发编排、工作流清理）→ `guide/3. 插件开发/10. 模式.md` § 事件驱动工作流编排
