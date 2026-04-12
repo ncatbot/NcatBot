@@ -11,7 +11,9 @@
 """
 
 import asyncio
+import contextlib
 import functools
+import logging
 import os
 import sys
 from enum import Enum
@@ -167,10 +169,34 @@ def select(message: str, choices: List[str], *, default_index: int = 0) -> str:
 # ==================== 异步交互原语 ====================
 
 
+@contextlib.contextmanager
+def _suppress_console_logs():
+    """临时抑制控制台日志输出，防止等待用户输入时日志冲刷提示信息。"""
+    root = logging.getLogger()
+    console_handlers = [
+        h
+        for h in root.handlers
+        if isinstance(h, logging.StreamHandler)
+        and not isinstance(h, logging.FileHandler)
+    ]
+    saved_levels = [(h, h.level) for h in console_handlers]
+    for h in console_handlers:
+        h.setLevel(logging.CRITICAL + 1)
+    try:
+        yield
+    finally:
+        for h, level in saved_levels:
+            h.setLevel(level)
+
+
 async def _async_input(prompt_text: str = "") -> str:
-    """在线程池中执行 input()，避免阻塞 asyncio 事件循环。"""
+    """在线程池中执行 input()，避免阻塞 asyncio 事件循环。
+
+    等待期间临时抑制控制台日志，防止提示信息被日志冲刷。
+    """
     loop = asyncio.get_running_loop()
-    return await loop.run_in_executor(None, functools.partial(input, prompt_text))
+    with _suppress_console_logs():
+        return await loop.run_in_executor(None, functools.partial(input, prompt_text))
 
 
 async def async_confirm(message: str, *, default: bool = False) -> bool:
