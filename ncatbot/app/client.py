@@ -8,9 +8,10 @@
 from __future__ import annotations
 
 import asyncio
+import inspect
 import platform
 from pathlib import Path
-from typing import Any, List, Optional, Sequence
+from typing import Any, Awaitable, Callable, List, Optional, Sequence, TypeVar
 
 from ncatbot.adapter import BaseAdapter, adapter_registry
 from ncatbot.api import BotAPIClient, QQAPIClient, MiscAPI
@@ -31,6 +32,9 @@ from ncatbot.utils import (
 )
 
 LOG = get_log("BotClient")
+
+AsyncLifecycleCallback = Callable[..., Awaitable[Any]]
+LifecycleCallback = TypeVar("LifecycleCallback", bound=AsyncLifecycleCallback)
 
 
 class BotClient:
@@ -95,6 +99,10 @@ class BotClient:
         # 待注册的 handler（在 run 之前通过 @bot.on() 收集）
         self._pending_handlers: list[tuple[str, object, dict]] = []
 
+        # 生命周期回调（通过 @bot.on_startup() / @bot.on_close() 收集）
+        self._startup_callbacks: list[AsyncLifecycleCallback] = []
+        self._close_callbacks: list[AsyncLifecycleCallback] = []
+
     @staticmethod
     def _create_adapters_from_config() -> List[BaseAdapter]:
         """从 config.yaml 的 adapters 列表创建适配器实例。"""
@@ -149,6 +157,55 @@ class BotClient:
             raise RuntimeError("HandlerDispatcher 不可用：BotClient 尚未启动")
         return self._handler_dispatcher
 
+    def _register_lifecycle_callback(
+        self,
+        callbacks: list[AsyncLifecycleCallback],
+    ) -> Callable[[LifecycleCallback], LifecycleCallback]:
+        def decorator(callback: LifecycleCallback) -> LifecycleCallback:
+            if not inspect.iscoroutinefunction(callback):
+                raise TypeError("生命周期回调必须使用 async def 定义")
+            callbacks.append(callback)
+            return callback
+
+        return decorator
+
+    def on_startup(self) -> Callable[[LifecycleCallback], LifecycleCallback]:
+        """注册启动回调（bot 就绪后自动调用）。
+
+        回调在 ``_running = True`` 之后执行，此时 api / dispatcher / 服务 / 插件均已可用。
+
+        用法::
+
+            @bot.on_startup()
+            async def on_start():
+                print("Bot 已启动")
+        """
+        return self._register_lifecycle_callback(self._startup_callbacks)
+
+    def on_close(self) -> Callable[[LifecycleCallback], LifecycleCallback]:
+        """注册关闭回调（shutdown 时自动调用）。
+
+        回调在 ``_running = False`` 之后、适配器断开/插件卸载/服务关闭**之前**执行，
+        因此仍可访问运行中的服务和插件。
+
+        用法::
+
+            @bot.on_close()
+            async def on_close():
+                print("Bot 正在关闭")
+        """
+        return self._register_lifecycle_callback(self._close_callbacks)
+
+    async def _execute_lifecycle_callbacks(
+        self, callbacks: list[AsyncLifecycleCallback], name: str
+    ) -> None:
+        """依次执行生命周期回调。"""
+        for cb in callbacks:
+            try:
+                await cb()
+            except Exception as e:
+                LOG.error("执行%s回调 %s 异常: %s", name, cb.__name__, e)
+
     # ---- 启动 ----
 
     def run(self) -> None:
@@ -181,6 +238,8 @@ class BotClient:
             return
         self._running = False
         LOG.info("正在关闭…")
+
+        await self._execute_lifecycle_callbacks(self._close_callbacks, "关闭")
 
         # 优先断开适配器（释放端口等网络资源），使 listen 循环自然退出
         for adapter in self._adapters:
@@ -276,6 +335,7 @@ class BotClient:
         await self._startup_core()
         await self._setup_plugins()
         self._running = True
+        await self._execute_lifecycle_callbacks(self._startup_callbacks, "启动")
 
     async def _startup_core(self) -> None:
         """核心启动（不含插件加载）：adapters → API → dispatcher → listen → 服务"""
