@@ -32,16 +32,28 @@ class TaskExecutor:
         """执行任务"""
         name = job_info["name"]
 
-        if job_info["max_runs"] and job_info["run_count"] >= job_info["max_runs"]:
+        with self._service._lock:
+            max_runs = job_info["max_runs"]
+            run_count = job_info["run_count"]
+
+        if max_runs and run_count >= max_runs:
             self._service.remove_job(name)
             return
 
-        if not self._check_conditions(job_info):
-            return
-
         try:
+            if not self._check_conditions(job_info):
+                return
+
             job_info["callback"]()
-            job_info["run_count"] += 1
+
+            with self._service._lock:
+                job_info["run_count"] += 1
+                run_count = job_info["run_count"]
+                max_runs = job_info["max_runs"]
+
+            if max_runs and run_count >= max_runs:
+                self._service.remove_job(name)
+
             if not name.startswith("_"):
                 LOG.debug("定时任务已执行: %s", name)
         except Exception as e:

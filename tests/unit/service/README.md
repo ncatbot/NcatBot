@@ -10,6 +10,7 @@
 | `test_file_watcher.py` | `FileWatcherService`（FW-01） |
 | `test_rbac.py` | RBAC 子系统（SC-01～SC-12） |
 | `test_schedule_parser.py` | `TimeTaskParser`（TS-01～TS-06） |
+| `test_time_task_service.py` | `TimeTaskService`（TT-01） |
 
 ## 验证规范
 
@@ -61,3 +62,9 @@
 | TS-04 | 冒号间隔 | `HH:MM:SS` 样式 → 换算为总秒数（如 `00:02:30` → 9000） |
 | TS-05 | 中文间隔 | 如 `2天3小时5秒` → 总秒数 |
 | TS-06 | 无效格式 | 无法解析时抛出 `ValueError`（匹配「无效的时间格式」） |
+
+### TimeTaskService (`test_time_task_service.py`)
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| TT-01 | 同时到期任务派发 | 不同插件在同一时间点触发时，慢任务不会阻塞快任务启动 |

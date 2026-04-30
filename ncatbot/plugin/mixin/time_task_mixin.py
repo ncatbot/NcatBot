@@ -5,7 +5,20 @@
 """
 
 import asyncio
-from typing import Any, Callable, Dict, List, Optional, Union, TYPE_CHECKING, final
+import inspect
+from typing import (
+    Any,
+    Awaitable,
+    Callable,
+    Coroutine,
+    Dict,
+    List,
+    Optional,
+    TYPE_CHECKING,
+    Union,
+    cast,
+    final,
+)
 
 from ncatbot.utils import get_log
 
@@ -84,7 +97,10 @@ class TimeTaskMixin:
             callback = method
 
         # 包装为线程安全的同步回调（scheduler 线程中调用）
-        wrapped = self._wrap_task_callback(callback)
+        wrapped = self._wrap_task_callback(
+            callback,
+            getattr(service, "event_loop", None),
+        )
 
         plugin_name = getattr(self, "name", "unknown")
         result = service.add_job(
@@ -102,22 +118,38 @@ class TimeTaskMixin:
         return result
 
     @staticmethod
-    def _wrap_task_callback(callback: Callable) -> Callable[[], None]:
-        """将同步/异步回调包装为可在调度线程中安全调用的同步函数。"""
-        if asyncio.iscoroutinefunction(callback):
+    def _wrap_task_callback(
+        callback: Callable,
+        loop: Optional[asyncio.AbstractEventLoop] = None,
+    ) -> Callable[[], None]:
+        """将同步/异步回调包装为可在工作线程中安全调用的同步函数。"""
 
-            def _sync_wrapper():
-                try:
-                    loop = asyncio.get_running_loop()
-                except RuntimeError:
-                    loop = None
-                if loop and loop.is_running():
-                    asyncio.run_coroutine_threadsafe(callback(), loop)
-                else:
-                    asyncio.run(callback())
+        def _sync_wrapper() -> None:
+            result = callback()
+            if not inspect.isawaitable(result):
+                return
 
-            return _sync_wrapper
-        return callback
+            coroutine = TimeTaskMixin._ensure_coroutine(result)
+
+            if loop is not None and loop.is_running():
+                future = asyncio.run_coroutine_threadsafe(coroutine, loop)
+                future.result()
+                return
+
+            asyncio.run(coroutine)
+
+        return _sync_wrapper
+
+    @staticmethod
+    def _ensure_coroutine(result: Awaitable[Any]) -> Coroutine[Any, Any, Any]:
+        """将任意 awaitable 规范化为 coroutine，便于跨线程调度。"""
+        if inspect.iscoroutine(result):
+            return cast(Coroutine[Any, Any, Any], result)
+
+        async def _await_result() -> Any:
+            return await result
+
+        return _await_result()
 
     @final
     def remove_scheduled_task(self, name: str) -> bool:

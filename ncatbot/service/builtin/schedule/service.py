@@ -4,6 +4,7 @@
 提供线程安全的定时任务调度功能，通过回调通知任务触发。
 """
 
+import asyncio
 import threading
 import traceback
 from typing import Callable, Optional, List, Dict, Any, Union
@@ -22,7 +23,7 @@ class TimeTaskService(BaseService):
     """定时任务调度服务
 
     每个任务通过 ``add_job(callback=...)`` 绑定回调，
-    ``TaskExecutor`` 在调度线程中直接调用该回调。
+    调度线程仅负责判定触发时机，实际执行交给独立工作线程。
     """
 
     name = "time_task"
@@ -39,6 +40,7 @@ class TimeTaskService(BaseService):
 
         self._scheduler_thread: Optional[threading.Thread] = None
         self._stop_event = threading.Event()
+        self._event_loop: Optional[asyncio.AbstractEventLoop] = None
 
         self._executor = None
 
@@ -49,12 +51,18 @@ class TimeTaskService(BaseService):
             self._executor = TaskExecutor(self)
         return self._executor
 
+    @property
+    def event_loop(self) -> Optional[asyncio.AbstractEventLoop]:
+        """获取服务绑定的主事件循环。"""
+        return self._event_loop
+
     # ------------------------------------------------------------------
     # 生命周期
     # ------------------------------------------------------------------
 
     async def on_load(self) -> None:
         """启动调度线程"""
+        self._event_loop = asyncio.get_running_loop()
         self._stop_event.clear()
         self._scheduler_thread = threading.Thread(
             target=self._schedule_loop, daemon=True, name="TimeTaskSchedulerThread"
@@ -71,6 +79,7 @@ class TimeTaskService(BaseService):
         with self._lock:
             self._jobs.clear()
 
+        self._event_loop = None
         LOG.info("定时任务服务已停止")
 
     # ------------------------------------------------------------------
@@ -103,7 +112,7 @@ class TimeTaskService(BaseService):
         Args:
             name: 任务唯一标识名称
             interval: 调度时间参数
-            callback: 任务触发时调用的回调函数（在调度线程中执行）
+            callback: 任务触发时调用的回调函数（在工作线程中执行）
             conditions: 执行条件列表
             max_runs: 最大执行次数
             plugin_name: 插件名称
@@ -198,11 +207,12 @@ class TimeTaskService(BaseService):
             "callback": callback,
             "max_runs": max_runs,
             "run_count": 0,
+            "is_running": False,
             "conditions": conditions or [],
         }
 
         def job_wrapper():
-            self.executor.execute(job_info)
+            self._dispatch_job(job_info)
 
         job = self._create_schedule_job(interval_cfg, job_wrapper)
 
@@ -214,6 +224,39 @@ class TimeTaskService(BaseService):
         self._jobs.append(job_info)
         LOG.debug(f"添加定时任务: {name}")
         return True
+
+    def _dispatch_job(self, job_info: Dict[str, Any]) -> None:
+        """将到点任务派发到独立工作线程，避免阻塞调度线程。"""
+        name = job_info["name"]
+
+        with self._lock:
+            if job_info["is_running"]:
+                if not name.startswith("_"):
+                    LOG.debug("定时任务仍在执行，跳过本次触发: %s", name)
+                return
+            job_info["is_running"] = True
+
+        worker = threading.Thread(
+            target=self._run_job,
+            args=(job_info,),
+            daemon=True,
+            name=f"TimeTaskWorker-{name}",
+        )
+
+        try:
+            worker.start()
+        except Exception:
+            with self._lock:
+                job_info["is_running"] = False
+            raise
+
+    def _run_job(self, job_info: Dict[str, Any]) -> None:
+        """在工作线程中执行任务并清理运行态。"""
+        try:
+            self.executor.execute(job_info)
+        finally:
+            with self._lock:
+                job_info["is_running"] = False
 
     def _create_schedule_job(self, interval_cfg: Dict, job_wrapper: Callable):
         """根据配置创建调度任务"""
