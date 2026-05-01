@@ -144,6 +144,10 @@ class GroupMessageEvent(MessageEvent, GroupScoped, Kickable, Bannable):
         return self._data.group_id
 
     @property
+    def group_name(self) -> Optional[str]:
+        return self._data.group_name
+
+    @property
     def anonymous(self) -> Optional[Anonymous]:
         return self._data.anonymous
 
