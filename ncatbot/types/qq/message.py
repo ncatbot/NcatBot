@@ -51,5 +51,6 @@ class GroupMessageEventData(MessageEventData):
     message_type: MessageType = Field(default=MessageType.GROUP)
     sub_type: str = Field(default="normal")
     group_id: str
+    group_name: Optional[str] = None
     anonymous: Optional[Anonymous] = None
     sender: GroupSender
