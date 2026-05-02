@@ -162,6 +162,7 @@ class TestEventParserParse:
             "message_id": "2009890763",
             "user_id": "3333355556",
             "group_id": "701784439",
+            "group_name": "测试群",
             "message": [{"type": "text", "data": {"text": "你好"}}],
             "raw_message": "你好",
             "font": 14,
@@ -170,6 +171,7 @@ class TestEventParserParse:
         result = EventParser.parse(data)
         assert isinstance(result, GroupMessageEventData)
         assert result.group_id == "701784439"
+        assert result.group_name == "测试群"
 
     def test_parse_lifecycle_event(self):
         data = {

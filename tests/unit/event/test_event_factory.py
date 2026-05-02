@@ -193,12 +193,18 @@ def test_unknown_notice_falls_back():
 
 def test_event_properties_proxy_data():
     """E-04: 事件实体 property 代理底层数据字段"""
-    data = factory.group_message("test", group_id="111", user_id="222")
+    data = factory.group_message(
+        "test",
+        group_id="111",
+        user_id="222",
+        group_name="测试群",
+    )
     entity = create_entity(data, MockBotAPI())
 
     assert entity.time == data.time
     assert entity.self_id == data.self_id
     assert isinstance(entity, GroupMessageEvent)
     assert entity.group_id == "111"
+    assert entity.group_name == "测试群"
     assert entity.user_id == "222"
     assert entity.raw_message == "test"
