@@ -15,7 +15,7 @@
 
 > QQ (NapCat) 首次启动时由 NcatBot 自动安装，无需手动配置。启动后通过 WebUI 扫码登录。CLI `ncatbot init` 选择自动安装时跳过 WS/WebUI 地址输入。
 
-> QQ (SnowLuma) 协议层与 NapCat 兼容，但首次运行需要你在 SnowLuma WebUI 手动启用 OneBot v11 WebSocket 端点。自动安装 / 自动启动当前仅完整支持 Windows x64。
+> QQ (SnowLuma) 协议层与 NapCat 兼容。首次启动时 NcatBot 会进入交互式引导，等待用户在 SnowLuma WebUI 中完成 OneBot v11 配置和扫码登录后按回车继续，配置自动写回 config.yaml。自动安装 / 自动启动当前仅完整支持 Windows x64。
 
 > Bilibili 适配器支持扫码登录：config.yaml 中 `sessdata` 留空即可在启动时自动弹出二维码，扫码后凭据自动写回配置文件。CLI 初始化时选择扫码可跳过 sessdata 等手动输入。
 

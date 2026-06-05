@@ -136,7 +136,7 @@ if __name__ == "__main__":
 
 > ⚠️ **NapCat 自动安装说明**：NapCat 由 NcatBot Setup 模式（首次 `ncatbot run` 或 `ncatbot dev`）自动安装，无需手动安装。`ncatbot napcat install --yes` 仅用于 CI/Docker 等无交互环境。启动后通过 WebUI 扫码登录 QQ。
 
-> ⚠️ **SnowLuma 使用说明**：SnowLuma 同样提供 Setup / Connect 两种模式，但首次运行仍需要你在 SnowLuma WebUI 中手动启用 OneBot v11 WebSocket 并扫码登录。自动安装 / 自动启动当前仅完整支持 Windows x64；Linux / macOS 请使用 `skip_setup: true` 手动管理。
+> ⚠️ **SnowLuma 使用说明**：SnowLuma 同样提供 Setup / Connect 两种模式。首次启动时 NcatBot 会进入交互式引导，等待用户在 SnowLuma WebUI 中完成 OneBot v11 配置和扫码登录后按回车继续，配置自动写回 config.yaml。后续启动将跳过交互直接连接。自动安装 / 自动启动当前仅完整支持 Windows x64；Linux / macOS 请使用 `skip_setup: true` 手动管理。
 
 ### CLI 交互式命令注意事项
 

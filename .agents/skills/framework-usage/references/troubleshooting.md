@@ -89,11 +89,12 @@ adapters:
 
 排查顺序：
 
-1. `ncatbot snowluma diagnose ws` 检查 OneBot v11 WebSocket
-2. `ncatbot snowluma diagnose webui` 检查 WebUI 可达性
+1. `ncatbot snowluma diagnose ws` 检测 OneBot v11 WebSocket
+2. `ncatbot snowluma diagnose webui` 检测 WebUI 可达性
 3. 确认已在 SnowLuma WebUI 中启用 OneBot v11 WebSocket 端点
 4. 若报 `retcode=1403`，说明 `ws_token` 与 WebUI 中配置不一致
 5. 若使用 Linux / macOS，请确认 `skip_setup: true`，并由外部进程手动管理 SnowLuma
+6. Setup 模式首次启动时会进入交互式引导（无超时限制），用户在 WebUI 完成配置后按回车继续；配置会自动写回 config.yaml
 
 ### 插件
 
