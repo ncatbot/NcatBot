@@ -137,9 +137,7 @@ class AtFilter(Hook):
         return HookAction.SKIP
 
     def __repr__(self) -> str:
-        return (
-            f"<AtFilter(include_at_all={self.include_at_all})>"
-        )
+        return f"<AtFilter(include_at_all={self.include_at_all})>"
 
 
 class PlatformFilter(Hook):
