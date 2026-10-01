@@ -335,6 +335,7 @@ class BotClient:
         await self._startup_core()
         await self._setup_plugins()
         self._running = True
+        await self._plugin_loader.run_startup()
         await self._execute_lifecycle_callbacks(self._startup_callbacks, "启动")
 
     async def _startup_core(self) -> None:

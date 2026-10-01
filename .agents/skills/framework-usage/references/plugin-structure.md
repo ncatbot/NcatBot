@@ -65,7 +65,23 @@ async def on_close(self):
     pass
 ```
 
-**顺序**：加载 `_init_()` → Mixin `_mixin_load()` → `on_load()` | 卸载 `_close_()` → `on_close()` → Mixin `_mixin_unload()`
+**顺序**：加载 Mixin `_mixin_load()` → `_init_()` → `on_load()` → Handler 注册；首次启动待所有插件加载后运行 `@registrar.on_startup()` 方法。运行中加载或重载时，目标插件注册完 Handler 后运行 startup。卸载时 `_close_()` → `on_close()` → Mixin `_mixin_unload()`。
+
+`on_load()` 适合初始化插件自身的配置、数据、定时任务，也可以调用已连接的 Bot API；此时当前插件的声明式 Handler 尚未注册，其他插件未必加载。需要访问其他插件或依赖完整 Handler 注册状态时，用插件类中的异步方法：
+
+```python
+from ncatbot.core import registrar
+from ncatbot.plugin import NcatBotPlugin
+
+class MyPlugin(NcatBotPlugin):
+    name = "my_plugin"
+    version = "1.0.0"
+
+    @registrar.on_startup()
+    async def after_startup(self):
+        # 首次启动等待全部插件就绪；热重载时对该插件再次执行
+        pass
+```
 
 ## 验证清单
 

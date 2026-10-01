@@ -53,6 +53,7 @@ class PluginLoader:
         self._resolver = DependencyResolver()
         self._importer = ModuleImporter()
         self.plugins: Dict[str, BasePlugin] = {}
+        self._startup_complete = False
 
         # 热重载相关
         self._reload_queue: asyncio.Queue[str] = asyncio.Queue()
@@ -163,6 +164,14 @@ class PluginLoader:
         """注入 HandlerDispatcher 实例（由 BotClient 调用）。"""
         self._handler_dispatcher = dispatcher
 
+    async def run_startup(self) -> None:
+        """首次启动全部插件完成后，依加载顺序执行插件启动回调。"""
+        if self._startup_complete:
+            return
+        self._startup_complete = True
+        for plugin in list(self.plugins.values()):
+            await plugin.__startup__()
+
     async def load_plugin(self, name: str) -> Optional[BasePlugin]:
         """加载单个插件（必须已索引）。"""
         manifest = self._indexer.get(name)
@@ -196,6 +205,8 @@ class PluginLoader:
                 flush_pending(self._handler_dispatcher, name, plugin_instance=plugin)
 
             self.plugins[name] = plugin
+            if self._startup_complete:
+                await plugin.__startup__()
             LOG.info("插件加载成功: %s v%s", name, manifest.version)
             return plugin
 
@@ -256,6 +267,7 @@ class PluginLoader:
 
     async def unload_all(self) -> None:
         """卸载所有插件。"""
+        self._startup_complete = False
         await asyncio.gather(*(self.unload_plugin(name) for name in list(self.plugins)))
 
     # ------------------------------------------------------------------

@@ -12,6 +12,7 @@ flush_pending() 将指定插件的 handler 批量注册到 HandlerDispatcher。
   registrar.qq.on_poke()、registrar.bilibili.on_danmu()、registrar.github.on_push()
 """
 
+import inspect
 from functools import cached_property
 from typing import Any, Callable, Dict, List, Optional, TYPE_CHECKING
 
@@ -50,6 +51,20 @@ class Registrar:
 
     def __init__(self, default_hooks: Optional[List[Hook]] = None):
         self._default_hooks = list(default_hooks or [])
+
+    def on_startup(self) -> Callable[[Callable], Callable]:
+        """标记插件的异步实例方法，在插件及其事件处理器就绪后执行。
+
+        首次启动时等待全部插件加载；运行中加载或重载时，在该插件加载完后执行。
+        """
+
+        def decorator(func: Callable) -> Callable:
+            if not inspect.iscoroutinefunction(func):
+                raise TypeError("插件启动回调必须使用 async def 定义")
+            func.__plugin_startup__ = True
+            return func
+
+        return decorator
 
     def on(
         self,

@@ -7,6 +7,7 @@ BasePlugin 按 MRO 顺序自动发现并执行。
 """
 
 import asyncio
+import inspect
 from pathlib import Path
 from typing import Any, Dict, List, Optional, TYPE_CHECKING
 
@@ -81,6 +82,16 @@ class BasePlugin:
         await self._run_mixin_hooks("_mixin_load")
         self._init_()
         await self.on_load()
+
+    async def __startup__(self) -> None:
+        """执行被 @registrar.on_startup() 标记的异步实例方法。"""
+        for name, func in inspect.getmembers(type(self), inspect.iscoroutinefunction):
+            if not getattr(func, "__plugin_startup__", False):
+                continue
+            try:
+                await getattr(self, name)()
+            except Exception:
+                LOG.exception("插件 %s 启动回调 %s 执行失败", self.name, name)
 
     async def __unload__(self) -> None:
         """框架卸载插件时调用（子类不应重写）。

@@ -64,6 +64,16 @@
 | PL-52 | Config/Data | 加载后 config 有默认值，data 有初始化结构 |
 | PL-53 | 帮助/关键词/配置 | "帮助" / 关键词管理 / "查看配置" 命令 |
 
+### startup (`test_startup.py`)
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| PL-54 | 启动顺序 | `on_load` 逐插件执行，`startup` 在全部插件和 Handler 就绪后执行 |
+| PL-55 | 动态加载 | 热重载和手动加载触发目标插件新实例的 `startup` |
+| PL-56 | 异常隔离 | 单个插件回调失败不阻断其他插件 |
+| PL-57 | 回调类型 | `on_startup()` 拒绝同步函数 |
+| PL-58 | 离线测试 | `PluginTestHarness` 选择性加载后执行 `startup` |
+
 ## 人工验收
 
 除自动化测试外，插件还可通过 `run.py` 进行人工验收，详见 [../README.md](../README.md)。

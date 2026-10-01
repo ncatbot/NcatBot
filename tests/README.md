@@ -83,7 +83,7 @@ python tests/e2e/napcat/run.py
 | M | Plugin Mixin | M-01 ~ M-41, M-50 ~ M-59 |
 | I | Integration | I-01 ~ I-26 |
 | B | BotClient E2E | B-01 ~ B-05 |
-| PL | Plugin E2E | PL-01 ~ PL-53 |
+| PL | Plugin E2E | PL-01 ~ PL-58 |
 | PL-MR | 插件手动热重载 / 加载卸载 E2E | PL-MR-01 ~ PL-MR-04 |
 | NC | NapCat E2E | NC-01 ~ NC-21 |
 | SC | RBAC 权限系统 | SC-01 ~ SC-12 |

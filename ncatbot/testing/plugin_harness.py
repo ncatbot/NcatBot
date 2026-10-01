@@ -82,6 +82,7 @@ class PluginTestHarness(TestHarness):
         )
 
         self._bot._running = True
+        await loader.run_startup()
         self._bot._listen_task = asyncio.create_task(self._bot._listen_forever())
 
     # ---- 插件状态查询 ----
