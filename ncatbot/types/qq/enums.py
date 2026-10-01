@@ -1,8 +1,9 @@
 """QQ 平台专用枚举"""
 
-from enum import Enum
+from enum import Enum, IntEnum
 
 __all__ = [
+    "OnlineStatus",
     "PostType",
     "MessageType",
     "NoticeType",
@@ -15,6 +16,20 @@ __all__ = [
     "MetaEventType",
     "EventType",
 ]
+
+
+class OnlineStatus(IntEnum):
+    """QQ 基础在线状态，用于 ``set_online_status`` 的 ``status`` 参数。
+
+    扩展状态仍通过 ``ext_status`` 指定；接口也接受普通整数。
+    """
+
+    ONLINE = 10
+    Q_ME = 60
+    AWAY = 30
+    BUSY = 50
+    DO_NOT_DISTURB = 70
+    INVISIBLE = 40
 
 
 class PostType(str, Enum):

@@ -4,6 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Optional, Union
 
+from ncatbot.types.qq import OnlineStatus
+
 if TYPE_CHECKING:
     from .interface import IQQAPIClient
 
@@ -151,12 +153,16 @@ class QQManage:
 
     async def set_online_status(
         self,
-        status: int,
+        status: OnlineStatus | int,
         ext_status: int = 0,
         custom_status: str = "",
         *,
         battery_status: int = 0,
     ) -> None:
+        """设置 QQ 在线状态，推荐使用 OnlineStatus，也兼容普通整数。
+
+        battery_status 仅限关键字传入，默认 0；保留旧 custom_status 位置参数。
+        """
         await self._api.set_online_status(
             status, ext_status, custom_status, battery_status=battery_status
         )

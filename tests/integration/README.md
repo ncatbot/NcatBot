@@ -61,3 +61,5 @@
 |---------|------|--------|
 | I-23 | NapCat 必填参数 | 整数调用经 QQManage → NapCatBotAPI → OB11Protocol 自动携带 battery_status=0 |
 | I-24 | 参数兼容 | 第三位置参数仍为 custom_status，battery_status 通过关键字指定 |
+| I-25 | 枚举与整数兼容 | 六种基础状态序列化为协议整数，未枚举整数原样发送 |
+| I-26 | Mock 契约一致 | Mock API 接受枚举、整数及关键字电量参数 |

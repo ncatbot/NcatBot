@@ -8,6 +8,8 @@ from __future__ import annotations
 
 from typing import List, Union
 
+from ncatbot.types.qq import OnlineStatus
+
 from ncatbot.api.qq import IQQAPIClient
 from ncatbot.types.napcat import (
     BotStatus,
@@ -277,7 +279,7 @@ class MockBotAPI(MockAPIBase, IQQAPIClient):
 
     async def set_online_status(
         self,
-        status: int,
+        status: OnlineStatus | int,
         ext_status: int = 0,
         custom_status: str = "",
         *,

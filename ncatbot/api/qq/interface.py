@@ -9,6 +9,8 @@ from __future__ import annotations
 from abc import abstractmethod
 from typing import List, Union
 
+from ncatbot.types.qq import OnlineStatus
+
 from ..base import IAPIClient
 from ..traits import IMessaging, IGroupManage, IQuery, IFileTransfer
 from ncatbot.types.napcat import (
@@ -222,7 +224,7 @@ class IQQAPIClient(IAPIClient, IMessaging, IGroupManage, IQuery, IFileTransfer):
     @abstractmethod
     async def set_online_status(
         self,
-        status: int,
+        status: OnlineStatus | int,
         ext_status: int = 0,
         custom_status: str = "",
         *,

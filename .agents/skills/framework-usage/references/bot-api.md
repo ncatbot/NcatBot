@@ -142,7 +142,7 @@ await self.api.qq.manage.delete_friend(user_id)
 await self.api.qq.manage.set_self_longnick(long_nick)
 await self.api.qq.manage.set_qq_avatar(file)
 await self.api.qq.manage.set_qq_profile(nickname, company, email, college, personal_note)
-await self.api.qq.manage.set_online_status(status, ext_status=0, custom_status="")
+await self.api.qq.manage.set_online_status(status, ext_status=0, custom_status="", battery_status=0)
 ```
 
 ## 信息查询 API
@@ -503,4 +503,4 @@ proxy = self.api.misc.get_proxy()  # str | None
 
 ## QQ 在线状态
 
-`self.api.qq.manage.set_online_status(status, ext_status=0, custom_status="", *, battery_status=0)` 可在插件 `on_load()` 中调用。在线状态值为 `10`，不是 `1`。NapCat 要求 `battery_status` 必填，适配器自动补齐默认值 `0`；缺失时返回 1400，与 startup 时机无关。第三位置参数 `custom_status` 保留兼容，电量请使用关键字传递。
+`self.api.qq.manage.set_online_status(status: OnlineStatus | int, ext_status=0, custom_status="", *, battery_status=0)` 可在插件 `on_load()` 中调用。推荐 `from ncatbot.types.qq import OnlineStatus` 后传入 `OnlineStatus.ONLINE`。`OnlineStatus` 为 `IntEnum`：`ONLINE=10`、`Q_ME=60`、`AWAY=30`、`BUSY=50`、`DO_NOT_DISTURB=70`、`INVISIBLE=40`。原有整数用法保留，包括枚举未列出的值，不强制枚举成员校验；在线状态值为 `10`，不是 `1`。NapCat 要求 `battery_status` 必填，适配器自动补齐默认值 `0`；缺失时返回 1400，与 startup 时机无关。第三位置参数 `custom_status` 保留兼容，电量请使用关键字传递。

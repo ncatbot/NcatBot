@@ -7,6 +7,8 @@ import pytest
 from ncatbot.adapter.napcat.api.bot_api import NapCatBotAPI
 from ncatbot.adapter.napcat.connection.protocol import OB11Protocol
 from ncatbot.api.qq import QQAPIClient
+from ncatbot.adapter.mock import MockBotAPI
+from ncatbot.types.qq import OnlineStatus
 
 pytestmark = pytest.mark.asyncio
 
@@ -59,6 +61,46 @@ async def test_online_status_preserves_positional_parameters():
 
     assert transport.requests[0]["params"] == {
         "status": 10,
+        "ext_status": 1000,
+        "custom_status": "legacy",
+        "battery_status": 75,
+    }
+
+
+@pytest.mark.parametrize(
+    ("status", "expected"),
+    [
+        (OnlineStatus.ONLINE, 10),
+        (OnlineStatus.Q_ME, 60),
+        (OnlineStatus.AWAY, 30),
+        (OnlineStatus.BUSY, 50),
+        (OnlineStatus.DO_NOT_DISTURB, 70),
+        (OnlineStatus.INVISIBLE, 40),
+        (12345, 12345),
+    ],
+)
+async def test_online_status_enum_and_integer_wire_format(status, expected):
+    """I-25: 枚举发送协议整数；未列入枚举的整数仍原样发送，不强制校验。"""
+    transport = StatusTransport()
+    api = QQAPIClient(NapCatBotAPI(transport.protocol))
+
+    await api.manage.set_online_status(status)
+
+    params = transport.requests[0]["params"]
+    assert type(params["status"]) is int
+    assert params == {"status": expected, "ext_status": 0, "battery_status": 0}
+
+
+@pytest.mark.parametrize("status", [OnlineStatus.ONLINE, 10, 12345])
+async def test_online_status_mock_matches_public_interface(status):
+    """I-26: Mock API 与真实适配器一致接受枚举、整数及关键字电量参数。"""
+    raw_api = MockBotAPI()
+    api = QQAPIClient(raw_api)
+
+    await api.manage.set_online_status(status, 1000, "legacy", battery_status=75)
+
+    assert raw_api.get_calls("set_online_status")[0].params == {
+        "status": status,
         "ext_status": 1000,
         "custom_status": "legacy",
         "battery_status": 75,

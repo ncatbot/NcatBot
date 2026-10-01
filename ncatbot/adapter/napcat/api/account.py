@@ -2,6 +2,8 @@
 
 from typing import Union
 
+from ncatbot.types.qq import OnlineStatus
+
 from ncatbot.types.napcat import OcrResult
 
 
@@ -83,7 +85,7 @@ class AccountAPIMixin:
 
     async def set_online_status(
         self,
-        status: int,
+        status: OnlineStatus | int,
         ext_status: int = 0,
         custom_status: str = "",
         *,

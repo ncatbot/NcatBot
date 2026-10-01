@@ -1,6 +1,7 @@
 """QQ 平台专用类型"""
 
 from .enums import (
+    OnlineStatus,
     PostType,
     EventType,
     MessageType,
@@ -65,6 +66,7 @@ from .helper import ForwardConstructor
 
 __all__ = [
     # enums
+    "OnlineStatus",
     "PostType",
     "MessageType",
     "NoticeType",
