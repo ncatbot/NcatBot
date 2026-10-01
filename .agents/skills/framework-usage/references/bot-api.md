@@ -500,3 +500,7 @@ proxy = self.api.misc.get_proxy()  # str | None
 ```
 
 > ⚠️ **网络提醒**：从 GitHub 获取资源时（包括使用 `Attachment.download()` / `as_bytes()` 隐式下载），国内网络可能无法直连。建议在 `config.yaml` 中配置 `http_proxy`，或自行对 GitHub URL 添加镜像前缀（如 `ghfast.top`）以避免网络阻塞。
+
+## QQ 在线状态
+
+`self.api.qq.manage.set_online_status(status, ext_status=0, custom_status="", *, battery_status=0)` 可在插件 `on_load()` 中调用。在线状态值为 `10`，不是 `1`。NapCat 要求 `battery_status` 必填，适配器自动补齐默认值 `0`；缺失时返回 1400，与 startup 时机无关。第三位置参数 `custom_status` 保留兼容，电量请使用关键字传递。

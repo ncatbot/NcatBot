@@ -54,3 +54,10 @@
 | PV-04 | 外部事件 → 群通知 | `TestHarness` 手动注册 handler 模拟 webhook → `reply` → `send_group_msg` |
 | PV-05a | 权限分支（允许） | 模拟管理员 `user_id` → 执行成功回复 |
 | PV-05b | 权限分支（拒绝） | 普通用户 → 权限不足回复 |
+
+### 在线状态 API (`test_online_status.py`)
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| I-23 | NapCat 必填参数 | 整数调用经 QQManage → NapCatBotAPI → OB11Protocol 自动携带 battery_status=0 |
+| I-24 | 参数兼容 | 第三位置参数仍为 custom_status，battery_status 通过关键字指定 |

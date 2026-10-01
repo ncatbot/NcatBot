@@ -82,9 +82,18 @@ class AccountAPIMixin:
         await self._call("set_qq_profile", params)
 
     async def set_online_status(
-        self, status: int, ext_status: int = 0, custom_status: str = ""
+        self,
+        status: int,
+        ext_status: int = 0,
+        custom_status: str = "",
+        *,
+        battery_status: int = 0,
     ) -> None:
-        params: dict = {"status": status, "ext_status": ext_status}
+        params: dict = {
+            "status": status,
+            "ext_status": ext_status,
+            "battery_status": battery_status,
+        }
         if custom_status:
             params["custom_status"] = custom_status
         await self._call("set_online_status", params)

@@ -280,12 +280,15 @@ class MockBotAPI(MockAPIBase, IQQAPIClient):
         status: int,
         ext_status: int = 0,
         custom_status: str = "",
+        *,
+        battery_status: int = 0,
     ) -> None:
         self._record(
             "set_online_status",
             status=status,
             ext_status=ext_status,
             custom_status=custom_status,
+            battery_status=battery_status,
         )
 
     # ---- IQuery ----

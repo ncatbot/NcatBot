@@ -221,7 +221,12 @@ class IQQAPIClient(IAPIClient, IMessaging, IGroupManage, IQuery, IFileTransfer):
 
     @abstractmethod
     async def set_online_status(
-        self, status: int, ext_status: int = 0, custom_status: str = ""
+        self,
+        status: int,
+        ext_status: int = 0,
+        custom_status: str = "",
+        *,
+        battery_status: int = 0,
     ) -> None: ...
 
     @abstractmethod

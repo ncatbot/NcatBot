@@ -150,9 +150,16 @@ class QQManage:
         await self._api.set_qq_profile(nickname, company, email, college, personal_note)
 
     async def set_online_status(
-        self, status: int, ext_status: int = 0, custom_status: str = ""
+        self,
+        status: int,
+        ext_status: int = 0,
+        custom_status: str = "",
+        *,
+        battery_status: int = 0,
     ) -> None:
-        await self._api.set_online_status(status, ext_status, custom_status)
+        await self._api.set_online_status(
+            status, ext_status, custom_status, battery_status=battery_status
+        )
 
     # ---- 组合 sugar ----
 
