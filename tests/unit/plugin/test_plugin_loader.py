@@ -1,7 +1,7 @@
 """
 Plugin Loader 生命周期单元测试
 
-LD-01 ~ LD-08：覆盖 load/unload/load_all/热重载消费 的核心路径。
+LD-01 ~ LD-09：覆盖 load/unload/load_all/热重载消费 的核心路径。
 """
 
 import asyncio
@@ -347,3 +347,45 @@ class TestReloadConsumer:
         task.cancel()
         with pytest.raises(asyncio.CancelledError):
             await task
+
+
+class TestPluginEnableConfig:
+    """LD-09: plugin_blacklist / plugin_whitelist 控制插件是否加载"""
+
+    @pytest.mark.asyncio
+    @pytest.mark.parametrize(
+        ("blacklist", "whitelist", "expected"),
+        [
+            (["b"], [], {"a", "c"}),
+            ([], ["a", "c"], {"a", "c"}),
+            (["a"], ["a", "b"], {"b"}),
+        ],
+    )
+    async def test_ld09_blacklist_whitelist_skip_load(
+        self, loader: PluginLoader, blacklist, whitelist, expected
+    ):
+        """LD-09: load_all 跳过黑名单中的插件，白名单非空时只加载白名单内的插件"""
+        manifests = {name: _make_manifest(name) for name in ("a", "b", "c")}
+        loader._indexer._manifests = manifests
+
+        config = MagicMock()
+        config.plugin.plugin_blacklist = blacklist
+        config.plugin.plugin_whitelist = whitelist
+
+        with (
+            patch("ncatbot.plugin.loader.core.get_config_manager", return_value=config),
+            patch.object(loader._indexer, "scan", return_value=manifests),
+            patch.object(loader._importer, "add_plugin_root"),
+            patch.object(loader._importer, "load_module") as mock_load,
+            patch.object(
+                loader._importer, "find_plugin_class", return_value=_StubPlugin
+            ),
+            patch.object(loader, "_check_pip_deps_batch", return_value=set()),
+            patch("ncatbot.plugin.loader.core.flush_pending"),
+            patch("ncatbot.plugin.loader.core.clear_pending"),
+        ):
+            loaded = await loader.load_all(Path("plugins"))
+
+        assert set(loaded) == expected
+        assert set(loader.plugins) == expected
+        assert {call.args[0].name for call in mock_load.call_args_list} == expected

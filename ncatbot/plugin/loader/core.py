@@ -174,6 +174,10 @@ class PluginLoader:
 
     async def load_plugin(self, name: str) -> Optional[BasePlugin]:
         """加载单个插件（必须已索引）。"""
+        if not self._is_plugin_enabled(name):
+            LOG.info("跳过插件 %s（已在配置中禁用）", name)
+            return None
+
         manifest = self._indexer.get(name)
         if manifest is None:
             LOG.error("插件 %s 未索引，无法加载", name)
@@ -409,6 +413,14 @@ class PluginLoader:
     # ------------------------------------------------------------------
     # 内部方法
     # ------------------------------------------------------------------
+
+    def _is_plugin_enabled(self, name: str) -> bool:
+        """按配置中的黑白名单判断插件是否允许加载（黑名单优先）。"""
+        plugin_config = get_config_manager().plugin
+        if name in plugin_config.plugin_blacklist:
+            return False
+        whitelist = plugin_config.plugin_whitelist
+        return not whitelist or name in whitelist
 
     async def _check_pip_deps_batch(self, manifests: Dict[str, PluginManifest]) -> set:
         """批量检查所有插件的 pip 依赖，返回应跳过的插件名集合。"""
