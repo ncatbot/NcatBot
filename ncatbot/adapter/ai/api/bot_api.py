@@ -294,6 +294,64 @@ class AIBotAPI(IAPIClient):
             **call_kwargs,
         )
 
+    async def video_generation(
+        self,
+        prompt: str,
+        *,
+        model: Optional[str] = None,
+        seconds: Optional[str] = None,
+        size: Optional[str] = None,
+        input_reference: Any = None,
+        **kwargs: Any,
+    ) -> Any:
+        """提交视频生成任务，返回 LiteLLM VideoObject。
+
+        ``model`` 覆盖 ``video_model``；``seconds`` 为时长字符串（如 ``"8"``），
+        ``size`` 为尺寸，``input_reference`` 为参考图像文件对象或字节。
+        返回任务的 ``id`` 和 ``status``，用 ``video_status()`` 查询完成状态，
+        完成后用 ``video_content()`` 下载。提供商参数通过 ``kwargs`` 透传。
+        """
+        from litellm import avideo_generation
+
+        resolved_model = model or self._config.video_model
+        if not resolved_model:
+            raise ValueError("未指定模型：请通过参数 model= 或配置 video_model 设置")
+
+        call_kwargs: Dict[str, Any] = {**self._common_kwargs, **kwargs}
+        if seconds is not None:
+            call_kwargs["seconds"] = seconds
+        if size is not None:
+            call_kwargs["size"] = size
+        if input_reference is not None:
+            call_kwargs["input_reference"] = input_reference
+
+        return await self._call_with_fallback(
+            avideo_generation,
+            resolved_model,
+            self._config.video_model,
+            prompt=prompt,
+            **call_kwargs,
+        )
+
+    async def video_status(self, video_id: str, **kwargs: Any) -> Any:
+        """查询视频任务，返回 LiteLLM VideoObject（status/progress/error）。
+
+        保留原始任务 ID，让 LiteLLM 路由到原提供商，不使用默认模型回退。
+        """
+        from litellm import avideo_status
+
+        return await avideo_status(
+            video_id=video_id, **{**self._common_kwargs, **kwargs}
+        )
+
+    async def video_content(self, video_id: str, **kwargs: Any) -> bytes:
+        """下载已完成的视频字节，不写入文件；variant 等参数透传给 LiteLLM。"""
+        from litellm import avideo_content
+
+        return await avideo_content(
+            video_id=video_id, **{**self._common_kwargs, **kwargs}
+        )
+
     async def _call_with_fallback(
         self,
         func: Any,

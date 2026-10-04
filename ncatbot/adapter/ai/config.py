@@ -23,6 +23,8 @@ class AIConfig(BaseModel):
         Embedding 默认模型（如 ``"text-embedding-3-small"``）。
     image_model:
         图像生成默认模型（如 ``"dall-e-3"``）。
+    video_model:
+        视频生成默认模型（如 ``"openai/sora-2"``）。
     timeout:
         请求超时（秒）。
     max_tokens:
@@ -46,6 +48,7 @@ class AIConfig(BaseModel):
     completion_model: str = ""
     embedding_model: str = ""
     image_model: str = ""
+    video_model: str = ""
     asr_model: str = ""
     timeout: float = 120.0
     max_tokens: Optional[int] = None

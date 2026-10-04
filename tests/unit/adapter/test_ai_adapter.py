@@ -29,6 +29,11 @@ AI 适配器单元测试
   AI-27: MCP 工具调用返回文本结果
   AI-28: MCP 单个服务器连接失败不影响其他服务器
   AI-31: chat_text() 透传 mcp_servers / max_tool_calls 给 chat()
+  AI-32: video_generation() 默认模型、参数覆盖和参考图像
+  AI-33: video_generation() 未指定模型时抛出 ValueError
+  AI-34: video_generation() 仅模型不存在时回退一次
+  AI-35: video_status/content() 按任务 ID 调用，不回退模型
+  AI-36: AIAdapter 启动验证 video_model，失败不阻止启动
 """
 
 import asyncio
@@ -991,3 +996,132 @@ async def test_chat_text_forwards_mcp_params():
     call_kwargs = mock_chat.call_args.kwargs
     assert call_kwargs["mcp_servers"] == {"weather": {"url": "http://x"}}
     assert call_kwargs["max_tool_calls"] == 5
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("model", [None, "gemini/veo-test"])
+async def test_video_generation_parameters(model):
+    """AI-32: 视频生成使用默认模型或覆盖模型，并合并通用参数与参考图像。"""
+    api = AIBotAPI(
+        AIConfig(
+            video_model="openai/sora-2",
+            api_key="config-key",
+            base_url="https://config.example/v1",
+            timeout=45,
+        )
+    )
+    reference = b"reference-image"
+    response = MagicMock(id="video_test", status="queued")
+    with patch("litellm.avideo_generation", AsyncMock(return_value=response)) as fn:
+        result = await api.video_generation(
+            "a cat",
+            model=model,
+            seconds="8",
+            size="1280x720",
+            input_reference=reference,
+            api_key="override-key",
+            api_base="https://override.example/v1",
+            timeout=90,
+            user="user-1",
+        )
+
+    assert result is response
+    fn.assert_awaited_once_with(
+        model=model or "openai/sora-2",
+        prompt="a cat",
+        seconds="8",
+        size="1280x720",
+        input_reference=reference,
+        api_key="override-key",
+        api_base="https://override.example/v1",
+        timeout=90,
+        user="user-1",
+    )
+
+
+@pytest.mark.asyncio
+async def test_video_generation_no_model():
+    """AI-33: 没有指定 video_model 时不请求提供商，提示如何配置模型。"""
+    api = AIBotAPI(AIConfig())
+    with patch("litellm.avideo_generation", AsyncMock()) as fn:
+        with pytest.raises(ValueError, match="video_model"):
+            await api.video_generation("a cat")
+    fn.assert_not_awaited()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "requested, default, message, expected_models",
+    [
+        ("missing", "openai/sora-2", "model_not_found", ["missing", "openai/sora-2"]),
+        ("missing", "", "model_not_found", ["missing"]),
+        (None, "openai/sora-2", "model_not_found", ["openai/sora-2"]),
+        ("missing", "openai/sora-2", "invalid api key", ["missing"]),
+    ],
+)
+async def test_video_generation_fallback(requested, default, message, expected_models):
+    """AI-34: 模型不存在且默认模型不同才回退一次，其他错误原样传播。"""
+    api = AIBotAPI(AIConfig(video_model=default))
+    error = RuntimeError(message)
+    response = MagicMock(id="video_test", status="queued")
+    side_effect = [error, response] if len(expected_models) == 2 else error
+    with patch("litellm.avideo_generation", AsyncMock(side_effect=side_effect)) as fn:
+        if len(expected_models) == 2:
+            assert await api.video_generation("a cat", model=requested) is response
+        else:
+            with pytest.raises(RuntimeError) as caught:
+                await api.video_generation("a cat", model=requested)
+            assert caught.value is error
+
+    assert [c.kwargs["model"] for c in fn.await_args_list] == expected_models
+    assert all(c.kwargs["prompt"] == "a cat" for c in fn.await_args_list)
+    assert all("seconds" not in c.kwargs for c in fn.await_args_list)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("action", ["video_status", "video_content"])
+@pytest.mark.parametrize("fails", [False, True])
+async def test_video_task_parameters_and_errors(action, fails):
+    """AI-35: 查询/下载合并通用参数，保留完整 ID，无默认模型也可调用且不回退。"""
+    api = AIBotAPI(
+        AIConfig(api_key="config-key", base_url="https://config.example/v1", timeout=45)
+    )
+    response = (
+        b"video-data" if action == "video_content" else MagicMock(status="failed")
+    )
+    error = RuntimeError("video does not exist")
+    with patch(
+        f"litellm.a{action}",
+        AsyncMock(return_value=response, side_effect=error if fails else None),
+    ) as fn:
+        params = {
+            "video_id": "encoded-provider-video-id",
+            "api_key": "override-key",
+            "custom_llm_provider": "gemini",
+            "timeout": 90,
+        }
+        if fails:
+            with pytest.raises(RuntimeError) as caught:
+                await api.call(action, params)
+            assert caught.value is error
+        else:
+            assert await api.call(action, params) is response
+    fn.assert_awaited_once_with(api_base="https://config.example/v1", **params)
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("validation_fails", [False, True])
+async def test_adapter_validates_video_model(validation_fails):
+    """AI-36: 连接时验证视频默认模型；验证失败只记录警告，仍可连接。"""
+    adapter = AIAdapter(config={"video_model": "openai/sora-2", "api_key": "test-key"})
+    with patch(
+        "litellm.validate_environment",
+        return_value={"missing_keys": []},
+        side_effect=RuntimeError("validation failed") if validation_fails else None,
+    ) as validate:
+        try:
+            await adapter.connect()
+            assert adapter.connected
+            validate.assert_called_once_with("openai/sora-2")
+        finally:
+            await adapter.disconnect()

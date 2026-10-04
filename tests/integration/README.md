@@ -2,6 +2,12 @@
 
 跨模块协作的集成测试，验证多个组件协同工作。
 
+## AI 视频生成 (`test_ai_video.py`)
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| AI-37 | 视频任务完整流程 | AIAdapter → BotAPIClient → 真实 LiteLLM → 模拟 HTTP；生成、查询、下载，ID 路由、认证和失败状态 |
+
 ## 公共 fixtures (`conftest.py`)
 
 | Fixture | 说明 |

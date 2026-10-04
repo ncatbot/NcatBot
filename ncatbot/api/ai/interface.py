@@ -116,6 +116,44 @@ class IAIAPIClient(IAPIClient):
         litellm.ImageResponse
         """
 
+    # ---- Video Generation ----
+
+    @abstractmethod
+    async def video_generation(
+        self,
+        prompt: str,
+        *,
+        model: Optional[str] = None,
+        seconds: Optional[str] = None,
+        size: Optional[str] = None,
+        input_reference: Any = None,
+        **kwargs: Any,
+    ) -> Any:
+        """提交视频生成任务，返回 LiteLLM VideoObject。
+
+        ``model`` 覆盖 ``video_model``，模型不存在时回退到默认模型。
+        ``seconds`` 是时长字符串（如 ``"8"``），``size`` 是尺寸（如
+        ``"1280x720"``），``input_reference`` 是参考图像文件对象或字节。
+        其他参数透传给 ``litellm.avideo_generation()``。
+        用返回的 ``id`` 调用 ``video_status()``，完成后用 ``video_content()`` 下载。
+        """
+
+    @abstractmethod
+    async def video_status(self, video_id: str, **kwargs: Any) -> Any:
+        """查询视频任务，返回包含 status/progress/error 的 LiteLLM VideoObject。
+
+        ``video_id`` 应保留生成响应的完整 ID，LiteLLM 据此路由到原提供商。
+        不使用默认模型回退；其他参数透传给 ``litellm.avideo_status()``。
+        """
+
+    @abstractmethod
+    async def video_content(self, video_id: str, **kwargs: Any) -> bytes:
+        """下载已完成的视频，返回字节，不写入文件。
+
+        ``video_id`` 应保留生成响应的完整 ID；其他参数（如 ``variant``）
+        透传给 ``litellm.avideo_content()``。
+        """
+
     # ---- Sugar 便捷方法 ----
 
     @abstractmethod

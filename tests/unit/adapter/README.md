@@ -117,7 +117,7 @@ python -m pytest tests/unit/adapter/ -v
 
 ### AIAdapter (`test_ai_adapter.py`)
 
-测试 AI 适配器：chat、image_generation、transcription（ASR）。
+测试 AI 适配器：chat、image_generation、视频生成/查询/下载、transcription（ASR）。
 
 | 规范 ID | 说明 | 验证点 |
 |---------|------|--------|
@@ -139,3 +139,8 @@ python -m pytest tests/unit/adapter/ -v
 | AI-18 | transcription 模型回退 | 不存在模型回退到 asr_model |
 | AI-19 | transcription_text() | 返回 str，None → "" |
 | AI-20 | transcription kwargs | 透传 language/prompt/response_format/temperature |
+| AI-32 | 视频生成参数 | 默认/覆盖模型、通用参数覆盖、时长/尺寸/参考图像 |
+| AI-33 | 视频生成无模型 | 不请求提供商，抛 ValueError 提示 video_model |
+| AI-34 | 视频模型回退 | 仅模型不存在时回退一次，其他错误原样传播 |
+| AI-35 | 视频查询/下载 | 按完整任务 ID 请求、合并认证参数，无默认模型也可调用，不回退 |
+| AI-36 | 视频模型启动验证 | 验证 video_model，失败不阻止连接 |
