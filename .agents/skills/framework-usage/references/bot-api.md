@@ -471,6 +471,21 @@ image = await self.api.ai.generate_image("一只猫")  # → Image 消息段
 await event.reply(image)
 ```
 
+视频生成需要 `video_model` 或调用时传入 `model=`，以及 `litellm >= 1.83.0`。
+完整示例见 `docs/docs/notes/guide/2. 适配器/5a. AI 视频生成.md`，签名见
+`docs/docs/notes/reference/1. Bot API/5. AI/2. 视频生成.md`。
+
+```python
+job = await self.api.ai.video_generation("一只猫", seconds="8")  # → VideoObject
+status = await self.api.ai.video_status(job.id)  # 保留完整 ID，按原提供商路由
+if status.status == "completed":
+    data = await self.api.ai.video_content(job.id)  # → bytes，由调用者保存/发送
+```
+
+生成时模型不存在会回退到默认 `video_model`；查询和下载不回退模型，不自动轮询。
+等待任务时应设置总超时并处理 `failed` 状态；配置的 `timeout` 仅限制单次请求。
+如生成时覆盖 `api_key`/`api_base`，后续查询和下载需使用相同覆盖值。
+
 ## MiscAPI（杂项工具）
 
 > 参考文档：`docs/docs/notes/reference/1. Bot API/6. Misc/1. API.md`
