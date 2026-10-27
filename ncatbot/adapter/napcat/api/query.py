@@ -22,6 +22,7 @@ from ncatbot.types.napcat import (
     MessageData,
     MessageHistory,
     ForwardMessageData,
+    PttTextResult,
     RecentContact,
     StrangerInfo,
     VersionInfo,
@@ -235,6 +236,18 @@ class QueryAPIMixin:
             params["emoji_id"] = emoji_id
         data = await self._call_data("get_emoji_likes", params) or {}
         return EmojiLikesResult(**data)
+
+    async def fetch_ptt_text(self, message_id: Union[str, int]) -> PttTextResult:
+        """获取语音消息的转文字结果
+
+        NapCat 的 ``fetch_ptt_text`` 接受数字或字符串消息 ID，
+        这里统一按字符串传递，避免超过 JS 安全整数范围的 ID 精度丢失。
+        """
+        data = (
+            await self._call_data("fetch_ptt_text", {"message_id": str(message_id)})
+            or {}
+        )
+        return PttTextResult(**data)
 
     # ---- 系统信息 ----
 

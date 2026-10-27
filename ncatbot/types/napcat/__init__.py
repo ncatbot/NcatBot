@@ -50,6 +50,7 @@ from .system import (
     EmojiLikeUser,
     OcrResult,
     OcrText,
+    PttTextResult,
     RecentContact,
     RecentContactMessage,
     VersionInfo,
@@ -103,6 +104,7 @@ __all__ = [
     "EmojiLikesUser",
     "OcrText",
     "OcrResult",
+    "PttTextResult",
     "RecentContact",
     "RecentContactMessage",
 ]

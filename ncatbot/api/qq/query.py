@@ -26,6 +26,7 @@ from ncatbot.types.napcat import (
     LoginInfo,
     MessageData,
     OcrResult,
+    PttTextResult,
     RecentContact,
     StrangerInfo,
     VersionInfo,
@@ -164,6 +165,21 @@ class QQQuery:
 
     async def ocr_image(self, image: str) -> OcrResult:
         return await self._api.ocr_image(image)
+
+    async def fetch_ptt_text(self, message_id: Union[str, int]) -> PttTextResult:
+        """获取语音消息的转文字结果
+
+        Parameters
+        ----------
+        message_id : str | int
+            语音消息的消息 ID
+
+        Returns
+        -------
+        PttTextResult
+            转写文本位于 ``text`` 字段
+        """
+        return await self._api.fetch_ptt_text(message_id)
 
     # ---- 头像查询 ----
 

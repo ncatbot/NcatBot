@@ -37,6 +37,7 @@ from ncatbot.types.napcat import (
     MessageHistory,
     ForwardMessageData,
     OcrResult,
+    PttTextResult,
     RecentContact,
     SendMessageResult,
     StrangerInfo,
@@ -403,6 +404,9 @@ class IQQAPIClient(IAPIClient, IMessaging, IGroupManage, IQuery, IFileTransfer):
     ) -> DownloadResult: ...
 
     # ---- 消息扩展操作 ----
+
+    @abstractmethod
+    async def fetch_ptt_text(self, message_id: Union[str, int]) -> PttTextResult: ...
 
     @abstractmethod
     async def set_msg_emoji_like(

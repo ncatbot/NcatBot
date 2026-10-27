@@ -183,6 +183,13 @@ file = await self.api.qq.query.get_file(file_id)
 emoji = await self.api.qq.query.fetch_emoji_like(message_id, emoji_id, emoji_type="1", count=20, cookie="")  # -> EmojiLikeInfo
 likes = await self.api.qq.query.get_emoji_likes(message_id, emoji_id="", count=0)  # -> EmojiLikesResult
 
+# 语音转文字（NapCat 内置，原样返回 QQ 侧转写结果；QQ 侧未产出文本时抛 APIError）
+try:
+    ptt = await self.api.qq.query.fetch_ptt_text(message_id)  # -> PttTextResult
+    print(ptt.text)
+except APIError:  # 常见：retcode 1200 "获取语音转文字结果失败"
+    ...
+
 # 系统信息
 version = await self.api.qq.query.get_version_info()
 status = await self.api.qq.query.get_status()
@@ -427,6 +434,7 @@ await event.reject(reason="理由")
 | `"get_file"` | `query.get_file()` |
 | `"fetch_emoji_like"` | `query.fetch_emoji_like()` |
 | `"get_emoji_likes"` | `query.get_emoji_likes()` |
+| `"fetch_ptt_text"` | `query.fetch_ptt_text()` |
 | `"get_version_info"` | `query.get_version_info()` |
 | `"get_status"` | `query.get_status()` |
 | `"get_recent_contact"` | `query.get_recent_contact()` |

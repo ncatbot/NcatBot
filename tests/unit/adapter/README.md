@@ -18,6 +18,17 @@
 | P-06 | message_sent 映射 | `message_sent` 映射到 `MESSAGE` + `message_type` |
 | P-07 | notify 子类型推导 | `notice_type=notify` 时使用 `sub_type` 推导 |
 
+### NapCat QueryAPI (`test_napcat_query_api.py`)
+
+测试 `QueryAPIMixin` 的消息 ID 参数转换与语音转文字结果解析。
+
+| 规范 ID | 说明 | 验证点 |
+|---------|------|--------|
+| NQ-01 | `get_forward_msg` 参数规范 | 使用 `message_id` 键传递 |
+| NQ-02 | 长消息 ID 精度 | 超过 JS 安全整数范围的 ID 以字符串原样传递 |
+| NQ-03 | `fetch_ptt_text` 参数与解析 | 以字符串 `message_id` 调用 `fetch_ptt_text`，解析 `text` |
+| NQ-04 | `fetch_ptt_text` 空数据 | `data` 为 null 时返回空文本 `text` |
+
 ## 运行方式
 
 ```bash

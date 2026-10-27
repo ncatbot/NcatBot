@@ -69,6 +69,7 @@ python tests/e2e/napcat/run.py
 | A | API Client | A-01 ~ A-02 |
 | AE | API Errors | AE-01 ~ AE-07 |
 | P | EventParser / NapCatEventParser | P-01 ~ P-07 |
+| NQ | NapCat 查询 API 参数转换 | NQ-01 ~ NQ-04 |
 | AR | AdapterRegistry | AR-01 ~ AR-05 |
 | CF | Config Migration | CF-01 ~ CF-05 |
 | CE | Config 分层与运行时覆盖 | CE-01 ~ CE-05 |

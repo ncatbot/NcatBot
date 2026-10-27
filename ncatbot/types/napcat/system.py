@@ -92,6 +92,15 @@ class OcrResult(NapCatModel):
     texts: Optional[List[OcrText]] = None
 
 
+class PttTextResult(NapCatModel):
+    """语音转文字结果
+
+    对应: ``fetch_ptt_text``
+    """
+
+    text: str = ""
+
+
 class RecentContactMessage(NapCatModel):
     """最近联系人中的最新消息（内嵌结构）"""
 

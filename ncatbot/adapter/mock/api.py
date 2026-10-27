@@ -30,6 +30,7 @@ from ncatbot.types.napcat import (
     MessageData,
     MessageHistory,
     OcrResult,
+    PttTextResult,
     SendMessageResult,
     StrangerInfo,
     VersionInfo,
@@ -327,6 +328,9 @@ class MockBotAPI(MockAPIBase, IQQAPIClient):
 
     async def get_msg(self, message_id: Union[str, int]) -> MessageData:
         return self._record("get_msg", message_id=message_id)
+
+    async def fetch_ptt_text(self, message_id: Union[str, int]) -> PttTextResult:
+        return self._record("fetch_ptt_text", message_id=message_id)
 
     async def get_forward_msg(self, message_id: Union[str, int]) -> ForwardMessageData:
         return self._record("get_forward_msg", message_id=message_id)
